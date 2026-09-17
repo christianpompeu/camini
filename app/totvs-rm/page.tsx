@@ -377,9 +377,9 @@ export default function TotvsRmChatPage() {
                   value={inputPrompt}
                   onChange={handleTextareaChange}
                   onKeyDown={handleKeyDown}
-                  placeholder="Ex: Consultar lançamentos a pagar em aberto com fornecedor e centro de custo..."
+                  placeholder="Ex: Consultar lançamentos..."
                   rows={1}
-                  className="w-full resize-none bg-transparent py-1.5 px-2 text-xs sm:text-sm text-text-primary placeholder:text-text-secondary focus:outline-none max-h-32 font-sans leading-relaxed"
+                  className="flex-1 min-w-0 resize-none bg-transparent py-1.5 px-2 text-xs sm:text-sm text-text-primary placeholder:text-text-secondary focus:outline-none max-h-32 font-sans leading-relaxed"
                 />
 
                 <button
@@ -393,7 +393,7 @@ export default function TotvsRmChatPage() {
               </div>
 
               <div className="flex items-center justify-between text-[10px] text-text-secondary px-1">
-                <span>Pressione <strong>Enter</strong> para enviar, <strong>Shift + Enter</strong> para nova linha</span>
+                <span className="hidden sm:inline">Pressione <strong>Enter</strong> para enviar, <strong>Shift + Enter</strong> para nova linha</span>
                 <span className="hidden sm:inline">TOTVS Corpore RM v12+ • Dicionário Local</span>
               </div>
             </div>
