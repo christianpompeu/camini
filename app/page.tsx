@@ -13,6 +13,8 @@ import {
   HeartPulse,
   CheckCircle2,
   Lock,
+  Database,
+  Bot,
 } from "lucide-react";
 
 import { Navbar } from "@/components/layout/navbar";
@@ -37,7 +39,7 @@ export default function CaminiHomePage() {
             <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-pill bg-surface-elevated border border-outline shadow-sm animate-in fade-in duration-300">
               <span className="w-2 h-2 rounded-full bg-energy-blue animate-pulse" />
               <span className="text-xs font-bold text-text-secondary tracking-wide">
-                Ecossistema de Alta Performance • 2026
+                Ecossistema Modular Integrado • 2026
               </span>
             </div>
 
@@ -47,22 +49,34 @@ export default function CaminiHomePage() {
             </h1>
 
             <p className="text-lg sm:text-xl text-text-secondary max-w-2xl mx-auto leading-relaxed font-normal">
-              Sua plataforma integrada de evolução, disciplina e alto rendimento.
-              Construída com linguagem visual contemporânea, foco em usabilidade mobile
-              e velocidade instantânea.
+              Sua plataforma mestre para aplicações de alto rendimento pessoal,
+              eclesiástico e profissional. Construída com interface conversacional moderna,
+              design expressivo e velocidade instantânea.
             </p>
 
             {/* Ações Rápidas de Boas-Vindas */}
-            <div className="pt-4 flex flex-col sm:flex-row items-center justify-center gap-3.5 max-w-md mx-auto">
-              <Link href="/forca" className="w-full sm:w-auto">
+            <div className="pt-4 flex flex-col sm:flex-row items-center justify-center gap-3.5 max-w-lg mx-auto">
+              <Link href="/totvs-rm" className="w-full sm:w-auto">
                 <Button
                   variant="energy"
                   size="lg"
                   fullWidth
                   className="shadow-xl shadow-energy-blue/25 gap-2"
                 >
-                  <Dumbbell className="w-5 h-5 fill-white" />
-                  <span>Acessar App FORÇA</span>
+                  <Database className="w-5 h-5 fill-white" />
+                  <span>Acessar RM SQL AI</span>
+                </Button>
+              </Link>
+
+              <Link href="/forca" className="w-full sm:w-auto">
+                <Button
+                  variant="secondary"
+                  size="lg"
+                  fullWidth
+                  className="border-outline hover:border-energy-blue text-text-primary gap-2"
+                >
+                  <Dumbbell className="w-5 h-5 text-energy-blue" />
+                  <span>App FORÇA</span>
                 </Button>
               </Link>
 
@@ -101,16 +115,68 @@ export default function CaminiHomePage() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {/* CARD 1: APP FORÇA */}
-              <div className="relative overflow-hidden rounded-xl border-2 border-energy-blue/40 bg-surface-elevated p-6 card-elevation flex flex-col justify-between transition-all duration-200 hover:border-energy-blue hover:shadow-xl hover:shadow-energy-blue/10">
+              {/* CARD 0: TOTVS RM SQL STUDIO */}
+              <div className="relative overflow-hidden rounded-xl border-2 border-energy-blue/50 bg-surface-elevated p-6 card-elevation flex flex-col justify-between transition-all duration-200 hover:border-energy-blue hover:shadow-xl hover:shadow-energy-blue/15">
                 <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-energy" />
+
+                <div>
+                  <div className="flex items-center justify-between gap-2 mb-4">
+                    <div className="w-12 h-12 rounded-lg bg-energy-blue/15 border border-energy-blue/30 flex items-center justify-center text-energy-blue">
+                      <Database className="w-6 h-6" />
+                    </div>
+                    <Chip variant="energy" size="sm" className="font-bold">
+                      Disponível
+                    </Chip>
+                  </div>
+
+                  <h3 className="text-xl font-bold text-text-primary tracking-tight">
+                    RM SQL Studio
+                  </h3>
+                  <span className="text-xs font-semibold text-energy-blue block mt-0.5">
+                    IA Especializada em TOTVS Corpore RM
+                  </span>
+
+                  <p className="text-xs sm:text-sm text-text-secondary leading-relaxed mt-3">
+                    Assistente conversacional estilo ChatGPT/Gemini com catálogo de mais de 9.400 tabelas,
+                    mapeamento de campos, chaves estrangeiras e geração de scripts T-SQL de alta performance.
+                  </p>
+
+                  <ul className="mt-4 space-y-1.5 text-xs text-text-secondary">
+                    <li className="flex items-center gap-2">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-energy-green" />
+                      <span>Dicionário completo RM (Fluxus, Nucleus, Labore, etc.)</span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-energy-green" />
+                      <span>RAG de relacionamentos e regras multi-coligada</span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-energy-green" />
+                      <span>Histórico de sessões e cópia em 1 clique</span>
+                    </li>
+                  </ul>
+                </div>
+
+                <div className="mt-6 pt-4 border-t border-outline/60">
+                  <Link href="/totvs-rm">
+                    <Button variant="energy" size="md" fullWidth className="shadow-md gap-2">
+                      <span>Acessar RM SQL Studio</span>
+                      <ArrowRight className="w-4 h-4" />
+                    </Button>
+                  </Link>
+                </div>
+              </div>
+
+              {/* CARD 1: APP FORÇA */}
+              <div className="relative overflow-hidden rounded-xl border border-outline bg-surface-elevated p-6 card-elevation flex flex-col justify-between transition-all duration-200 hover:border-energy-blue/60 hover:shadow-lg">
+                <div className="absolute top-0 left-0 right-0 h-1.5 bg-energy-blue" />
 
                 <div>
                   <div className="flex items-center justify-between gap-2 mb-4">
                     <div className="w-12 h-12 rounded-lg bg-energy-blue/15 border border-energy-blue/30 flex items-center justify-center text-energy-blue">
                       <Dumbbell className="w-6 h-6" />
                     </div>
-                    <Chip variant="energy" size="sm" className="font-bold">
+                    <Chip variant="outline" size="sm" className="font-bold text-energy-blue border-energy-blue/30">
                       Disponível
                     </Chip>
                   </div>

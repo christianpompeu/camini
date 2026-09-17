@@ -1,0 +1,4940 @@
+[
+    {
+        "Tabela": "JALERGIAPACIENTE",
+        "Colunas": [
+            {
+                "Coluna": "CODCOLIGADA",
+                "Tipo": "DCODCOLIGADA",
+                "TamanhoBytes": 2,
+                "Precisao": 5,
+                "Escala": 0,
+                "PermiteNulo": "N",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Identificador da coligada",
+                "RelacionamentosRM": [
+                    {
+                        "TabelaDestino": "GCOLIGADA",
+                        "CamposDestino": "CODCOLIGADA",
+                        "ChaveLogicaComposta": "CODCOLIGADA"
+                    },
+                    {
+                        "TabelaDestino": "SZCADGERAL",
+                        "CamposDestino": "CODCOLIGADA,CODGERAL",
+                        "ChaveLogicaComposta": "CODCOLIGADA,CODGERAL"
+                    },
+                    {
+                        "TabelaDestino": "SZPACIENTE",
+                        "CamposDestino": "CODCOLIGADA,CODPACIENTE",
+                        "ChaveLogicaComposta": "CODCOLIGADA,CODPACIENTE"
+                    },
+                    {
+                        "TabelaDestino": "SZPRINCIPIOATIVO",
+                        "CamposDestino": "CODCOLIGADA,IDPRINCIPIOATIVO",
+                        "ChaveLogicaComposta": "CODCOLIGADA,IDPRINCIPIOATIVO"
+                    }
+                ]
+            },
+            {
+                "Coluna": "CONDUTA",
+                "Tipo": "varchar",
+                "TamanhoBytes": -1,
+                "Precisao": 0,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Conduta sugerida caso alguma reação ao princípio ativo aconteça"
+            },
+            {
+                "Coluna": "ATIVO",
+                "Tipo": "BOOLEAN",
+                "TamanhoBytes": 1,
+                "Precisao": 0,
+                "Escala": 0,
+                "PermiteNulo": "N",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Indica se o registro está ativo"
+            },
+            {
+                "Coluna": "CODALERGIAPACIENTE",
+                "Tipo": "int",
+                "TamanhoBytes": 4,
+                "Precisao": 10,
+                "Escala": 0,
+                "PermiteNulo": "N",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Identificador da alergia do paciente"
+            },
+            {
+                "Coluna": "CODPACIENTE",
+                "Tipo": "int",
+                "TamanhoBytes": 4,
+                "Precisao": 10,
+                "Escala": 0,
+                "PermiteNulo": "N",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Identificador do paciente",
+                "RelacionamentosRM": [
+                    {
+                        "TabelaDestino": "SZPACIENTE",
+                        "CamposDestino": "CODCOLIGADA,CODPACIENTE",
+                        "ChaveLogicaComposta": "CODCOLIGADA,CODPACIENTE"
+                    }
+                ]
+            },
+            {
+                "Coluna": "IDPRINCIPIOATIVO",
+                "Tipo": "int",
+                "TamanhoBytes": 4,
+                "Precisao": 10,
+                "Escala": 0,
+                "PermiteNulo": "N",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Identificador do principio ativo",
+                "RelacionamentosRM": [
+                    {
+                        "TabelaDestino": "SZPRINCIPIOATIVO",
+                        "CamposDestino": "CODCOLIGADA,IDPRINCIPIOATIVO",
+                        "ChaveLogicaComposta": "CODCOLIGADA,IDPRINCIPIOATIVO"
+                    }
+                ]
+            },
+            {
+                "Coluna": "REACAO",
+                "Tipo": "varchar",
+                "TamanhoBytes": -1,
+                "Precisao": 0,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Reação do paciente ao entrar em contato com o princípio ativo"
+            },
+            {
+                "Coluna": "CODGERAL",
+                "Tipo": "int",
+                "TamanhoBytes": 4,
+                "Precisao": 10,
+                "Escala": 0,
+                "PermiteNulo": "N",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Identificador do profissional que criou a alergia",
+                "RelacionamentosRM": [
+                    {
+                        "TabelaDestino": "SZCADGERAL",
+                        "CamposDestino": "CODCOLIGADA,CODGERAL",
+                        "ChaveLogicaComposta": "CODCOLIGADA,CODGERAL"
+                    }
+                ]
+            },
+            {
+                "Coluna": "RECCREATEDBY",
+                "Tipo": "varchar",
+                "TamanhoBytes": 50,
+                "Precisao": 0,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Usuário criador do registro"
+            },
+            {
+                "Coluna": "RECCREATEDON",
+                "Tipo": "datetime2",
+                "TamanhoBytes": 8,
+                "Precisao": 27,
+                "Escala": 7,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Data de criação do registro"
+            },
+            {
+                "Coluna": "RECMODIFIEDBY",
+                "Tipo": "varchar",
+                "TamanhoBytes": 50,
+                "Precisao": 0,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Autor da última modificação no registro"
+            },
+            {
+                "Coluna": "RECMODIFIEDON",
+                "Tipo": "datetime2",
+                "TamanhoBytes": 8,
+                "Precisao": 27,
+                "Escala": 7,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Data da última modificação no registro"
+            }
+        ],
+        "Descricao": "Tabela que irá conter as alergias do paciente"
+    },
+    {
+        "Tabela": "JALERGIAPACIENTE",
+        "Colunas": [
+            {
+                "Coluna": "LOGID",
+                "Tipo": "bigint",
+                "TamanhoBytes": 8,
+                "Precisao": 19,
+                "Escala": 0,
+                "PermiteNulo": "N",
+                "Identity": "S",
+                "Calculada": "N",
+                "Descricao": "N/A"
+            },
+            {
+                "Coluna": "PARENTLOGID",
+                "Tipo": "bigint",
+                "TamanhoBytes": 8,
+                "Precisao": 19,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "N/A"
+            },
+            {
+                "Coluna": "AUDITID",
+                "Tipo": "bigint",
+                "TamanhoBytes": 8,
+                "Precisao": 19,
+                "Escala": 0,
+                "PermiteNulo": "N",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "N/A"
+            },
+            {
+                "Coluna": "AUDITACTION",
+                "Tipo": "char",
+                "TamanhoBytes": 1,
+                "Precisao": 0,
+                "Escala": 0,
+                "PermiteNulo": "N",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "N/A"
+            },
+            {
+                "Coluna": "LOGAPP",
+                "Tipo": "varchar",
+                "TamanhoBytes": 128,
+                "Precisao": 0,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "N/A"
+            },
+            {
+                "Coluna": "LOGUSER",
+                "Tipo": "varchar",
+                "TamanhoBytes": 128,
+                "Precisao": 0,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "N/A"
+            },
+            {
+                "Coluna": "CODCOLIGADA",
+                "Tipo": "DCODCOLIGADA",
+                "TamanhoBytes": 2,
+                "Precisao": 5,
+                "Escala": 0,
+                "PermiteNulo": "N",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Identificador da coligada",
+                "RelacionamentosRM": [
+                    {
+                        "TabelaDestino": "GCOLIGADA",
+                        "CamposDestino": "CODCOLIGADA",
+                        "ChaveLogicaComposta": "CODCOLIGADA"
+                    },
+                    {
+                        "TabelaDestino": "SZCADGERAL",
+                        "CamposDestino": "CODCOLIGADA,CODGERAL",
+                        "ChaveLogicaComposta": "CODCOLIGADA,CODGERAL"
+                    },
+                    {
+                        "TabelaDestino": "SZPACIENTE",
+                        "CamposDestino": "CODCOLIGADA,CODPACIENTE",
+                        "ChaveLogicaComposta": "CODCOLIGADA,CODPACIENTE"
+                    },
+                    {
+                        "TabelaDestino": "SZPRINCIPIOATIVO",
+                        "CamposDestino": "CODCOLIGADA,IDPRINCIPIOATIVO",
+                        "ChaveLogicaComposta": "CODCOLIGADA,IDPRINCIPIOATIVO"
+                    }
+                ]
+            },
+            {
+                "Coluna": "CONDUTA",
+                "Tipo": "varchar",
+                "TamanhoBytes": -1,
+                "Precisao": 0,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Conduta sugerida caso alguma reação ao princípio ativo aconteça"
+            },
+            {
+                "Coluna": "ATIVO",
+                "Tipo": "BOOLEAN",
+                "TamanhoBytes": 1,
+                "Precisao": 0,
+                "Escala": 0,
+                "PermiteNulo": "N",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Indica se o registro está ativo"
+            },
+            {
+                "Coluna": "CODALERGIAPACIENTE",
+                "Tipo": "int",
+                "TamanhoBytes": 4,
+                "Precisao": 10,
+                "Escala": 0,
+                "PermiteNulo": "N",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Identificador da alergia do paciente"
+            },
+            {
+                "Coluna": "CODPACIENTE",
+                "Tipo": "int",
+                "TamanhoBytes": 4,
+                "Precisao": 10,
+                "Escala": 0,
+                "PermiteNulo": "N",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Identificador do paciente",
+                "RelacionamentosRM": [
+                    {
+                        "TabelaDestino": "SZPACIENTE",
+                        "CamposDestino": "CODCOLIGADA,CODPACIENTE",
+                        "ChaveLogicaComposta": "CODCOLIGADA,CODPACIENTE"
+                    }
+                ]
+            },
+            {
+                "Coluna": "IDPRINCIPIOATIVO",
+                "Tipo": "int",
+                "TamanhoBytes": 4,
+                "Precisao": 10,
+                "Escala": 0,
+                "PermiteNulo": "N",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Identificador do principio ativo",
+                "RelacionamentosRM": [
+                    {
+                        "TabelaDestino": "SZPRINCIPIOATIVO",
+                        "CamposDestino": "CODCOLIGADA,IDPRINCIPIOATIVO",
+                        "ChaveLogicaComposta": "CODCOLIGADA,IDPRINCIPIOATIVO"
+                    }
+                ]
+            },
+            {
+                "Coluna": "REACAO",
+                "Tipo": "varchar",
+                "TamanhoBytes": -1,
+                "Precisao": 0,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Reação do paciente ao entrar em contato com o princípio ativo"
+            },
+            {
+                "Coluna": "CODGERAL",
+                "Tipo": "int",
+                "TamanhoBytes": 4,
+                "Precisao": 10,
+                "Escala": 0,
+                "PermiteNulo": "N",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Identificador do profissional que criou a alergia",
+                "RelacionamentosRM": [
+                    {
+                        "TabelaDestino": "SZCADGERAL",
+                        "CamposDestino": "CODCOLIGADA,CODGERAL",
+                        "ChaveLogicaComposta": "CODCOLIGADA,CODGERAL"
+                    }
+                ]
+            },
+            {
+                "Coluna": "RECCREATEDBY",
+                "Tipo": "varchar",
+                "TamanhoBytes": 50,
+                "Precisao": 0,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Usuário criador do registro"
+            },
+            {
+                "Coluna": "RECCREATEDON",
+                "Tipo": "datetime2",
+                "TamanhoBytes": 8,
+                "Precisao": 27,
+                "Escala": 7,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Data de criação do registro"
+            },
+            {
+                "Coluna": "RECMODIFIEDBY",
+                "Tipo": "varchar",
+                "TamanhoBytes": 50,
+                "Precisao": 0,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Autor da última modificação no registro"
+            },
+            {
+                "Coluna": "RECMODIFIEDON",
+                "Tipo": "datetime2",
+                "TamanhoBytes": 8,
+                "Precisao": 27,
+                "Escala": 7,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Data da última modificação no registro"
+            }
+        ],
+        "Descricao": "Tabela que irá conter as alergias do paciente"
+    },
+    {
+        "Tabela": "JALERTASCLINICOS",
+        "Colunas": [
+            {
+                "Coluna": "CODCOLIGADA",
+                "Tipo": "DCODCOLIGADA",
+                "TamanhoBytes": 2,
+                "Precisao": 5,
+                "Escala": 0,
+                "PermiteNulo": "N",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Código da coligada",
+                "RelacionamentosRM": [
+                    {
+                        "TabelaDestino": "JALERTASCLINICOSPACIENTE",
+                        "CamposDestino": "CODCOLIGADA,CODALERTACLINICO",
+                        "ChaveLogicaComposta": "CODCOLIGADA,CODALERTACLINICO"
+                    },
+                    {
+                        "TabelaDestino": "SZCLASSRISCOALERTACLINICO",
+                        "CamposDestino": "CODCOLIGADA,CODALERTACLINICO",
+                        "ChaveLogicaComposta": "CODCOLIGADA,CODALERTACLINICO"
+                    },
+                    {
+                        "TabelaDestino": "SZHISTENFERANTCLIALERTACLINICO",
+                        "CamposDestino": "CODCOLIGADA,CODALERTACLINICO",
+                        "ChaveLogicaComposta": "CODCOLIGADA,CODALERTACLINICO"
+                    }
+                ]
+            },
+            {
+                "Coluna": "CODALERTACLINICO",
+                "Tipo": "int",
+                "TamanhoBytes": 4,
+                "Precisao": 10,
+                "Escala": 0,
+                "PermiteNulo": "N",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Código do alerta clínico",
+                "RelacionamentosRM": [
+                    {
+                        "TabelaDestino": "JALERTASCLINICOSPACIENTE",
+                        "CamposDestino": "CODCOLIGADA,CODALERTACLINICO",
+                        "ChaveLogicaComposta": "CODCOLIGADA,CODALERTACLINICO"
+                    },
+                    {
+                        "TabelaDestino": "SZCLASSRISCOALERTACLINICO",
+                        "CamposDestino": "CODCOLIGADA,CODALERTACLINICO",
+                        "ChaveLogicaComposta": "CODCOLIGADA,CODALERTACLINICO"
+                    },
+                    {
+                        "TabelaDestino": "SZHISTENFERANTCLIALERTACLINICO",
+                        "CamposDestino": "CODCOLIGADA,CODALERTACLINICO",
+                        "ChaveLogicaComposta": "CODCOLIGADA,CODALERTACLINICO"
+                    }
+                ]
+            },
+            {
+                "Coluna": "DESCRICAO",
+                "Tipo": "varchar",
+                "TamanhoBytes": 100,
+                "Precisao": 0,
+                "Escala": 0,
+                "PermiteNulo": "N",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Descrição do alerta clínico"
+            },
+            {
+                "Coluna": "RECCREATEDBY",
+                "Tipo": "varchar",
+                "TamanhoBytes": 50,
+                "Precisao": 0,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Usuário criador do registro"
+            },
+            {
+                "Coluna": "RECCREATEDON",
+                "Tipo": "datetime",
+                "TamanhoBytes": 8,
+                "Precisao": 23,
+                "Escala": 3,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Data de criação do registro"
+            },
+            {
+                "Coluna": "RECMODIFIEDBY",
+                "Tipo": "varchar",
+                "TamanhoBytes": 50,
+                "Precisao": 0,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Autor da última modificação no registro"
+            },
+            {
+                "Coluna": "RECMODIFIEDON",
+                "Tipo": "datetime",
+                "TamanhoBytes": 8,
+                "Precisao": 23,
+                "Escala": 3,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Data da última modificação no registro"
+            }
+        ],
+        "Descricao": "Alertas clínicos de pacientes, cadastrados pelo médico"
+    },
+    {
+        "Tabela": "JALERTASCLINICOSPACIENTE",
+        "Colunas": [
+            {
+                "Coluna": "CODCOLIGADA",
+                "Tipo": "DCODCOLIGADA",
+                "TamanhoBytes": 2,
+                "Precisao": 5,
+                "Escala": 0,
+                "PermiteNulo": "N",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Código da coligada",
+                "RelacionamentosRM": [
+                    {
+                        "TabelaDestino": "JALERTASCLINICOS",
+                        "CamposDestino": "CODCOLIGADA,CODALERTACLINICO",
+                        "ChaveLogicaComposta": "CODCOLIGADA,CODALERTACLINICO"
+                    },
+                    {
+                        "TabelaDestino": "SZCADGERAL",
+                        "CamposDestino": "CODCOLIGADA,CODGERAL",
+                        "ChaveLogicaComposta": "CODCOLIGADA,CODGERAL"
+                    },
+                    {
+                        "TabelaDestino": "SZPACIENTE",
+                        "CamposDestino": "CODCOLIGADA,CODPACIENTE",
+                        "ChaveLogicaComposta": "CODCOLIGADA,CODPACIENTE"
+                    }
+                ]
+            },
+            {
+                "Coluna": "CODALERTACLINICO",
+                "Tipo": "int",
+                "TamanhoBytes": 4,
+                "Precisao": 10,
+                "Escala": 0,
+                "PermiteNulo": "N",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Código do alerta clínico",
+                "RelacionamentosRM": [
+                    {
+                        "TabelaDestino": "JALERTASCLINICOS",
+                        "CamposDestino": "CODCOLIGADA,CODALERTACLINICO",
+                        "ChaveLogicaComposta": "CODCOLIGADA,CODALERTACLINICO"
+                    }
+                ]
+            },
+            {
+                "Coluna": "CODPACIENTE",
+                "Tipo": "int",
+                "TamanhoBytes": 4,
+                "Precisao": 10,
+                "Escala": 0,
+                "PermiteNulo": "N",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Código do paciente",
+                "RelacionamentosRM": [
+                    {
+                        "TabelaDestino": "SZPACIENTE",
+                        "CamposDestino": "CODCOLIGADA,CODPACIENTE",
+                        "ChaveLogicaComposta": "CODCOLIGADA,CODPACIENTE"
+                    }
+                ]
+            },
+            {
+                "Coluna": "CODGERAL",
+                "Tipo": "int",
+                "TamanhoBytes": 4,
+                "Precisao": 10,
+                "Escala": 0,
+                "PermiteNulo": "N",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Código do médico que criou o alerta clínico",
+                "RelacionamentosRM": [
+                    {
+                        "TabelaDestino": "SZCADGERAL",
+                        "CamposDestino": "CODCOLIGADA,CODGERAL",
+                        "ChaveLogicaComposta": "CODCOLIGADA,CODGERAL"
+                    }
+                ]
+            },
+            {
+                "Coluna": "DETALHES",
+                "Tipo": "varchar",
+                "TamanhoBytes": -1,
+                "Precisao": 0,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Detalhes do alerta clínico"
+            },
+            {
+                "Coluna": "CONDUTA",
+                "Tipo": "varchar",
+                "TamanhoBytes": -1,
+                "Precisao": 0,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Conduta adotada"
+            },
+            {
+                "Coluna": "STATUS",
+                "Tipo": "smallint",
+                "TamanhoBytes": 2,
+                "Precisao": 5,
+                "Escala": 0,
+                "PermiteNulo": "N",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Informa se o alerta clínico está disponível/ativo no sistema"
+            },
+            {
+                "Coluna": "NIVELATENCAO",
+                "Tipo": "smallint",
+                "TamanhoBytes": 2,
+                "Precisao": 5,
+                "Escala": 0,
+                "PermiteNulo": "N",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Nível de atenção do alerta"
+            },
+            {
+                "Coluna": "RECCREATEDBY",
+                "Tipo": "varchar",
+                "TamanhoBytes": 50,
+                "Precisao": 0,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Usuário criador do registro"
+            },
+            {
+                "Coluna": "RECCREATEDON",
+                "Tipo": "datetime",
+                "TamanhoBytes": 8,
+                "Precisao": 23,
+                "Escala": 3,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Data de criação do registro"
+            },
+            {
+                "Coluna": "RECMODIFIEDBY",
+                "Tipo": "varchar",
+                "TamanhoBytes": 50,
+                "Precisao": 0,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Autor da última modificação no registro"
+            },
+            {
+                "Coluna": "RECMODIFIEDON",
+                "Tipo": "datetime",
+                "TamanhoBytes": 8,
+                "Precisao": 23,
+                "Escala": 3,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Data da última modificação no registro"
+            }
+        ],
+        "Descricao": "Associa um alerta clínico a um paciente"
+    },
+    {
+        "Tabela": "JANAMNESE",
+        "Colunas": [
+            {
+                "Coluna": "CODANAMNESE",
+                "Tipo": "int",
+                "TamanhoBytes": 4,
+                "Precisao": 10,
+                "Escala": 0,
+                "PermiteNulo": "N",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Id da Anamnese"
+            },
+            {
+                "Coluna": "CODCOLIGADA",
+                "Tipo": "DCODCOLIGADA",
+                "TamanhoBytes": 2,
+                "Precisao": 5,
+                "Escala": 0,
+                "PermiteNulo": "N",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Id da Coligada",
+                "RelacionamentosRM": [
+                    {
+                        "TabelaDestino": "JANAMNESECABECALHO",
+                        "CamposDestino": "CODANAMNESECABECALHO,CODCOLIGADA",
+                        "ChaveLogicaComposta": "CODANAMNESECABECALHO,CODCOLIGADA"
+                    },
+                    {
+                        "TabelaDestino": "GCOLIGADA",
+                        "CamposDestino": "CODCOLIGADA",
+                        "ChaveLogicaComposta": "CODCOLIGADA"
+                    }
+                ]
+            },
+            {
+                "Coluna": "CODANAMNESECABECALHO",
+                "Tipo": "int",
+                "TamanhoBytes": 4,
+                "Precisao": 10,
+                "Escala": 0,
+                "PermiteNulo": "N",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Id do Header de controle da Anamnese",
+                "RelacionamentosRM": [
+                    {
+                        "TabelaDestino": "JANAMNESECABECALHO",
+                        "CamposDestino": "CODANAMNESECABECALHO,CODCOLIGADA",
+                        "ChaveLogicaComposta": "CODANAMNESECABECALHO,CODCOLIGADA"
+                    }
+                ]
+            },
+            {
+                "Coluna": "QUEIXA",
+                "Tipo": "varchar",
+                "TamanhoBytes": -1,
+                "Precisao": 0,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Queixa do paciente"
+            },
+            {
+                "Coluna": "FREQUENCIACARDIACA",
+                "Tipo": "numeric",
+                "TamanhoBytes": 5,
+                "Precisao": 3,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Frequencia Cardiaca do Paciente"
+            },
+            {
+                "Coluna": "FREQUENCIARESPIRATORIA",
+                "Tipo": "numeric",
+                "TamanhoBytes": 5,
+                "Precisao": 3,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Frequencia Respiratória do Paciente"
+            },
+            {
+                "Coluna": "TEMPERATURACORPORAL",
+                "Tipo": "numeric",
+                "TamanhoBytes": 5,
+                "Precisao": 5,
+                "Escala": 2,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Temperatura Corporal do Paciente"
+            },
+            {
+                "Coluna": "PESO",
+                "Tipo": "numeric",
+                "TamanhoBytes": 5,
+                "Precisao": 5,
+                "Escala": 2,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Peso do Paciente"
+            },
+            {
+                "Coluna": "ALTURA",
+                "Tipo": "numeric",
+                "TamanhoBytes": 5,
+                "Precisao": 5,
+                "Escala": 2,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Altura do Paciente"
+            },
+            {
+                "Coluna": "IMC",
+                "Tipo": "numeric",
+                "TamanhoBytes": 5,
+                "Precisao": 5,
+                "Escala": 2,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "IMC do Paciente"
+            },
+            {
+                "Coluna": "SATURACAOO2",
+                "Tipo": "numeric",
+                "TamanhoBytes": 5,
+                "Precisao": 3,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Saturação O2 do Paciente"
+            },
+            {
+                "Coluna": "PRESSAOSISTOLICA",
+                "Tipo": "numeric",
+                "TamanhoBytes": 5,
+                "Precisao": 5,
+                "Escala": 2,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Pressão Sistólica do Paciente"
+            },
+            {
+                "Coluna": "PRESSAODIASTOLICA",
+                "Tipo": "numeric",
+                "TamanhoBytes": 5,
+                "Precisao": 5,
+                "Escala": 2,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Pressão Diastólica do Paciente"
+            },
+            {
+                "Coluna": "EXAMEFISICO",
+                "Tipo": "varchar",
+                "TamanhoBytes": -1,
+                "Precisao": 0,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Exame Fisico do Paciente"
+            },
+            {
+                "Coluna": "HIPOTESEDIAGNOSTICA",
+                "Tipo": "varchar",
+                "TamanhoBytes": -1,
+                "Precisao": 0,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Hipotese Diagnostica do Paciente"
+            },
+            {
+                "Coluna": "EXAMESCOMPLEMENTARES",
+                "Tipo": "varchar",
+                "TamanhoBytes": -1,
+                "Precisao": 0,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Exames Complementares do Paciente"
+            },
+            {
+                "Coluna": "CONDUTA",
+                "Tipo": "varchar",
+                "TamanhoBytes": -1,
+                "Precisao": 0,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Conduta"
+            },
+            {
+                "Coluna": "CODVERSAOCID",
+                "Tipo": "int",
+                "TamanhoBytes": 4,
+                "Precisao": 10,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Versão do CID",
+                "RelacionamentosRM": [
+                    {
+                        "TabelaDestino": "SZCID",
+                        "CamposDestino": "CODCID,CODVERSAOCID",
+                        "ChaveLogicaComposta": "CODCID,CODVERSAOCID"
+                    }
+                ]
+            },
+            {
+                "Coluna": "CODCID",
+                "Tipo": "varchar",
+                "TamanhoBytes": 6,
+                "Precisao": 0,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Código do Cid",
+                "RelacionamentosRM": [
+                    {
+                        "TabelaDestino": "SZCID",
+                        "CamposDestino": "CODCID,CODVERSAOCID",
+                        "ChaveLogicaComposta": "CODCID,CODVERSAOCID"
+                    }
+                ]
+            },
+            {
+                "Coluna": "RECCREATEDBY",
+                "Tipo": "varchar",
+                "TamanhoBytes": 50,
+                "Precisao": 0,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Usuário criador do registro"
+            },
+            {
+                "Coluna": "RECCREATEDON",
+                "Tipo": "datetime2",
+                "TamanhoBytes": 8,
+                "Precisao": 27,
+                "Escala": 7,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Data de criação do registro"
+            },
+            {
+                "Coluna": "RECMODIFIEDBY",
+                "Tipo": "varchar",
+                "TamanhoBytes": 50,
+                "Precisao": 0,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Autor da última modificação no registro"
+            },
+            {
+                "Coluna": "RECMODIFIEDON",
+                "Tipo": "datetime2",
+                "TamanhoBytes": 8,
+                "Precisao": 27,
+                "Escala": 7,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Data da última modificação no registro"
+            },
+            {
+                "Coluna": "TEMPERATURATRANSESOFAGICA",
+                "Tipo": "numeric",
+                "TamanhoBytes": 5,
+                "Precisao": 5,
+                "Escala": 2,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Temperatura Transesofagica"
+            },
+            {
+                "Coluna": "STATUS",
+                "Tipo": "int",
+                "TamanhoBytes": 4,
+                "Precisao": 10,
+                "Escala": 0,
+                "PermiteNulo": "N",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Status do registro da anamnese (Rascunho - 0, Finalizado - 1, Cancelado - 9)"
+            },
+            {
+                "Coluna": "PRESSAOMEDIA",
+                "Tipo": "numeric",
+                "TamanhoBytes": 5,
+                "Precisao": 5,
+                "Escala": 2,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Pressão arterial média"
+            }
+        ],
+        "Descricao": "Tabela de Anamnese"
+    },
+    {
+        "Tabela": "JANAMNESE",
+        "Colunas": [
+            {
+                "Coluna": "LOGID",
+                "Tipo": "bigint",
+                "TamanhoBytes": 8,
+                "Precisao": 19,
+                "Escala": 0,
+                "PermiteNulo": "N",
+                "Identity": "S",
+                "Calculada": "N",
+                "Descricao": "N/A"
+            },
+            {
+                "Coluna": "PARENTLOGID",
+                "Tipo": "bigint",
+                "TamanhoBytes": 8,
+                "Precisao": 19,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "N/A"
+            },
+            {
+                "Coluna": "AUDITID",
+                "Tipo": "bigint",
+                "TamanhoBytes": 8,
+                "Precisao": 19,
+                "Escala": 0,
+                "PermiteNulo": "N",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "N/A"
+            },
+            {
+                "Coluna": "AUDITACTION",
+                "Tipo": "char",
+                "TamanhoBytes": 1,
+                "Precisao": 0,
+                "Escala": 0,
+                "PermiteNulo": "N",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "N/A"
+            },
+            {
+                "Coluna": "LOGAPP",
+                "Tipo": "varchar",
+                "TamanhoBytes": 128,
+                "Precisao": 0,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "N/A"
+            },
+            {
+                "Coluna": "LOGUSER",
+                "Tipo": "varchar",
+                "TamanhoBytes": 128,
+                "Precisao": 0,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "N/A"
+            },
+            {
+                "Coluna": "CODANAMNESE",
+                "Tipo": "int",
+                "TamanhoBytes": 4,
+                "Precisao": 10,
+                "Escala": 0,
+                "PermiteNulo": "N",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Id da Anamnese"
+            },
+            {
+                "Coluna": "CODCOLIGADA",
+                "Tipo": "DCODCOLIGADA",
+                "TamanhoBytes": 2,
+                "Precisao": 5,
+                "Escala": 0,
+                "PermiteNulo": "N",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Id da Coligada",
+                "RelacionamentosRM": [
+                    {
+                        "TabelaDestino": "JANAMNESECABECALHO",
+                        "CamposDestino": "CODANAMNESECABECALHO,CODCOLIGADA",
+                        "ChaveLogicaComposta": "CODANAMNESECABECALHO,CODCOLIGADA"
+                    },
+                    {
+                        "TabelaDestino": "GCOLIGADA",
+                        "CamposDestino": "CODCOLIGADA",
+                        "ChaveLogicaComposta": "CODCOLIGADA"
+                    }
+                ]
+            },
+            {
+                "Coluna": "CODANAMNESECABECALHO",
+                "Tipo": "int",
+                "TamanhoBytes": 4,
+                "Precisao": 10,
+                "Escala": 0,
+                "PermiteNulo": "N",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Id do Header de controle da Anamnese",
+                "RelacionamentosRM": [
+                    {
+                        "TabelaDestino": "JANAMNESECABECALHO",
+                        "CamposDestino": "CODANAMNESECABECALHO,CODCOLIGADA",
+                        "ChaveLogicaComposta": "CODANAMNESECABECALHO,CODCOLIGADA"
+                    }
+                ]
+            },
+            {
+                "Coluna": "QUEIXA",
+                "Tipo": "varchar",
+                "TamanhoBytes": -1,
+                "Precisao": 0,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Queixa do paciente"
+            },
+            {
+                "Coluna": "FREQUENCIACARDIACA",
+                "Tipo": "numeric",
+                "TamanhoBytes": 5,
+                "Precisao": 3,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Frequencia Cardiaca do Paciente"
+            },
+            {
+                "Coluna": "FREQUENCIARESPIRATORIA",
+                "Tipo": "numeric",
+                "TamanhoBytes": 5,
+                "Precisao": 3,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Frequencia Respiratória do Paciente"
+            },
+            {
+                "Coluna": "TEMPERATURACORPORAL",
+                "Tipo": "numeric",
+                "TamanhoBytes": 5,
+                "Precisao": 5,
+                "Escala": 2,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Temperatura Corporal do Paciente"
+            },
+            {
+                "Coluna": "PESO",
+                "Tipo": "numeric",
+                "TamanhoBytes": 5,
+                "Precisao": 5,
+                "Escala": 2,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Peso do Paciente"
+            },
+            {
+                "Coluna": "ALTURA",
+                "Tipo": "numeric",
+                "TamanhoBytes": 5,
+                "Precisao": 5,
+                "Escala": 2,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Altura do Paciente"
+            },
+            {
+                "Coluna": "IMC",
+                "Tipo": "numeric",
+                "TamanhoBytes": 5,
+                "Precisao": 5,
+                "Escala": 2,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "IMC do Paciente"
+            },
+            {
+                "Coluna": "SATURACAOO2",
+                "Tipo": "numeric",
+                "TamanhoBytes": 5,
+                "Precisao": 3,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Saturação O2 do Paciente"
+            },
+            {
+                "Coluna": "PRESSAOSISTOLICA",
+                "Tipo": "numeric",
+                "TamanhoBytes": 5,
+                "Precisao": 5,
+                "Escala": 2,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Pressão Sistólica do Paciente"
+            },
+            {
+                "Coluna": "PRESSAODIASTOLICA",
+                "Tipo": "numeric",
+                "TamanhoBytes": 5,
+                "Precisao": 5,
+                "Escala": 2,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Pressão Diastólica do Paciente"
+            },
+            {
+                "Coluna": "EXAMEFISICO",
+                "Tipo": "varchar",
+                "TamanhoBytes": -1,
+                "Precisao": 0,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Exame Fisico do Paciente"
+            },
+            {
+                "Coluna": "HIPOTESEDIAGNOSTICA",
+                "Tipo": "varchar",
+                "TamanhoBytes": -1,
+                "Precisao": 0,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Hipotese Diagnostica do Paciente"
+            },
+            {
+                "Coluna": "EXAMESCOMPLEMENTARES",
+                "Tipo": "varchar",
+                "TamanhoBytes": -1,
+                "Precisao": 0,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Exames Complementares do Paciente"
+            },
+            {
+                "Coluna": "CONDUTA",
+                "Tipo": "varchar",
+                "TamanhoBytes": -1,
+                "Precisao": 0,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Conduta"
+            },
+            {
+                "Coluna": "CODVERSAOCID",
+                "Tipo": "int",
+                "TamanhoBytes": 4,
+                "Precisao": 10,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Versão do CID",
+                "RelacionamentosRM": [
+                    {
+                        "TabelaDestino": "SZCID",
+                        "CamposDestino": "CODCID,CODVERSAOCID",
+                        "ChaveLogicaComposta": "CODCID,CODVERSAOCID"
+                    }
+                ]
+            },
+            {
+                "Coluna": "CODCID",
+                "Tipo": "varchar",
+                "TamanhoBytes": 6,
+                "Precisao": 0,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Código do Cid",
+                "RelacionamentosRM": [
+                    {
+                        "TabelaDestino": "SZCID",
+                        "CamposDestino": "CODCID,CODVERSAOCID",
+                        "ChaveLogicaComposta": "CODCID,CODVERSAOCID"
+                    }
+                ]
+            },
+            {
+                "Coluna": "TEMPERATURATRANSESOFAGICA",
+                "Tipo": "numeric",
+                "TamanhoBytes": 5,
+                "Precisao": 5,
+                "Escala": 2,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Temperatura Transesofagica"
+            },
+            {
+                "Coluna": "STATUS",
+                "Tipo": "int",
+                "TamanhoBytes": 4,
+                "Precisao": 10,
+                "Escala": 0,
+                "PermiteNulo": "N",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Status do registro da anamnese (Rascunho - 0, Finalizado - 1, Cancelado - 9)"
+            },
+            {
+                "Coluna": "RECCREATEDBY",
+                "Tipo": "varchar",
+                "TamanhoBytes": 50,
+                "Precisao": 0,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Usuário criador do registro"
+            },
+            {
+                "Coluna": "RECCREATEDON",
+                "Tipo": "datetime2",
+                "TamanhoBytes": 8,
+                "Precisao": 27,
+                "Escala": 7,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Data de criação do registro"
+            },
+            {
+                "Coluna": "RECMODIFIEDBY",
+                "Tipo": "varchar",
+                "TamanhoBytes": 50,
+                "Precisao": 0,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Autor da última modificação no registro"
+            },
+            {
+                "Coluna": "RECMODIFIEDON",
+                "Tipo": "datetime2",
+                "TamanhoBytes": 8,
+                "Precisao": 27,
+                "Escala": 7,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Data da última modificação no registro"
+            },
+            {
+                "Coluna": "PRESSAOMEDIA",
+                "Tipo": "numeric",
+                "TamanhoBytes": 5,
+                "Precisao": 5,
+                "Escala": 2,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Pressão arterial média"
+            }
+        ],
+        "Descricao": "Tabela de Anamnese"
+    },
+    {
+        "Tabela": "JANAMNESECABECALHO",
+        "Colunas": [
+            {
+                "Coluna": "CODANAMNESECABECALHO",
+                "Tipo": "int",
+                "TamanhoBytes": 4,
+                "Precisao": 10,
+                "Escala": 0,
+                "PermiteNulo": "N",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Id da Tabela",
+                "RelacionamentosRM": [
+                    {
+                        "TabelaDestino": "JANAMNESE",
+                        "CamposDestino": "CODANAMNESECABECALHO,CODCOLIGADA",
+                        "ChaveLogicaComposta": "CODANAMNESECABECALHO,CODCOLIGADA"
+                    }
+                ]
+            },
+            {
+                "Coluna": "CODCOLIGADA",
+                "Tipo": "DCODCOLIGADA",
+                "TamanhoBytes": 2,
+                "Precisao": 5,
+                "Escala": 0,
+                "PermiteNulo": "N",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Codigo da Coligada",
+                "RelacionamentosRM": [
+                    {
+                        "TabelaDestino": "JANAMNESE",
+                        "CamposDestino": "CODANAMNESECABECALHO,CODCOLIGADA",
+                        "ChaveLogicaComposta": "CODANAMNESECABECALHO,CODCOLIGADA"
+                    },
+                    {
+                        "TabelaDestino": "GCOLIGADA",
+                        "CamposDestino": "CODCOLIGADA",
+                        "ChaveLogicaComposta": "CODCOLIGADA"
+                    },
+                    {
+                        "TabelaDestino": "SZCADGERAL",
+                        "CamposDestino": "CODCOLIGADA,CODGERAL",
+                        "ChaveLogicaComposta": "CODCOLIGADA,CODGERAL"
+                    },
+                    {
+                        "TabelaDestino": "SZPACIENTE",
+                        "CamposDestino": "CODCOLIGADA,CODPACIENTE",
+                        "ChaveLogicaComposta": "CODCOLIGADA,CODPACIENTE"
+                    },
+                    {
+                        "TabelaDestino": "SZATENDIMENTO",
+                        "CamposDestino": "CODCOLIGADA,CODPACIENTE,CODATENDIMENTO",
+                        "ChaveLogicaComposta": "CODCOLIGADA,CODPACIENTE,CODATENDIMENTO"
+                    },
+                    {
+                        "TabelaDestino": "SZUNIDATEND",
+                        "CamposDestino": "CODCOLIGADA,IDUNIDATEND",
+                        "ChaveLogicaComposta": "CODCOLIGADA,IDUNIDATEND"
+                    }
+                ]
+            },
+            {
+                "Coluna": "CODATENDIMENTO",
+                "Tipo": "int",
+                "TamanhoBytes": 4,
+                "Precisao": 10,
+                "Escala": 0,
+                "PermiteNulo": "N",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Id da Admissão Hospitalar (Atendimento)",
+                "RelacionamentosRM": [
+                    {
+                        "TabelaDestino": "SZATENDIMENTO",
+                        "CamposDestino": "CODCOLIGADA,CODPACIENTE,CODATENDIMENTO",
+                        "ChaveLogicaComposta": "CODCOLIGADA,CODPACIENTE,CODATENDIMENTO"
+                    }
+                ]
+            },
+            {
+                "Coluna": "CODGERAL",
+                "Tipo": "int",
+                "TamanhoBytes": 4,
+                "Precisao": 10,
+                "Escala": 0,
+                "PermiteNulo": "N",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Id do Profissional",
+                "RelacionamentosRM": [
+                    {
+                        "TabelaDestino": "SZCADGERAL",
+                        "CamposDestino": "CODCOLIGADA,CODGERAL",
+                        "ChaveLogicaComposta": "CODCOLIGADA,CODGERAL"
+                    }
+                ]
+            },
+            {
+                "Coluna": "CODPACIENTE",
+                "Tipo": "int",
+                "TamanhoBytes": 4,
+                "Precisao": 10,
+                "Escala": 0,
+                "PermiteNulo": "N",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Id do Paciente",
+                "RelacionamentosRM": [
+                    {
+                        "TabelaDestino": "SZPACIENTE",
+                        "CamposDestino": "CODCOLIGADA,CODPACIENTE",
+                        "ChaveLogicaComposta": "CODCOLIGADA,CODPACIENTE"
+                    },
+                    {
+                        "TabelaDestino": "SZATENDIMENTO",
+                        "CamposDestino": "CODCOLIGADA,CODPACIENTE,CODATENDIMENTO",
+                        "ChaveLogicaComposta": "CODCOLIGADA,CODPACIENTE,CODATENDIMENTO"
+                    }
+                ]
+            },
+            {
+                "Coluna": "RECCREATEDBY",
+                "Tipo": "varchar",
+                "TamanhoBytes": 50,
+                "Precisao": 0,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Usuário criador do registro"
+            },
+            {
+                "Coluna": "RECCREATEDON",
+                "Tipo": "datetime2",
+                "TamanhoBytes": 8,
+                "Precisao": 27,
+                "Escala": 7,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Data de criação do registro"
+            },
+            {
+                "Coluna": "RECMODIFIEDBY",
+                "Tipo": "varchar",
+                "TamanhoBytes": 50,
+                "Precisao": 0,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Autor da última modificação no registro"
+            },
+            {
+                "Coluna": "RECMODIFIEDON",
+                "Tipo": "datetime2",
+                "TamanhoBytes": 8,
+                "Precisao": 27,
+                "Escala": 7,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Data da última modificação no registro"
+            },
+            {
+                "Coluna": "IDUNIDATEND",
+                "Tipo": "int",
+                "TamanhoBytes": 4,
+                "Precisao": 10,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Unidade de atendimento do paciente no cadastro de anamnese",
+                "RelacionamentosRM": [
+                    {
+                        "TabelaDestino": "SZUNIDATEND",
+                        "CamposDestino": "CODCOLIGADA,IDUNIDATEND",
+                        "ChaveLogicaComposta": "CODCOLIGADA,IDUNIDATEND"
+                    }
+                ]
+            },
+            {
+                "Coluna": "CODIGOPROCESSO",
+                "Tipo": "int",
+                "TamanhoBytes": 4,
+                "Precisao": 10,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "N/A"
+            },
+            {
+                "Coluna": "ASSINADO",
+                "Tipo": "char",
+                "TamanhoBytes": 1,
+                "Precisao": 0,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "N/A"
+            },
+            {
+                "Coluna": "SEQUENCIALCONTROLEENFGRUPO",
+                "Tipo": "DINTEGER",
+                "TamanhoBytes": 4,
+                "Precisao": 10,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Referência da tabela de grupo de controle de enfermagem"
+            }
+        ],
+        "Descricao": "Tabela de Controle de lista de Anamneses"
+    },
+    {
+        "Tabela": "JEVOLUCAOCLINICA",
+        "Colunas": [
+            {
+                "Coluna": "CODEVOLUCAO",
+                "Tipo": "int",
+                "TamanhoBytes": 4,
+                "Precisao": 10,
+                "Escala": 0,
+                "PermiteNulo": "N",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Identificador de evolução"
+            },
+            {
+                "Coluna": "CODCOLIGADA",
+                "Tipo": "DCODCOLIGADA",
+                "TamanhoBytes": 2,
+                "Precisao": 5,
+                "Escala": 0,
+                "PermiteNulo": "N",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Identificador da coligada",
+                "RelacionamentosRM": [
+                    {
+                        "TabelaDestino": "SZCADGERAL",
+                        "CamposDestino": "CODCOLIGADA,CODGERAL",
+                        "ChaveLogicaComposta": "CODCOLIGADA,CODGERAL"
+                    },
+                    {
+                        "TabelaDestino": "SZPACIENTE",
+                        "CamposDestino": "CODCOLIGADA,CODPACIENTE",
+                        "ChaveLogicaComposta": "CODCOLIGADA,CODPACIENTE"
+                    },
+                    {
+                        "TabelaDestino": "SZATENDIMENTO",
+                        "CamposDestino": "CODCOLIGADA,CODPACIENTE,CODATENDIMENTO",
+                        "ChaveLogicaComposta": "CODCOLIGADA,CODPACIENTE,CODATENDIMENTO"
+                    },
+                    {
+                        "TabelaDestino": "SZUNIDATEND",
+                        "CamposDestino": "CODCOLIGADA,IDUNIDATEND",
+                        "ChaveLogicaComposta": "CODCOLIGADA,IDUNIDATEND"
+                    }
+                ]
+            },
+            {
+                "Coluna": "CODATENDIMENTO",
+                "Tipo": "int",
+                "TamanhoBytes": 4,
+                "Precisao": 10,
+                "Escala": 0,
+                "PermiteNulo": "N",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Identificador do atendimento",
+                "RelacionamentosRM": [
+                    {
+                        "TabelaDestino": "SZATENDIMENTO",
+                        "CamposDestino": "CODCOLIGADA,CODPACIENTE,CODATENDIMENTO",
+                        "ChaveLogicaComposta": "CODCOLIGADA,CODPACIENTE,CODATENDIMENTO"
+                    }
+                ]
+            },
+            {
+                "Coluna": "CODGERAL",
+                "Tipo": "int",
+                "TamanhoBytes": 4,
+                "Precisao": 10,
+                "Escala": 0,
+                "PermiteNulo": "N",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Identificador do prestador",
+                "RelacionamentosRM": [
+                    {
+                        "TabelaDestino": "SZCADGERAL",
+                        "CamposDestino": "CODCOLIGADA,CODGERAL",
+                        "ChaveLogicaComposta": "CODCOLIGADA,CODGERAL"
+                    }
+                ]
+            },
+            {
+                "Coluna": "CODPACIENTE",
+                "Tipo": "int",
+                "TamanhoBytes": 4,
+                "Precisao": 10,
+                "Escala": 0,
+                "PermiteNulo": "N",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Identificador do paciente",
+                "RelacionamentosRM": [
+                    {
+                        "TabelaDestino": "SZPACIENTE",
+                        "CamposDestino": "CODCOLIGADA,CODPACIENTE",
+                        "ChaveLogicaComposta": "CODCOLIGADA,CODPACIENTE"
+                    },
+                    {
+                        "TabelaDestino": "SZATENDIMENTO",
+                        "CamposDestino": "CODCOLIGADA,CODPACIENTE,CODATENDIMENTO",
+                        "ChaveLogicaComposta": "CODCOLIGADA,CODPACIENTE,CODATENDIMENTO"
+                    }
+                ]
+            },
+            {
+                "Coluna": "DESCRICAO",
+                "Tipo": "varchar",
+                "TamanhoBytes": -1,
+                "Precisao": 0,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Descrição da evolução"
+            },
+            {
+                "Coluna": "STATUS",
+                "Tipo": "int",
+                "TamanhoBytes": 4,
+                "Precisao": 10,
+                "Escala": 0,
+                "PermiteNulo": "N",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Status do registro. 0 = Rascunho, 1 = Finalizado, 9 = Cancelado"
+            },
+            {
+                "Coluna": "CONDICAO",
+                "Tipo": "int",
+                "TamanhoBytes": 4,
+                "Precisao": 10,
+                "Escala": 0,
+                "PermiteNulo": "N",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Condição do paciente. 0 = Grave, 1 = Estável, 2 = Fora de Risco"
+            },
+            {
+                "Coluna": "IDUNIDATEND",
+                "Tipo": "int",
+                "TamanhoBytes": 4,
+                "Precisao": 10,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Identificador da unidade de atendimento",
+                "RelacionamentosRM": [
+                    {
+                        "TabelaDestino": "SZUNIDATEND",
+                        "CamposDestino": "CODCOLIGADA,IDUNIDATEND",
+                        "ChaveLogicaComposta": "CODCOLIGADA,IDUNIDATEND"
+                    }
+                ]
+            },
+            {
+                "Coluna": "RECCREATEDBY",
+                "Tipo": "varchar",
+                "TamanhoBytes": 50,
+                "Precisao": 0,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Usuário criador do registro"
+            },
+            {
+                "Coluna": "RECCREATEDON",
+                "Tipo": "datetime2",
+                "TamanhoBytes": 8,
+                "Precisao": 27,
+                "Escala": 7,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Data de criação do registro"
+            },
+            {
+                "Coluna": "RECMODIFIEDBY",
+                "Tipo": "varchar",
+                "TamanhoBytes": 50,
+                "Precisao": 0,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Autor da última modificação no registro"
+            },
+            {
+                "Coluna": "RECMODIFIEDON",
+                "Tipo": "datetime2",
+                "TamanhoBytes": 8,
+                "Precisao": 27,
+                "Escala": 7,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Data da última modificação no registro"
+            },
+            {
+                "Coluna": "TIPO",
+                "Tipo": "int",
+                "TamanhoBytes": 4,
+                "Precisao": 10,
+                "Escala": 0,
+                "PermiteNulo": "N",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Tipo da evolução (1-Medica, 2-Enfermagem)"
+            },
+            {
+                "Coluna": "CODIGOPROCESSO",
+                "Tipo": "int",
+                "TamanhoBytes": 4,
+                "Precisao": 10,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "N/A"
+            },
+            {
+                "Coluna": "ASSINADO",
+                "Tipo": "char",
+                "TamanhoBytes": 1,
+                "Precisao": 0,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "N/A"
+            },
+            {
+                "Coluna": "CODESPECIALIDADE",
+                "Tipo": "varchar",
+                "TamanhoBytes": 4,
+                "Precisao": 0,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Código especialidade",
+                "RelacionamentosRM": [
+                    {
+                        "TabelaDestino": "SZESPECIALIDADE",
+                        "CamposDestino": "CODESPECGRUPO",
+                        "ChaveLogicaComposta": "CODESPECIALIDADE"
+                    }
+                ]
+            },
+            {
+                "Coluna": "DESCRICAONORMALIZADA",
+                "Tipo": "varchar",
+                "TamanhoBytes": -1,
+                "Precisao": 0,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "PARA SER UTILIZADO EM RELATÓRIO, CORRESPONDE AO VALOR DO CAMPO DESCRIÇÃO SEM HTML"
+            },
+            {
+                "Coluna": "SEQ",
+                "Tipo": "int",
+                "TamanhoBytes": 4,
+                "Precisao": 10,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "CAMPO PARA IDENTIFICAR A RELAÇÃO COM TABELA SZEVOLUCAOPROF.SEQ"
+            },
+            {
+                "Coluna": "MIGRACAO",
+                "Tipo": "varchar",
+                "TamanhoBytes": 1,
+                "Precisao": 0,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "INDICA SE O REGISTRO FOI GERADO A PARTIR DO PROCESSO DE MIGRAÇÃO DE DADOS PARA O PEP RM."
+            }
+        ],
+        "Descricao": "Tabela de evolução clínica"
+    },
+    {
+        "Tabela": "JEVOLUCAOCLINICA",
+        "Colunas": [
+            {
+                "Coluna": "LOGID",
+                "Tipo": "bigint",
+                "TamanhoBytes": 8,
+                "Precisao": 19,
+                "Escala": 0,
+                "PermiteNulo": "N",
+                "Identity": "S",
+                "Calculada": "N",
+                "Descricao": "N/A"
+            },
+            {
+                "Coluna": "PARENTLOGID",
+                "Tipo": "bigint",
+                "TamanhoBytes": 8,
+                "Precisao": 19,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "N/A"
+            },
+            {
+                "Coluna": "AUDITID",
+                "Tipo": "bigint",
+                "TamanhoBytes": 8,
+                "Precisao": 19,
+                "Escala": 0,
+                "PermiteNulo": "N",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "N/A"
+            },
+            {
+                "Coluna": "AUDITACTION",
+                "Tipo": "char",
+                "TamanhoBytes": 1,
+                "Precisao": 0,
+                "Escala": 0,
+                "PermiteNulo": "N",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "N/A"
+            },
+            {
+                "Coluna": "LOGAPP",
+                "Tipo": "varchar",
+                "TamanhoBytes": 128,
+                "Precisao": 0,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "N/A"
+            },
+            {
+                "Coluna": "LOGUSER",
+                "Tipo": "varchar",
+                "TamanhoBytes": 128,
+                "Precisao": 0,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "N/A"
+            },
+            {
+                "Coluna": "CODEVOLUCAO",
+                "Tipo": "int",
+                "TamanhoBytes": 4,
+                "Precisao": 10,
+                "Escala": 0,
+                "PermiteNulo": "N",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Identificador de evolução"
+            },
+            {
+                "Coluna": "CODCOLIGADA",
+                "Tipo": "DCODCOLIGADA",
+                "TamanhoBytes": 2,
+                "Precisao": 5,
+                "Escala": 0,
+                "PermiteNulo": "N",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Identificador da coligada",
+                "RelacionamentosRM": [
+                    {
+                        "TabelaDestino": "SZCADGERAL",
+                        "CamposDestino": "CODCOLIGADA,CODGERAL",
+                        "ChaveLogicaComposta": "CODCOLIGADA,CODGERAL"
+                    },
+                    {
+                        "TabelaDestino": "SZPACIENTE",
+                        "CamposDestino": "CODCOLIGADA,CODPACIENTE",
+                        "ChaveLogicaComposta": "CODCOLIGADA,CODPACIENTE"
+                    },
+                    {
+                        "TabelaDestino": "SZATENDIMENTO",
+                        "CamposDestino": "CODCOLIGADA,CODPACIENTE,CODATENDIMENTO",
+                        "ChaveLogicaComposta": "CODCOLIGADA,CODPACIENTE,CODATENDIMENTO"
+                    },
+                    {
+                        "TabelaDestino": "SZUNIDATEND",
+                        "CamposDestino": "CODCOLIGADA,IDUNIDATEND",
+                        "ChaveLogicaComposta": "CODCOLIGADA,IDUNIDATEND"
+                    }
+                ]
+            },
+            {
+                "Coluna": "CODATENDIMENTO",
+                "Tipo": "int",
+                "TamanhoBytes": 4,
+                "Precisao": 10,
+                "Escala": 0,
+                "PermiteNulo": "N",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Identificador do atendimento",
+                "RelacionamentosRM": [
+                    {
+                        "TabelaDestino": "SZATENDIMENTO",
+                        "CamposDestino": "CODCOLIGADA,CODPACIENTE,CODATENDIMENTO",
+                        "ChaveLogicaComposta": "CODCOLIGADA,CODPACIENTE,CODATENDIMENTO"
+                    }
+                ]
+            },
+            {
+                "Coluna": "CODGERAL",
+                "Tipo": "int",
+                "TamanhoBytes": 4,
+                "Precisao": 10,
+                "Escala": 0,
+                "PermiteNulo": "N",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Identificador do prestador",
+                "RelacionamentosRM": [
+                    {
+                        "TabelaDestino": "SZCADGERAL",
+                        "CamposDestino": "CODCOLIGADA,CODGERAL",
+                        "ChaveLogicaComposta": "CODCOLIGADA,CODGERAL"
+                    }
+                ]
+            },
+            {
+                "Coluna": "CODPACIENTE",
+                "Tipo": "int",
+                "TamanhoBytes": 4,
+                "Precisao": 10,
+                "Escala": 0,
+                "PermiteNulo": "N",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Identificador do paciente",
+                "RelacionamentosRM": [
+                    {
+                        "TabelaDestino": "SZPACIENTE",
+                        "CamposDestino": "CODCOLIGADA,CODPACIENTE",
+                        "ChaveLogicaComposta": "CODCOLIGADA,CODPACIENTE"
+                    },
+                    {
+                        "TabelaDestino": "SZATENDIMENTO",
+                        "CamposDestino": "CODCOLIGADA,CODPACIENTE,CODATENDIMENTO",
+                        "ChaveLogicaComposta": "CODCOLIGADA,CODPACIENTE,CODATENDIMENTO"
+                    }
+                ]
+            },
+            {
+                "Coluna": "DESCRICAO",
+                "Tipo": "varchar",
+                "TamanhoBytes": -1,
+                "Precisao": 0,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Descrição da evolução"
+            },
+            {
+                "Coluna": "STATUS",
+                "Tipo": "int",
+                "TamanhoBytes": 4,
+                "Precisao": 10,
+                "Escala": 0,
+                "PermiteNulo": "N",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Status do registro. 0 = Rascunho, 1 = Finalizado, 9 = Cancelado"
+            },
+            {
+                "Coluna": "CONDICAO",
+                "Tipo": "int",
+                "TamanhoBytes": 4,
+                "Precisao": 10,
+                "Escala": 0,
+                "PermiteNulo": "N",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Condição do paciente. 0 = Grave, 1 = Estável, 2 = Fora de Risco"
+            },
+            {
+                "Coluna": "IDUNIDATEND",
+                "Tipo": "int",
+                "TamanhoBytes": 4,
+                "Precisao": 10,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Identificador da unidade de atendimento",
+                "RelacionamentosRM": [
+                    {
+                        "TabelaDestino": "SZUNIDATEND",
+                        "CamposDestino": "CODCOLIGADA,IDUNIDATEND",
+                        "ChaveLogicaComposta": "CODCOLIGADA,IDUNIDATEND"
+                    }
+                ]
+            },
+            {
+                "Coluna": "TIPO",
+                "Tipo": "int",
+                "TamanhoBytes": 4,
+                "Precisao": 10,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Tipo da evolução (1-Medica, 2-Enfermagem)"
+            },
+            {
+                "Coluna": "CODIGOPROCESSO",
+                "Tipo": "int",
+                "TamanhoBytes": 4,
+                "Precisao": 10,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "N/A"
+            },
+            {
+                "Coluna": "ASSINADO",
+                "Tipo": "char",
+                "TamanhoBytes": 1,
+                "Precisao": 0,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "N/A"
+            },
+            {
+                "Coluna": "CODESPECIALIDADE",
+                "Tipo": "varchar",
+                "TamanhoBytes": 4,
+                "Precisao": 0,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Código especialidade",
+                "RelacionamentosRM": [
+                    {
+                        "TabelaDestino": "SZESPECIALIDADE",
+                        "CamposDestino": "CODESPECGRUPO",
+                        "ChaveLogicaComposta": "CODESPECIALIDADE"
+                    }
+                ]
+            },
+            {
+                "Coluna": "RECCREATEDBY",
+                "Tipo": "varchar",
+                "TamanhoBytes": 50,
+                "Precisao": 0,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Usuário criador do registro"
+            },
+            {
+                "Coluna": "RECCREATEDON",
+                "Tipo": "datetime2",
+                "TamanhoBytes": 8,
+                "Precisao": 27,
+                "Escala": 7,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Data de criação do registro"
+            },
+            {
+                "Coluna": "RECMODIFIEDBY",
+                "Tipo": "varchar",
+                "TamanhoBytes": 50,
+                "Precisao": 0,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Autor da última modificação no registro"
+            },
+            {
+                "Coluna": "RECMODIFIEDON",
+                "Tipo": "datetime2",
+                "TamanhoBytes": 8,
+                "Precisao": 27,
+                "Escala": 7,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Data da última modificação no registro"
+            },
+            {
+                "Coluna": "DESCRICAONORMALIZADA",
+                "Tipo": "varchar",
+                "TamanhoBytes": -1,
+                "Precisao": 0,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "PARA SER UTILIZADO EM RELATÓRIO, CORRESPONDE AO VALOR DO CAMPO DESCRIÇÃO SEM HTML"
+            },
+            {
+                "Coluna": "SEQ",
+                "Tipo": "int",
+                "TamanhoBytes": 4,
+                "Precisao": 10,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "CAMPO PARA IDENTIFICAR A RELAÇÃO COM TABELA SZEVOLUCAOPROF.SEQ"
+            },
+            {
+                "Coluna": "MIGRACAO",
+                "Tipo": "varchar",
+                "TamanhoBytes": 1,
+                "Precisao": 0,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "INDICA SE O REGISTRO FOI GERADO A PARTIR DO PROCESSO DE MIGRAÇÃO DE DADOS PARA O PEP RM."
+            }
+        ],
+        "Descricao": "Tabela de evolução clínica"
+    },
+    {
+        "Tabela": "JIMPRESSOS",
+        "Colunas": [
+            {
+                "Coluna": "LOGID",
+                "Tipo": "bigint",
+                "TamanhoBytes": 8,
+                "Precisao": 19,
+                "Escala": 0,
+                "PermiteNulo": "N",
+                "Identity": "S",
+                "Calculada": "N",
+                "Descricao": "N/A"
+            },
+            {
+                "Coluna": "PARENTLOGID",
+                "Tipo": "bigint",
+                "TamanhoBytes": 8,
+                "Precisao": 19,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "N/A"
+            },
+            {
+                "Coluna": "AUDITID",
+                "Tipo": "bigint",
+                "TamanhoBytes": 8,
+                "Precisao": 19,
+                "Escala": 0,
+                "PermiteNulo": "N",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "N/A"
+            },
+            {
+                "Coluna": "AUDITACTION",
+                "Tipo": "char",
+                "TamanhoBytes": 1,
+                "Precisao": 0,
+                "Escala": 0,
+                "PermiteNulo": "N",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "N/A"
+            },
+            {
+                "Coluna": "LOGAPP",
+                "Tipo": "varchar",
+                "TamanhoBytes": 128,
+                "Precisao": 0,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "N/A"
+            },
+            {
+                "Coluna": "LOGUSER",
+                "Tipo": "varchar",
+                "TamanhoBytes": 128,
+                "Precisao": 0,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "N/A"
+            },
+            {
+                "Coluna": "CODIMPRESSO",
+                "Tipo": "int",
+                "TamanhoBytes": 4,
+                "Precisao": 10,
+                "Escala": 0,
+                "PermiteNulo": "N",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Código do impresso"
+            },
+            {
+                "Coluna": "CODCOLIGADA",
+                "Tipo": "DCODCOLIGADA",
+                "TamanhoBytes": 2,
+                "Precisao": 5,
+                "Escala": 0,
+                "PermiteNulo": "N",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Código da coligada",
+                "RelacionamentosRM": [
+                    {
+                        "TabelaDestino": "SZCADGERAL",
+                        "CamposDestino": "CODCOLIGADA,CODGERAL",
+                        "ChaveLogicaComposta": "CODCOLIGADA,CODGERAL"
+                    },
+                    {
+                        "TabelaDestino": "SZPACIENTE",
+                        "CamposDestino": "CODCOLIGADA,CODPACIENTE",
+                        "ChaveLogicaComposta": "CODCOLIGADA,CODPACIENTE"
+                    },
+                    {
+                        "TabelaDestino": "SZATENDIMENTO",
+                        "CamposDestino": "CODCOLIGADA,CODPACIENTE,CODATENDIMENTO",
+                        "ChaveLogicaComposta": "CODCOLIGADA,CODPACIENTE,CODATENDIMENTO"
+                    },
+                    {
+                        "TabelaDestino": "SZUNIDATEND",
+                        "CamposDestino": "CODCOLIGADA,IDUNIDATEND",
+                        "ChaveLogicaComposta": "CODCOLIGADA,IDUNIDATEND"
+                    }
+                ]
+            },
+            {
+                "Coluna": "CODATENDIMENTO",
+                "Tipo": "int",
+                "TamanhoBytes": 4,
+                "Precisao": 10,
+                "Escala": 0,
+                "PermiteNulo": "N",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Código do atendimento",
+                "RelacionamentosRM": [
+                    {
+                        "TabelaDestino": "SZATENDIMENTO",
+                        "CamposDestino": "CODCOLIGADA,CODPACIENTE,CODATENDIMENTO",
+                        "ChaveLogicaComposta": "CODCOLIGADA,CODPACIENTE,CODATENDIMENTO"
+                    }
+                ]
+            },
+            {
+                "Coluna": "CODGERAL",
+                "Tipo": "int",
+                "TamanhoBytes": 4,
+                "Precisao": 10,
+                "Escala": 0,
+                "PermiteNulo": "N",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Código do médico",
+                "RelacionamentosRM": [
+                    {
+                        "TabelaDestino": "SZCADGERAL",
+                        "CamposDestino": "CODCOLIGADA,CODGERAL",
+                        "ChaveLogicaComposta": "CODCOLIGADA,CODGERAL"
+                    }
+                ]
+            },
+            {
+                "Coluna": "CODPACIENTE",
+                "Tipo": "int",
+                "TamanhoBytes": 4,
+                "Precisao": 10,
+                "Escala": 0,
+                "PermiteNulo": "N",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Código do paciente",
+                "RelacionamentosRM": [
+                    {
+                        "TabelaDestino": "SZPACIENTE",
+                        "CamposDestino": "CODCOLIGADA,CODPACIENTE",
+                        "ChaveLogicaComposta": "CODCOLIGADA,CODPACIENTE"
+                    },
+                    {
+                        "TabelaDestino": "SZATENDIMENTO",
+                        "CamposDestino": "CODCOLIGADA,CODPACIENTE,CODATENDIMENTO",
+                        "ChaveLogicaComposta": "CODCOLIGADA,CODPACIENTE,CODATENDIMENTO"
+                    }
+                ]
+            },
+            {
+                "Coluna": "DESCRICAO",
+                "Tipo": "varchar",
+                "TamanhoBytes": -1,
+                "Precisao": 0,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Descrição do impresso"
+            },
+            {
+                "Coluna": "STATUS",
+                "Tipo": "int",
+                "TamanhoBytes": 4,
+                "Precisao": 10,
+                "Escala": 0,
+                "PermiteNulo": "N",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Status do impresso"
+            },
+            {
+                "Coluna": "IDUNIDATEND",
+                "Tipo": "int",
+                "TamanhoBytes": 4,
+                "Precisao": 10,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "ID da unidade de atendimento",
+                "RelacionamentosRM": [
+                    {
+                        "TabelaDestino": "SZUNIDATEND",
+                        "CamposDestino": "CODCOLIGADA,IDUNIDATEND",
+                        "ChaveLogicaComposta": "CODCOLIGADA,IDUNIDATEND"
+                    }
+                ]
+            },
+            {
+                "Coluna": "TIPO",
+                "Tipo": "int",
+                "TamanhoBytes": 4,
+                "Precisao": 10,
+                "Escala": 0,
+                "PermiteNulo": "N",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Tipo do impresso"
+            },
+            {
+                "Coluna": "CODIGOPROCESSO",
+                "Tipo": "int",
+                "TamanhoBytes": 4,
+                "Precisao": 10,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "N/A"
+            },
+            {
+                "Coluna": "ASSINADO",
+                "Tipo": "char",
+                "TamanhoBytes": 1,
+                "Precisao": 0,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "N/A"
+            },
+            {
+                "Coluna": "RECCREATEDBY",
+                "Tipo": "varchar",
+                "TamanhoBytes": 50,
+                "Precisao": 0,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Usuário criador do registro"
+            },
+            {
+                "Coluna": "RECCREATEDON",
+                "Tipo": "datetime",
+                "TamanhoBytes": 8,
+                "Precisao": 23,
+                "Escala": 3,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Data de criação do registro"
+            },
+            {
+                "Coluna": "RECMODIFIEDBY",
+                "Tipo": "varchar",
+                "TamanhoBytes": 50,
+                "Precisao": 0,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Autor da última modificação no registro"
+            },
+            {
+                "Coluna": "RECMODIFIEDON",
+                "Tipo": "datetime",
+                "TamanhoBytes": 8,
+                "Precisao": 23,
+                "Escala": 3,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Data da última modificação no registro"
+            }
+        ],
+        "Descricao": "Impressos genéricos do sistema, como atestados, orientações e comprovantes"
+    },
+    {
+        "Tabela": "JIMPRESSOS",
+        "Colunas": [
+            {
+                "Coluna": "CODIMPRESSO",
+                "Tipo": "int",
+                "TamanhoBytes": 4,
+                "Precisao": 10,
+                "Escala": 0,
+                "PermiteNulo": "N",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Código do impresso"
+            },
+            {
+                "Coluna": "CODCOLIGADA",
+                "Tipo": "DCODCOLIGADA",
+                "TamanhoBytes": 2,
+                "Precisao": 5,
+                "Escala": 0,
+                "PermiteNulo": "N",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Código da coligada",
+                "RelacionamentosRM": [
+                    {
+                        "TabelaDestino": "SZCADGERAL",
+                        "CamposDestino": "CODCOLIGADA,CODGERAL",
+                        "ChaveLogicaComposta": "CODCOLIGADA,CODGERAL"
+                    },
+                    {
+                        "TabelaDestino": "SZPACIENTE",
+                        "CamposDestino": "CODCOLIGADA,CODPACIENTE",
+                        "ChaveLogicaComposta": "CODCOLIGADA,CODPACIENTE"
+                    },
+                    {
+                        "TabelaDestino": "SZATENDIMENTO",
+                        "CamposDestino": "CODCOLIGADA,CODPACIENTE,CODATENDIMENTO",
+                        "ChaveLogicaComposta": "CODCOLIGADA,CODPACIENTE,CODATENDIMENTO"
+                    },
+                    {
+                        "TabelaDestino": "SZUNIDATEND",
+                        "CamposDestino": "CODCOLIGADA,IDUNIDATEND",
+                        "ChaveLogicaComposta": "CODCOLIGADA,IDUNIDATEND"
+                    }
+                ]
+            },
+            {
+                "Coluna": "CODATENDIMENTO",
+                "Tipo": "int",
+                "TamanhoBytes": 4,
+                "Precisao": 10,
+                "Escala": 0,
+                "PermiteNulo": "N",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Código do atendimento",
+                "RelacionamentosRM": [
+                    {
+                        "TabelaDestino": "SZATENDIMENTO",
+                        "CamposDestino": "CODCOLIGADA,CODPACIENTE,CODATENDIMENTO",
+                        "ChaveLogicaComposta": "CODCOLIGADA,CODPACIENTE,CODATENDIMENTO"
+                    }
+                ]
+            },
+            {
+                "Coluna": "CODGERAL",
+                "Tipo": "int",
+                "TamanhoBytes": 4,
+                "Precisao": 10,
+                "Escala": 0,
+                "PermiteNulo": "N",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Código do médico",
+                "RelacionamentosRM": [
+                    {
+                        "TabelaDestino": "SZCADGERAL",
+                        "CamposDestino": "CODCOLIGADA,CODGERAL",
+                        "ChaveLogicaComposta": "CODCOLIGADA,CODGERAL"
+                    }
+                ]
+            },
+            {
+                "Coluna": "CODPACIENTE",
+                "Tipo": "int",
+                "TamanhoBytes": 4,
+                "Precisao": 10,
+                "Escala": 0,
+                "PermiteNulo": "N",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Código do paciente",
+                "RelacionamentosRM": [
+                    {
+                        "TabelaDestino": "SZPACIENTE",
+                        "CamposDestino": "CODCOLIGADA,CODPACIENTE",
+                        "ChaveLogicaComposta": "CODCOLIGADA,CODPACIENTE"
+                    },
+                    {
+                        "TabelaDestino": "SZATENDIMENTO",
+                        "CamposDestino": "CODCOLIGADA,CODPACIENTE,CODATENDIMENTO",
+                        "ChaveLogicaComposta": "CODCOLIGADA,CODPACIENTE,CODATENDIMENTO"
+                    }
+                ]
+            },
+            {
+                "Coluna": "DESCRICAO",
+                "Tipo": "varchar",
+                "TamanhoBytes": -1,
+                "Precisao": 0,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Descrição do impresso"
+            },
+            {
+                "Coluna": "STATUS",
+                "Tipo": "int",
+                "TamanhoBytes": 4,
+                "Precisao": 10,
+                "Escala": 0,
+                "PermiteNulo": "N",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Status do impresso"
+            },
+            {
+                "Coluna": "IDUNIDATEND",
+                "Tipo": "int",
+                "TamanhoBytes": 4,
+                "Precisao": 10,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "ID da unidade de atendimento",
+                "RelacionamentosRM": [
+                    {
+                        "TabelaDestino": "SZUNIDATEND",
+                        "CamposDestino": "CODCOLIGADA,IDUNIDATEND",
+                        "ChaveLogicaComposta": "CODCOLIGADA,IDUNIDATEND"
+                    }
+                ]
+            },
+            {
+                "Coluna": "TIPO",
+                "Tipo": "int",
+                "TamanhoBytes": 4,
+                "Precisao": 10,
+                "Escala": 0,
+                "PermiteNulo": "N",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Tipo do impresso"
+            },
+            {
+                "Coluna": "RECCREATEDBY",
+                "Tipo": "varchar",
+                "TamanhoBytes": 50,
+                "Precisao": 0,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Usuário criador do registro"
+            },
+            {
+                "Coluna": "RECCREATEDON",
+                "Tipo": "datetime",
+                "TamanhoBytes": 8,
+                "Precisao": 23,
+                "Escala": 3,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Data de criação do registro"
+            },
+            {
+                "Coluna": "RECMODIFIEDBY",
+                "Tipo": "varchar",
+                "TamanhoBytes": 50,
+                "Precisao": 0,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Autor da última modificação no registro"
+            },
+            {
+                "Coluna": "RECMODIFIEDON",
+                "Tipo": "datetime",
+                "TamanhoBytes": 8,
+                "Precisao": 23,
+                "Escala": 3,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Data da última modificação no registro"
+            },
+            {
+                "Coluna": "CODIGOPROCESSO",
+                "Tipo": "int",
+                "TamanhoBytes": 4,
+                "Precisao": 10,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "N/A"
+            },
+            {
+                "Coluna": "ASSINADO",
+                "Tipo": "char",
+                "TamanhoBytes": 1,
+                "Precisao": 0,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "N/A"
+            }
+        ],
+        "Descricao": "Impressos genéricos do sistema, como atestados, orientações e comprovantes"
+    },
+    {
+        "Tabela": "JMODELO",
+        "Colunas": [
+            {
+                "Coluna": "CODCOLIGADA",
+                "Tipo": "DCODCOLIGADA",
+                "TamanhoBytes": 2,
+                "Precisao": 5,
+                "Escala": 0,
+                "PermiteNulo": "N",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Codigo da coligada",
+                "RelacionamentosRM": [
+                    {
+                        "TabelaDestino": "SZCADGERAL",
+                        "CamposDestino": "CODCOLIGADA,CODGERAL",
+                        "ChaveLogicaComposta": "CODCOLIGADA,CODGERAL"
+                    },
+                    {
+                        "TabelaDestino": "JMODELOUNIDADE",
+                        "CamposDestino": "CODCOLIGADA,CODMODELO",
+                        "ChaveLogicaComposta": "CODCOLIGADA,CODMODELO"
+                    }
+                ]
+            },
+            {
+                "Coluna": "CODMODELO",
+                "Tipo": "int",
+                "TamanhoBytes": 4,
+                "Precisao": 10,
+                "Escala": 0,
+                "PermiteNulo": "N",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Código identificador do Modelo",
+                "RelacionamentosRM": [
+                    {
+                        "TabelaDestino": "JMODELOUNIDADE",
+                        "CamposDestino": "CODCOLIGADA,CODMODELO",
+                        "ChaveLogicaComposta": "CODCOLIGADA,CODMODELO"
+                    }
+                ]
+            },
+            {
+                "Coluna": "DOMINIO",
+                "Tipo": "int",
+                "TamanhoBytes": 4,
+                "Precisao": 10,
+                "Escala": 0,
+                "PermiteNulo": "N",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Tipo do modelo salvo, ex.: Anamnese, Evolução, Prescrição"
+            },
+            {
+                "Coluna": "DESCRICAO",
+                "Tipo": "varchar",
+                "TamanhoBytes": 150,
+                "Precisao": 0,
+                "Escala": 0,
+                "PermiteNulo": "N",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Descrição do Modelo"
+            },
+            {
+                "Coluna": "PRIVACIDADE",
+                "Tipo": "int",
+                "TamanhoBytes": 4,
+                "Precisao": 10,
+                "Escala": 0,
+                "PermiteNulo": "N",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Tipo de permissão utilizada, Ex.: Privado, Publico, Por Unidade, Por Especialidade"
+            },
+            {
+                "Coluna": "CODGERAL",
+                "Tipo": "int",
+                "TamanhoBytes": 4,
+                "Precisao": 10,
+                "Escala": 0,
+                "PermiteNulo": "N",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Código do Profissional",
+                "RelacionamentosRM": [
+                    {
+                        "TabelaDestino": "SZCADGERAL",
+                        "CamposDestino": "CODCOLIGADA,CODGERAL",
+                        "ChaveLogicaComposta": "CODCOLIGADA,CODGERAL"
+                    }
+                ]
+            },
+            {
+                "Coluna": "CONTEUDO",
+                "Tipo": "varchar",
+                "TamanhoBytes": -1,
+                "Precisao": 0,
+                "Escala": 0,
+                "PermiteNulo": "N",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Conteudo do Modelo"
+            },
+            {
+                "Coluna": "RECCREATEDBY",
+                "Tipo": "varchar",
+                "TamanhoBytes": 50,
+                "Precisao": 0,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Usuário criador do registro"
+            },
+            {
+                "Coluna": "RECCREATEDON",
+                "Tipo": "datetime2",
+                "TamanhoBytes": 8,
+                "Precisao": 27,
+                "Escala": 7,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Data de criação do registro"
+            },
+            {
+                "Coluna": "RECMODIFIEDBY",
+                "Tipo": "varchar",
+                "TamanhoBytes": 50,
+                "Precisao": 0,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Autor da última modificação no registro"
+            },
+            {
+                "Coluna": "RECMODIFIEDON",
+                "Tipo": "datetime2",
+                "TamanhoBytes": 8,
+                "Precisao": 27,
+                "Escala": 7,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Data da última modificação no registro"
+            },
+            {
+                "Coluna": "CODAGRUPADOR",
+                "Tipo": "varchar",
+                "TamanhoBytes": 50,
+                "Precisao": 0,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "AGRUPADOR DE MODELO"
+            }
+        ],
+        "Descricao": "Tabela para modelos do PEP, salvando estrutura do JSON uitilizado na tela"
+    },
+    {
+        "Tabela": "JMODELOUNIDADE",
+        "Colunas": [
+            {
+                "Coluna": "CODCOLIGADA",
+                "Tipo": "DCODCOLIGADA",
+                "TamanhoBytes": 2,
+                "Precisao": 5,
+                "Escala": 0,
+                "PermiteNulo": "N",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Coligada",
+                "RelacionamentosRM": [
+                    {
+                        "TabelaDestino": "JMODELO",
+                        "CamposDestino": "CODCOLIGADA,CODMODELO",
+                        "ChaveLogicaComposta": "CODCOLIGADA,CODMODELO"
+                    },
+                    {
+                        "TabelaDestino": "SZUNIDATEND",
+                        "CamposDestino": "CODCOLIGADA,IDUNIDATEND",
+                        "ChaveLogicaComposta": "CODCOLIGADA,IDUNIDATEND"
+                    }
+                ]
+            },
+            {
+                "Coluna": "CODMODELO",
+                "Tipo": "int",
+                "TamanhoBytes": 4,
+                "Precisao": 10,
+                "Escala": 0,
+                "PermiteNulo": "N",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Código do Modelo",
+                "RelacionamentosRM": [
+                    {
+                        "TabelaDestino": "JMODELO",
+                        "CamposDestino": "CODCOLIGADA,CODMODELO",
+                        "ChaveLogicaComposta": "CODCOLIGADA,CODMODELO"
+                    }
+                ]
+            },
+            {
+                "Coluna": "IDUNIDATEND",
+                "Tipo": "int",
+                "TamanhoBytes": 4,
+                "Precisao": 10,
+                "Escala": 0,
+                "PermiteNulo": "N",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Id da Unidade de Atendimento",
+                "RelacionamentosRM": [
+                    {
+                        "TabelaDestino": "SZUNIDATEND",
+                        "CamposDestino": "CODCOLIGADA,IDUNIDATEND",
+                        "ChaveLogicaComposta": "CODCOLIGADA,IDUNIDATEND"
+                    }
+                ]
+            },
+            {
+                "Coluna": "RECCREATEDBY",
+                "Tipo": "varchar",
+                "TamanhoBytes": 50,
+                "Precisao": 0,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Usuário criador do registro"
+            },
+            {
+                "Coluna": "RECCREATEDON",
+                "Tipo": "datetime",
+                "TamanhoBytes": 8,
+                "Precisao": 23,
+                "Escala": 3,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Data de criação do registro"
+            },
+            {
+                "Coluna": "RECMODIFIEDBY",
+                "Tipo": "varchar",
+                "TamanhoBytes": 50,
+                "Precisao": 0,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Autor da última modificação no registro"
+            },
+            {
+                "Coluna": "RECMODIFIEDON",
+                "Tipo": "datetime",
+                "TamanhoBytes": 8,
+                "Precisao": 23,
+                "Escala": 3,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Data da última modificação no registro"
+            }
+        ],
+        "Descricao": "Tabela de Relacionamento entre Modelo e Unidade de Atendimento - PEP RM"
+    },
+    {
+        "Tabela": "JPREFERENCIAUSUARIO",
+        "Colunas": [
+            {
+                "Coluna": "DATA",
+                "Tipo": "datetime",
+                "TamanhoBytes": 8,
+                "Precisao": 23,
+                "Escala": 3,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Preferência tipo data"
+            },
+            {
+                "Coluna": "CODPREFERENCIA",
+                "Tipo": "int",
+                "TamanhoBytes": 4,
+                "Precisao": 10,
+                "Escala": 0,
+                "PermiteNulo": "N",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Código preferência",
+                "RelacionamentosRM": [
+                    {
+                        "TabelaDestino": "SZPREFUSUARIOITEMALERTASCORE",
+                        "CamposDestino": "CODPREFERENCIA,CODCOLIGADA,CODUSUARIO",
+                        "ChaveLogicaComposta": "CODPREFERENCIA,CODCOLIGADA,CODUSUARIO"
+                    }
+                ]
+            },
+            {
+                "Coluna": "CODCOLIGADA",
+                "Tipo": "int",
+                "TamanhoBytes": 4,
+                "Precisao": 10,
+                "Escala": 0,
+                "PermiteNulo": "N",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Código coligada",
+                "RelacionamentosRM": [
+                    {
+                        "TabelaDestino": "SZPREFUSUARIOITEMALERTASCORE",
+                        "CamposDestino": "CODPREFERENCIA,CODCOLIGADA,CODUSUARIO",
+                        "ChaveLogicaComposta": "CODPREFERENCIA,CODCOLIGADA,CODUSUARIO"
+                    }
+                ]
+            },
+            {
+                "Coluna": "TEXTO",
+                "Tipo": "varchar",
+                "TamanhoBytes": 255,
+                "Precisao": 0,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Preferência tipo texto"
+            },
+            {
+                "Coluna": "TIPOPREFERENCIA",
+                "Tipo": "int",
+                "TamanhoBytes": 4,
+                "Precisao": 10,
+                "Escala": 0,
+                "PermiteNulo": "N",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Tipo da preferência"
+            },
+            {
+                "Coluna": "CODUSUARIO",
+                "Tipo": "varchar",
+                "TamanhoBytes": 20,
+                "Precisao": 0,
+                "Escala": 0,
+                "PermiteNulo": "N",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Código usuário",
+                "RelacionamentosRM": [
+                    {
+                        "TabelaDestino": "SZPREFUSUARIOITEMALERTASCORE",
+                        "CamposDestino": "CODPREFERENCIA,CODCOLIGADA,CODUSUARIO",
+                        "ChaveLogicaComposta": "CODPREFERENCIA,CODCOLIGADA,CODUSUARIO"
+                    }
+                ]
+            },
+            {
+                "Coluna": "DESCRICAO",
+                "Tipo": "varchar",
+                "TamanhoBytes": 255,
+                "Precisao": 0,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Descrição da preferência"
+            },
+            {
+                "Coluna": "ARQUIVO",
+                "Tipo": "DIMAGEM",
+                "TamanhoBytes": 16,
+                "Precisao": 0,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Preferência tipo arquivo"
+            },
+            {
+                "Coluna": "NUMERO",
+                "Tipo": "numeric",
+                "TamanhoBytes": 5,
+                "Precisao": 1,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Preferência tipo número"
+            },
+            {
+                "Coluna": "RECCREATEDBY",
+                "Tipo": "varchar",
+                "TamanhoBytes": 50,
+                "Precisao": 0,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Usuário criador do registro"
+            },
+            {
+                "Coluna": "RECCREATEDON",
+                "Tipo": "datetime",
+                "TamanhoBytes": 8,
+                "Precisao": 23,
+                "Escala": 3,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Data de criação do registro"
+            },
+            {
+                "Coluna": "RECMODIFIEDBY",
+                "Tipo": "varchar",
+                "TamanhoBytes": 50,
+                "Precisao": 0,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Autor da última modificação no registro"
+            },
+            {
+                "Coluna": "RECMODIFIEDON",
+                "Tipo": "datetime",
+                "TamanhoBytes": 8,
+                "Precisao": 23,
+                "Escala": 3,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Data da última modificação no registro"
+            }
+        ],
+        "Descricao": "Preferências do usuário no PEP"
+    },
+    {
+        "Tabela": "JRECEITA",
+        "Colunas": [
+            {
+                "Coluna": "CODCOLIGADA",
+                "Tipo": "DCODCOLIGADA",
+                "TamanhoBytes": 2,
+                "Precisao": 5,
+                "Escala": 0,
+                "PermiteNulo": "N",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Código da Coligada",
+                "RelacionamentosRM": [
+                    {
+                        "TabelaDestino": "GCOLIGADA",
+                        "CamposDestino": "CODCOLIGADA",
+                        "ChaveLogicaComposta": "CODCOLIGADA"
+                    },
+                    {
+                        "TabelaDestino": "SZCADGERAL",
+                        "CamposDestino": "CODCOLIGADA,CODGERAL",
+                        "ChaveLogicaComposta": "CODCOLIGADA,CODGERAL"
+                    },
+                    {
+                        "TabelaDestino": "SZPACIENTE",
+                        "CamposDestino": "CODCOLIGADA,CODPACIENTE",
+                        "ChaveLogicaComposta": "CODCOLIGADA,CODPACIENTE"
+                    },
+                    {
+                        "TabelaDestino": "SZATENDIMENTO",
+                        "CamposDestino": "CODCOLIGADA,CODPACIENTE,CODATENDIMENTO",
+                        "ChaveLogicaComposta": "CODCOLIGADA,CODPACIENTE,CODATENDIMENTO"
+                    },
+                    {
+                        "TabelaDestino": "SZUNIDATEND",
+                        "CamposDestino": "CODCOLIGADA,IDUNIDATEND",
+                        "ChaveLogicaComposta": "CODCOLIGADA,IDUNIDATEND"
+                    }
+                ]
+            },
+            {
+                "Coluna": "CODRECEITA",
+                "Tipo": "int",
+                "TamanhoBytes": 4,
+                "Precisao": 10,
+                "Escala": 0,
+                "PermiteNulo": "N",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Código da Receita"
+            },
+            {
+                "Coluna": "CODATENDIMENTO",
+                "Tipo": "int",
+                "TamanhoBytes": 4,
+                "Precisao": 10,
+                "Escala": 0,
+                "PermiteNulo": "N",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Código do Atendimento",
+                "RelacionamentosRM": [
+                    {
+                        "TabelaDestino": "SZATENDIMENTO",
+                        "CamposDestino": "CODCOLIGADA,CODPACIENTE,CODATENDIMENTO",
+                        "ChaveLogicaComposta": "CODCOLIGADA,CODPACIENTE,CODATENDIMENTO"
+                    }
+                ]
+            },
+            {
+                "Coluna": "CODGERAL",
+                "Tipo": "int",
+                "TamanhoBytes": 4,
+                "Precisao": 10,
+                "Escala": 0,
+                "PermiteNulo": "N",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Código do Prestador",
+                "RelacionamentosRM": [
+                    {
+                        "TabelaDestino": "SZCADGERAL",
+                        "CamposDestino": "CODCOLIGADA,CODGERAL",
+                        "ChaveLogicaComposta": "CODCOLIGADA,CODGERAL"
+                    }
+                ]
+            },
+            {
+                "Coluna": "CODPACIENTE",
+                "Tipo": "int",
+                "TamanhoBytes": 4,
+                "Precisao": 10,
+                "Escala": 0,
+                "PermiteNulo": "N",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Código do Paciente",
+                "RelacionamentosRM": [
+                    {
+                        "TabelaDestino": "SZPACIENTE",
+                        "CamposDestino": "CODCOLIGADA,CODPACIENTE",
+                        "ChaveLogicaComposta": "CODCOLIGADA,CODPACIENTE"
+                    },
+                    {
+                        "TabelaDestino": "SZATENDIMENTO",
+                        "CamposDestino": "CODCOLIGADA,CODPACIENTE,CODATENDIMENTO",
+                        "ChaveLogicaComposta": "CODCOLIGADA,CODPACIENTE,CODATENDIMENTO"
+                    }
+                ]
+            },
+            {
+                "Coluna": "STATUS",
+                "Tipo": "int",
+                "TamanhoBytes": 4,
+                "Precisao": 10,
+                "Escala": 0,
+                "PermiteNulo": "N",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Status da Receita"
+            },
+            {
+                "Coluna": "DATAHORAINTEGRACAO",
+                "Tipo": "datetime2",
+                "TamanhoBytes": 8,
+                "Precisao": 27,
+                "Escala": 7,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Data/Hora retornada da integração com a MEMED"
+            },
+            {
+                "Coluna": "IDINTEGRACAO",
+                "Tipo": "int",
+                "TamanhoBytes": 4,
+                "Precisao": 10,
+                "Escala": 0,
+                "PermiteNulo": "N",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Identificador retornado da integração com a MEMED"
+            },
+            {
+                "Coluna": "RECCREATEDBY",
+                "Tipo": "varchar",
+                "TamanhoBytes": 50,
+                "Precisao": 0,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Usuário criador do registro"
+            },
+            {
+                "Coluna": "RECCREATEDON",
+                "Tipo": "datetime2",
+                "TamanhoBytes": 8,
+                "Precisao": 27,
+                "Escala": 7,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Data de criação do registro"
+            },
+            {
+                "Coluna": "RECMODIFIEDBY",
+                "Tipo": "varchar",
+                "TamanhoBytes": 50,
+                "Precisao": 0,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Autor da última modificação no registro"
+            },
+            {
+                "Coluna": "RECMODIFIEDON",
+                "Tipo": "datetime2",
+                "TamanhoBytes": 8,
+                "Precisao": 27,
+                "Escala": 7,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Data da última modificação no registro"
+            },
+            {
+                "Coluna": "IDUNIDATEND",
+                "Tipo": "int",
+                "TamanhoBytes": 4,
+                "Precisao": 10,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Identificador da Unidade no momento da criação da Receita",
+                "RelacionamentosRM": [
+                    {
+                        "TabelaDestino": "SZUNIDATEND",
+                        "CamposDestino": "CODCOLIGADA,IDUNIDATEND",
+                        "ChaveLogicaComposta": "CODCOLIGADA,IDUNIDATEND"
+                    }
+                ]
+            },
+            {
+                "Coluna": "IDARQUIVO",
+                "Tipo": "int",
+                "TamanhoBytes": 4,
+                "Precisao": 10,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "IDENTIFICADOR DO ARQUIVO IMPRESSO DA RECEITA"
+            },
+            {
+                "Coluna": "CODIGOPROCESSO",
+                "Tipo": "int",
+                "TamanhoBytes": 4,
+                "Precisao": 10,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Código do processo de impressão"
+            }
+        ],
+        "Descricao": "Tabela de receitas e integração com a MEMED"
+    },
+    {
+        "Tabela": "JRECEITAITEM",
+        "Colunas": [
+            {
+                "Coluna": "CODCOLIGADA",
+                "Tipo": "DCODCOLIGADA",
+                "TamanhoBytes": 2,
+                "Precisao": 5,
+                "Escala": 0,
+                "PermiteNulo": "N",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Código da Coligada",
+                "RelacionamentosRM": [
+                    {
+                        "TabelaDestino": "GCOLIGADA",
+                        "CamposDestino": "CODCOLIGADA",
+                        "ChaveLogicaComposta": "CODCOLIGADA"
+                    }
+                ]
+            },
+            {
+                "Coluna": "CODRECEITA",
+                "Tipo": "int",
+                "TamanhoBytes": 4,
+                "Precisao": 10,
+                "Escala": 0,
+                "PermiteNulo": "N",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Código da Receita"
+            },
+            {
+                "Coluna": "CODRECEITAITEM",
+                "Tipo": "int",
+                "TamanhoBytes": 4,
+                "Precisao": 10,
+                "Escala": 0,
+                "PermiteNulo": "N",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Código do Item da Receita"
+            },
+            {
+                "Coluna": "IDINTEGRACAO",
+                "Tipo": "varchar",
+                "TamanhoBytes": 32,
+                "Precisao": 0,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Identificador da Integração da MEMED"
+            },
+            {
+                "Coluna": "NOME",
+                "Tipo": "varchar",
+                "TamanhoBytes": -1,
+                "Precisao": 0,
+                "Escala": 0,
+                "PermiteNulo": "N",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Nome do Item da receita"
+            },
+            {
+                "Coluna": "DESCRICAO",
+                "Tipo": "varchar",
+                "TamanhoBytes": -1,
+                "Precisao": 0,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Descrição do item da receita"
+            },
+            {
+                "Coluna": "POSOLOGIA",
+                "Tipo": "varchar",
+                "TamanhoBytes": -1,
+                "Precisao": 0,
+                "Escala": 0,
+                "PermiteNulo": "N",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Posologia do item da receita"
+            },
+            {
+                "Coluna": "QUANTIDADE",
+                "Tipo": "numeric",
+                "TamanhoBytes": 9,
+                "Precisao": 10,
+                "Escala": 5,
+                "PermiteNulo": "N",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Quantidade do item da receita"
+            },
+            {
+                "Coluna": "COMPOSICAO",
+                "Tipo": "varchar",
+                "TamanhoBytes": -1,
+                "Precisao": 0,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Composição do item da receita"
+            },
+            {
+                "Coluna": "CONTROLEESPECIAL",
+                "Tipo": "BOOLEAN",
+                "TamanhoBytes": 1,
+                "Precisao": 0,
+                "Escala": 0,
+                "PermiteNulo": "N",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Indicador se o item possui controle especial"
+            },
+            {
+                "Coluna": "QTDMES1",
+                "Tipo": "numeric",
+                "TamanhoBytes": 9,
+                "Precisao": 10,
+                "Escala": 5,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Quantidade do item da receita no primeiro mes"
+            },
+            {
+                "Coluna": "QTDMES2",
+                "Tipo": "numeric",
+                "TamanhoBytes": 9,
+                "Precisao": 10,
+                "Escala": 5,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Quantidade do item da receita no segundo mes"
+            },
+            {
+                "Coluna": "QTDMES3",
+                "Tipo": "numeric",
+                "TamanhoBytes": 9,
+                "Precisao": 10,
+                "Escala": 5,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Quantidade do item da receita no terceiro mes"
+            },
+            {
+                "Coluna": "CODVERSAOCID",
+                "Tipo": "int",
+                "TamanhoBytes": 4,
+                "Precisao": 10,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Código da versão do CID",
+                "RelacionamentosRM": [
+                    {
+                        "TabelaDestino": "SZCID",
+                        "CamposDestino": "CODCID,CODVERSAOCID",
+                        "ChaveLogicaComposta": "CODCID,CODVERSAOCID"
+                    }
+                ]
+            },
+            {
+                "Coluna": "CODCID",
+                "Tipo": "varchar",
+                "TamanhoBytes": 6,
+                "Precisao": 0,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Código do CID",
+                "RelacionamentosRM": [
+                    {
+                        "TabelaDestino": "SZCID",
+                        "CamposDestino": "CODCID,CODVERSAOCID",
+                        "ChaveLogicaComposta": "CODCID,CODVERSAOCID"
+                    }
+                ]
+            },
+            {
+                "Coluna": "RECCREATEDBY",
+                "Tipo": "varchar",
+                "TamanhoBytes": 50,
+                "Precisao": 0,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Usuário criador do registro"
+            },
+            {
+                "Coluna": "RECCREATEDON",
+                "Tipo": "datetime2",
+                "TamanhoBytes": 8,
+                "Precisao": 27,
+                "Escala": 7,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Data de criação do registro"
+            },
+            {
+                "Coluna": "RECMODIFIEDBY",
+                "Tipo": "varchar",
+                "TamanhoBytes": 50,
+                "Precisao": 0,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Autor da última modificação no registro"
+            },
+            {
+                "Coluna": "RECMODIFIEDON",
+                "Tipo": "datetime2",
+                "TamanhoBytes": 8,
+                "Precisao": 27,
+                "Escala": 7,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Data da última modificação no registro"
+            }
+        ],
+        "Descricao": "Tabela de Itens de Receita para salvar retorno dos itens da MEMED"
+    },
+    {
+        "Tabela": "JRECEITAITEM",
+        "Colunas": [
+            {
+                "Coluna": "LOGID",
+                "Tipo": "bigint",
+                "TamanhoBytes": 8,
+                "Precisao": 19,
+                "Escala": 0,
+                "PermiteNulo": "N",
+                "Identity": "S",
+                "Calculada": "N",
+                "Descricao": "N/A"
+            },
+            {
+                "Coluna": "PARENTLOGID",
+                "Tipo": "bigint",
+                "TamanhoBytes": 8,
+                "Precisao": 19,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "N/A"
+            },
+            {
+                "Coluna": "AUDITID",
+                "Tipo": "bigint",
+                "TamanhoBytes": 8,
+                "Precisao": 19,
+                "Escala": 0,
+                "PermiteNulo": "N",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "N/A"
+            },
+            {
+                "Coluna": "AUDITACTION",
+                "Tipo": "char",
+                "TamanhoBytes": 1,
+                "Precisao": 0,
+                "Escala": 0,
+                "PermiteNulo": "N",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "N/A"
+            },
+            {
+                "Coluna": "LOGAPP",
+                "Tipo": "varchar",
+                "TamanhoBytes": 128,
+                "Precisao": 0,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "N/A"
+            },
+            {
+                "Coluna": "LOGUSER",
+                "Tipo": "varchar",
+                "TamanhoBytes": 128,
+                "Precisao": 0,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "N/A"
+            },
+            {
+                "Coluna": "CODCOLIGADA",
+                "Tipo": "DCODCOLIGADA",
+                "TamanhoBytes": 2,
+                "Precisao": 5,
+                "Escala": 0,
+                "PermiteNulo": "N",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Código da Coligada",
+                "RelacionamentosRM": [
+                    {
+                        "TabelaDestino": "GCOLIGADA",
+                        "CamposDestino": "CODCOLIGADA",
+                        "ChaveLogicaComposta": "CODCOLIGADA"
+                    }
+                ]
+            },
+            {
+                "Coluna": "CODRECEITA",
+                "Tipo": "int",
+                "TamanhoBytes": 4,
+                "Precisao": 10,
+                "Escala": 0,
+                "PermiteNulo": "N",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Código da Receita"
+            },
+            {
+                "Coluna": "CODRECEITAITEM",
+                "Tipo": "int",
+                "TamanhoBytes": 4,
+                "Precisao": 10,
+                "Escala": 0,
+                "PermiteNulo": "N",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Código do Item da Receita"
+            },
+            {
+                "Coluna": "IDINTEGRACAO",
+                "Tipo": "varchar",
+                "TamanhoBytes": 32,
+                "Precisao": 0,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Identificador da Integração da MEMED"
+            },
+            {
+                "Coluna": "NOME",
+                "Tipo": "varchar",
+                "TamanhoBytes": -1,
+                "Precisao": 0,
+                "Escala": 0,
+                "PermiteNulo": "N",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Nome do Item da receita"
+            },
+            {
+                "Coluna": "DESCRICAO",
+                "Tipo": "varchar",
+                "TamanhoBytes": -1,
+                "Precisao": 0,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Descrição do item da receita"
+            },
+            {
+                "Coluna": "POSOLOGIA",
+                "Tipo": "varchar",
+                "TamanhoBytes": -1,
+                "Precisao": 0,
+                "Escala": 0,
+                "PermiteNulo": "N",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Posologia do item da receita"
+            },
+            {
+                "Coluna": "QUANTIDADE",
+                "Tipo": "numeric",
+                "TamanhoBytes": 9,
+                "Precisao": 10,
+                "Escala": 5,
+                "PermiteNulo": "N",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Quantidade do item da receita"
+            },
+            {
+                "Coluna": "COMPOSICAO",
+                "Tipo": "varchar",
+                "TamanhoBytes": -1,
+                "Precisao": 0,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Composição do item da receita"
+            },
+            {
+                "Coluna": "CONTROLEESPECIAL",
+                "Tipo": "BOOLEAN",
+                "TamanhoBytes": 1,
+                "Precisao": 0,
+                "Escala": 0,
+                "PermiteNulo": "N",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Indicador se o item possui controle especial"
+            },
+            {
+                "Coluna": "QTDMES1",
+                "Tipo": "numeric",
+                "TamanhoBytes": 9,
+                "Precisao": 10,
+                "Escala": 5,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Quantidade do item da receita no primeiro mes"
+            },
+            {
+                "Coluna": "QTDMES2",
+                "Tipo": "numeric",
+                "TamanhoBytes": 9,
+                "Precisao": 10,
+                "Escala": 5,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Quantidade do item da receita no segundo mes"
+            },
+            {
+                "Coluna": "QTDMES3",
+                "Tipo": "numeric",
+                "TamanhoBytes": 9,
+                "Precisao": 10,
+                "Escala": 5,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Quantidade do item da receita no terceiro mes"
+            },
+            {
+                "Coluna": "CODVERSAOCID",
+                "Tipo": "int",
+                "TamanhoBytes": 4,
+                "Precisao": 10,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Código da versão do CID",
+                "RelacionamentosRM": [
+                    {
+                        "TabelaDestino": "SZCID",
+                        "CamposDestino": "CODCID,CODVERSAOCID",
+                        "ChaveLogicaComposta": "CODCID,CODVERSAOCID"
+                    }
+                ]
+            },
+            {
+                "Coluna": "CODCID",
+                "Tipo": "varchar",
+                "TamanhoBytes": 6,
+                "Precisao": 0,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Código do CID",
+                "RelacionamentosRM": [
+                    {
+                        "TabelaDestino": "SZCID",
+                        "CamposDestino": "CODCID,CODVERSAOCID",
+                        "ChaveLogicaComposta": "CODCID,CODVERSAOCID"
+                    }
+                ]
+            },
+            {
+                "Coluna": "RECCREATEDBY",
+                "Tipo": "varchar",
+                "TamanhoBytes": 50,
+                "Precisao": 0,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Usuário criador do registro"
+            },
+            {
+                "Coluna": "RECCREATEDON",
+                "Tipo": "datetime2",
+                "TamanhoBytes": 8,
+                "Precisao": 27,
+                "Escala": 7,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Data de criação do registro"
+            },
+            {
+                "Coluna": "RECMODIFIEDBY",
+                "Tipo": "varchar",
+                "TamanhoBytes": 50,
+                "Precisao": 0,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Autor da última modificação no registro"
+            },
+            {
+                "Coluna": "RECMODIFIEDON",
+                "Tipo": "datetime2",
+                "TamanhoBytes": 8,
+                "Precisao": 27,
+                "Escala": 7,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Data da última modificação no registro"
+            }
+        ],
+        "Descricao": "Tabela de Itens de Receita para salvar retorno dos itens da MEMED"
+    },
+    {
+        "Tabela": "JSOLICITACAOEXAME",
+        "Colunas": [
+            {
+                "Coluna": "LOGID",
+                "Tipo": "bigint",
+                "TamanhoBytes": 8,
+                "Precisao": 19,
+                "Escala": 0,
+                "PermiteNulo": "N",
+                "Identity": "S",
+                "Calculada": "N",
+                "Descricao": "N/A"
+            },
+            {
+                "Coluna": "PARENTLOGID",
+                "Tipo": "bigint",
+                "TamanhoBytes": 8,
+                "Precisao": 19,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "N/A"
+            },
+            {
+                "Coluna": "AUDITID",
+                "Tipo": "bigint",
+                "TamanhoBytes": 8,
+                "Precisao": 19,
+                "Escala": 0,
+                "PermiteNulo": "N",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "N/A"
+            },
+            {
+                "Coluna": "AUDITACTION",
+                "Tipo": "char",
+                "TamanhoBytes": 1,
+                "Precisao": 0,
+                "Escala": 0,
+                "PermiteNulo": "N",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "N/A"
+            },
+            {
+                "Coluna": "LOGAPP",
+                "Tipo": "varchar",
+                "TamanhoBytes": 128,
+                "Precisao": 0,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "N/A"
+            },
+            {
+                "Coluna": "LOGUSER",
+                "Tipo": "varchar",
+                "TamanhoBytes": 128,
+                "Precisao": 0,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "N/A"
+            },
+            {
+                "Coluna": "CODCOLIGADA",
+                "Tipo": "DCODCOLIGADA",
+                "TamanhoBytes": 2,
+                "Precisao": 5,
+                "Escala": 0,
+                "PermiteNulo": "N",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Código da coligada onde a solicitação de exame foi realizada.",
+                "RelacionamentosRM": [
+                    {
+                        "TabelaDestino": "GCOLIGADA",
+                        "CamposDestino": "CODCOLIGADA",
+                        "ChaveLogicaComposta": "CODCOLIGADA"
+                    },
+                    {
+                        "TabelaDestino": "SZCADGERAL",
+                        "CamposDestino": "CODCOLIGADA,CODGERAL",
+                        "ChaveLogicaComposta": "CODCOLIGADA,CODGERAL"
+                    },
+                    {
+                        "TabelaDestino": "SZPACIENTE",
+                        "CamposDestino": "CODCOLIGADA,CODPACIENTE",
+                        "ChaveLogicaComposta": "CODCOLIGADA,CODPACIENTE"
+                    },
+                    {
+                        "TabelaDestino": "SZATENDIMENTO",
+                        "CamposDestino": "CODCOLIGADA,CODPACIENTE,CODATENDIMENTO",
+                        "ChaveLogicaComposta": "CODCOLIGADA,CODPACIENTE,CODATENDIMENTO"
+                    },
+                    {
+                        "TabelaDestino": "JSOLICITACAOEXAMEITEM",
+                        "CamposDestino": "CODCOLIGADA,CODSOLICITACAOEXAME",
+                        "ChaveLogicaComposta": "CODCOLIGADA,CODSOLICITACAOEXAME"
+                    },
+                    {
+                        "TabelaDestino": "SZUNIDATEND",
+                        "CamposDestino": "CODCOLIGADA,IDUNIDATEND",
+                        "ChaveLogicaComposta": "CODCOLIGADA,IDUNIDATEND"
+                    }
+                ]
+            },
+            {
+                "Coluna": "CODSOLICITACAOEXAME",
+                "Tipo": "int",
+                "TamanhoBytes": 4,
+                "Precisao": 10,
+                "Escala": 0,
+                "PermiteNulo": "N",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Código (Id) da solicitação de exame.",
+                "RelacionamentosRM": [
+                    {
+                        "TabelaDestino": "JSOLICITACAOEXAMEITEM",
+                        "CamposDestino": "CODCOLIGADA,CODSOLICITACAOEXAME",
+                        "ChaveLogicaComposta": "CODCOLIGADA,CODSOLICITACAOEXAME"
+                    }
+                ]
+            },
+            {
+                "Coluna": "DESCRICAO",
+                "Tipo": "varchar",
+                "TamanhoBytes": -1,
+                "Precisao": 0,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Descrição da solicitação de exames."
+            },
+            {
+                "Coluna": "CODPACIENTE",
+                "Tipo": "int",
+                "TamanhoBytes": 4,
+                "Precisao": 10,
+                "Escala": 0,
+                "PermiteNulo": "N",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Código do paciente para quem a solicitação foi realizada.",
+                "RelacionamentosRM": [
+                    {
+                        "TabelaDestino": "SZPACIENTE",
+                        "CamposDestino": "CODCOLIGADA,CODPACIENTE",
+                        "ChaveLogicaComposta": "CODCOLIGADA,CODPACIENTE"
+                    },
+                    {
+                        "TabelaDestino": "SZATENDIMENTO",
+                        "CamposDestino": "CODCOLIGADA,CODPACIENTE,CODATENDIMENTO",
+                        "ChaveLogicaComposta": "CODCOLIGADA,CODPACIENTE,CODATENDIMENTO"
+                    }
+                ]
+            },
+            {
+                "Coluna": "CODATENDIMENTO",
+                "Tipo": "int",
+                "TamanhoBytes": 4,
+                "Precisao": 10,
+                "Escala": 0,
+                "PermiteNulo": "N",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Código do atendimento do paciente quando a solicitação de exames foi criada.",
+                "RelacionamentosRM": [
+                    {
+                        "TabelaDestino": "SZATENDIMENTO",
+                        "CamposDestino": "CODCOLIGADA,CODPACIENTE,CODATENDIMENTO",
+                        "ChaveLogicaComposta": "CODCOLIGADA,CODPACIENTE,CODATENDIMENTO"
+                    }
+                ]
+            },
+            {
+                "Coluna": "CODGERAL",
+                "Tipo": "int",
+                "TamanhoBytes": 4,
+                "Precisao": 10,
+                "Escala": 0,
+                "PermiteNulo": "N",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Código do profissional que criou a solicitação (especialmente médico).",
+                "RelacionamentosRM": [
+                    {
+                        "TabelaDestino": "SZCADGERAL",
+                        "CamposDestino": "CODCOLIGADA,CODGERAL",
+                        "ChaveLogicaComposta": "CODCOLIGADA,CODGERAL"
+                    }
+                ]
+            },
+            {
+                "Coluna": "STATUS",
+                "Tipo": "smallint",
+                "TamanhoBytes": 2,
+                "Precisao": 5,
+                "Escala": 0,
+                "PermiteNulo": "N",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Status (0 - Rascunho/1 - Finalizado)"
+            },
+            {
+                "Coluna": "IDUNIDATEND",
+                "Tipo": "int",
+                "TamanhoBytes": 4,
+                "Precisao": 10,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Inserção de coluna IDUNIDATEND",
+                "RelacionamentosRM": [
+                    {
+                        "TabelaDestino": "SZUNIDATEND",
+                        "CamposDestino": "CODCOLIGADA,IDUNIDATEND",
+                        "ChaveLogicaComposta": "CODCOLIGADA,IDUNIDATEND"
+                    }
+                ]
+            },
+            {
+                "Coluna": "CODPRESCRICAO",
+                "Tipo": "int",
+                "TamanhoBytes": 4,
+                "Precisao": 10,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Código do vínculo da solicitação de exames com a prescrição"
+            },
+            {
+                "Coluna": "CODIGOPROCESSO",
+                "Tipo": "int",
+                "TamanhoBytes": 4,
+                "Precisao": 10,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "N/A"
+            },
+            {
+                "Coluna": "ASSINADO",
+                "Tipo": "char",
+                "TamanhoBytes": 1,
+                "Precisao": 0,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "N/A"
+            },
+            {
+                "Coluna": "INDCLINICA",
+                "Tipo": "varchar",
+                "TamanhoBytes": 300,
+                "Precisao": 0,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "INDICAÇÃO CLÍNICA"
+            },
+            {
+                "Coluna": "OBSERVACAO",
+                "Tipo": "varchar",
+                "TamanhoBytes": 300,
+                "Precisao": 0,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "OBSERVAÇÃO"
+            },
+            {
+                "Coluna": "NROGUIA",
+                "Tipo": "varchar",
+                "TamanhoBytes": 20,
+                "Precisao": 0,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "NÚMERO DA GUIA"
+            },
+            {
+                "Coluna": "CARATERATENDIMENTO",
+                "Tipo": "varchar",
+                "TamanhoBytes": 1,
+                "Precisao": 0,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "INDICA CARÁTER DE ATENDIMENTO REFERENTE A SOLICITAÇÃO DE EXAMES."
+            },
+            {
+                "Coluna": "CODIGOPROCESSOGUIA",
+                "Tipo": "int",
+                "TamanhoBytes": 4,
+                "Precisao": 10,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "CÓDIGO DO PROCESSO ASSINATURA GUIA SPSADT"
+            },
+            {
+                "Coluna": "GUIAASSINADA",
+                "Tipo": "char",
+                "TamanhoBytes": 1,
+                "Precisao": 0,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "GUIA SPSADT ASSINADA"
+            },
+            {
+                "Coluna": "RECCREATEDBY",
+                "Tipo": "varchar",
+                "TamanhoBytes": 50,
+                "Precisao": 0,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Usuário criador do registro"
+            },
+            {
+                "Coluna": "RECCREATEDON",
+                "Tipo": "datetime2",
+                "TamanhoBytes": 8,
+                "Precisao": 27,
+                "Escala": 7,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Data de criação do registro"
+            },
+            {
+                "Coluna": "RECMODIFIEDBY",
+                "Tipo": "varchar",
+                "TamanhoBytes": 50,
+                "Precisao": 0,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Autor da última modificação no registro"
+            },
+            {
+                "Coluna": "RECMODIFIEDON",
+                "Tipo": "datetime2",
+                "TamanhoBytes": 8,
+                "Precisao": 27,
+                "Escala": 7,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Data da última modificação no registro"
+            }
+        ],
+        "Descricao": "Solicitações de exame realizadas no PEP RM"
+    },
+    {
+        "Tabela": "JSOLICITACAOEXAME",
+        "Colunas": [
+            {
+                "Coluna": "CODCOLIGADA",
+                "Tipo": "DCODCOLIGADA",
+                "TamanhoBytes": 2,
+                "Precisao": 5,
+                "Escala": 0,
+                "PermiteNulo": "N",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Código da coligada onde a solicitação de exame foi realizada.",
+                "RelacionamentosRM": [
+                    {
+                        "TabelaDestino": "GCOLIGADA",
+                        "CamposDestino": "CODCOLIGADA",
+                        "ChaveLogicaComposta": "CODCOLIGADA"
+                    },
+                    {
+                        "TabelaDestino": "SZCADGERAL",
+                        "CamposDestino": "CODCOLIGADA,CODGERAL",
+                        "ChaveLogicaComposta": "CODCOLIGADA,CODGERAL"
+                    },
+                    {
+                        "TabelaDestino": "SZPACIENTE",
+                        "CamposDestino": "CODCOLIGADA,CODPACIENTE",
+                        "ChaveLogicaComposta": "CODCOLIGADA,CODPACIENTE"
+                    },
+                    {
+                        "TabelaDestino": "SZATENDIMENTO",
+                        "CamposDestino": "CODCOLIGADA,CODPACIENTE,CODATENDIMENTO",
+                        "ChaveLogicaComposta": "CODCOLIGADA,CODPACIENTE,CODATENDIMENTO"
+                    },
+                    {
+                        "TabelaDestino": "JSOLICITACAOEXAMEITEM",
+                        "CamposDestino": "CODCOLIGADA,CODSOLICITACAOEXAME",
+                        "ChaveLogicaComposta": "CODCOLIGADA,CODSOLICITACAOEXAME"
+                    },
+                    {
+                        "TabelaDestino": "SZUNIDATEND",
+                        "CamposDestino": "CODCOLIGADA,IDUNIDATEND",
+                        "ChaveLogicaComposta": "CODCOLIGADA,IDUNIDATEND"
+                    }
+                ]
+            },
+            {
+                "Coluna": "CODSOLICITACAOEXAME",
+                "Tipo": "int",
+                "TamanhoBytes": 4,
+                "Precisao": 10,
+                "Escala": 0,
+                "PermiteNulo": "N",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Código (Id) da solicitação de exame.",
+                "RelacionamentosRM": [
+                    {
+                        "TabelaDestino": "JSOLICITACAOEXAMEITEM",
+                        "CamposDestino": "CODCOLIGADA,CODSOLICITACAOEXAME",
+                        "ChaveLogicaComposta": "CODCOLIGADA,CODSOLICITACAOEXAME"
+                    }
+                ]
+            },
+            {
+                "Coluna": "DESCRICAO",
+                "Tipo": "varchar",
+                "TamanhoBytes": -1,
+                "Precisao": 0,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Descrição da solicitação de exames."
+            },
+            {
+                "Coluna": "CODPACIENTE",
+                "Tipo": "int",
+                "TamanhoBytes": 4,
+                "Precisao": 10,
+                "Escala": 0,
+                "PermiteNulo": "N",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Código do paciente para quem a solicitação foi realizada.",
+                "RelacionamentosRM": [
+                    {
+                        "TabelaDestino": "SZPACIENTE",
+                        "CamposDestino": "CODCOLIGADA,CODPACIENTE",
+                        "ChaveLogicaComposta": "CODCOLIGADA,CODPACIENTE"
+                    },
+                    {
+                        "TabelaDestino": "SZATENDIMENTO",
+                        "CamposDestino": "CODCOLIGADA,CODPACIENTE,CODATENDIMENTO",
+                        "ChaveLogicaComposta": "CODCOLIGADA,CODPACIENTE,CODATENDIMENTO"
+                    }
+                ]
+            },
+            {
+                "Coluna": "CODATENDIMENTO",
+                "Tipo": "int",
+                "TamanhoBytes": 4,
+                "Precisao": 10,
+                "Escala": 0,
+                "PermiteNulo": "N",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Código do atendimento do paciente quando a solicitação de exames foi criada.",
+                "RelacionamentosRM": [
+                    {
+                        "TabelaDestino": "SZATENDIMENTO",
+                        "CamposDestino": "CODCOLIGADA,CODPACIENTE,CODATENDIMENTO",
+                        "ChaveLogicaComposta": "CODCOLIGADA,CODPACIENTE,CODATENDIMENTO"
+                    }
+                ]
+            },
+            {
+                "Coluna": "CODGERAL",
+                "Tipo": "int",
+                "TamanhoBytes": 4,
+                "Precisao": 10,
+                "Escala": 0,
+                "PermiteNulo": "N",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Código do profissional que criou a solicitação (especialmente médico).",
+                "RelacionamentosRM": [
+                    {
+                        "TabelaDestino": "SZCADGERAL",
+                        "CamposDestino": "CODCOLIGADA,CODGERAL",
+                        "ChaveLogicaComposta": "CODCOLIGADA,CODGERAL"
+                    }
+                ]
+            },
+            {
+                "Coluna": "RECCREATEDBY",
+                "Tipo": "varchar",
+                "TamanhoBytes": 50,
+                "Precisao": 0,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Usuário criador do registro"
+            },
+            {
+                "Coluna": "RECCREATEDON",
+                "Tipo": "datetime2",
+                "TamanhoBytes": 8,
+                "Precisao": 27,
+                "Escala": 7,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Data de criação do registro"
+            },
+            {
+                "Coluna": "RECMODIFIEDBY",
+                "Tipo": "varchar",
+                "TamanhoBytes": 50,
+                "Precisao": 0,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Autor da última modificação no registro"
+            },
+            {
+                "Coluna": "RECMODIFIEDON",
+                "Tipo": "datetime2",
+                "TamanhoBytes": 8,
+                "Precisao": 27,
+                "Escala": 7,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Data da última modificação no registro"
+            },
+            {
+                "Coluna": "STATUS",
+                "Tipo": "smallint",
+                "TamanhoBytes": 2,
+                "Precisao": 5,
+                "Escala": 0,
+                "PermiteNulo": "N",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Status (0 - Rascunho/1 - Finalizado)"
+            },
+            {
+                "Coluna": "IDUNIDATEND",
+                "Tipo": "int",
+                "TamanhoBytes": 4,
+                "Precisao": 10,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Inserção de coluna IDUNIDATEND",
+                "RelacionamentosRM": [
+                    {
+                        "TabelaDestino": "SZUNIDATEND",
+                        "CamposDestino": "CODCOLIGADA,IDUNIDATEND",
+                        "ChaveLogicaComposta": "CODCOLIGADA,IDUNIDATEND"
+                    }
+                ]
+            },
+            {
+                "Coluna": "CODPRESCRICAO",
+                "Tipo": "int",
+                "TamanhoBytes": 4,
+                "Precisao": 10,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Código do vínculo da solicitação de exames com a prescrição"
+            },
+            {
+                "Coluna": "CODIGOPROCESSO",
+                "Tipo": "int",
+                "TamanhoBytes": 4,
+                "Precisao": 10,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "N/A"
+            },
+            {
+                "Coluna": "ASSINADO",
+                "Tipo": "char",
+                "TamanhoBytes": 1,
+                "Precisao": 0,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "N/A"
+            },
+            {
+                "Coluna": "INDCLINICA",
+                "Tipo": "varchar",
+                "TamanhoBytes": 300,
+                "Precisao": 0,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "INDICAÇÃO CLÍNICA"
+            },
+            {
+                "Coluna": "OBSERVACAO",
+                "Tipo": "varchar",
+                "TamanhoBytes": 300,
+                "Precisao": 0,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "OBSERVAÇÃO"
+            },
+            {
+                "Coluna": "NROGUIA",
+                "Tipo": "varchar",
+                "TamanhoBytes": 20,
+                "Precisao": 0,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "NÚMERO DA GUIA"
+            },
+            {
+                "Coluna": "CARATERATENDIMENTO",
+                "Tipo": "varchar",
+                "TamanhoBytes": 1,
+                "Precisao": 0,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "INDICA CARÁTER DE ATENDIMENTO REFERENTE A SOLICITAÇÃO DE EXAMES."
+            },
+            {
+                "Coluna": "CODIGOPROCESSOGUIA",
+                "Tipo": "int",
+                "TamanhoBytes": 4,
+                "Precisao": 10,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "CÓDIGO DO PROCESSO ASSINATURA GUIA SPSADT"
+            },
+            {
+                "Coluna": "GUIAASSINADA",
+                "Tipo": "char",
+                "TamanhoBytes": 1,
+                "Precisao": 0,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "GUIA SPSADT ASSINADA"
+            }
+        ],
+        "Descricao": "Solicitações de exame realizadas no PEP RM"
+    },
+    {
+        "Tabela": "JSOLICITACAOEXAMEITEM",
+        "Colunas": [
+            {
+                "Coluna": "CODCOLIGADA",
+                "Tipo": "DCODCOLIGADA",
+                "TamanhoBytes": 2,
+                "Precisao": 5,
+                "Escala": 0,
+                "PermiteNulo": "N",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Código da coligada em que o item foi adicionado.",
+                "RelacionamentosRM": [
+                    {
+                        "TabelaDestino": "GCOLIGADA",
+                        "CamposDestino": "CODCOLIGADA",
+                        "ChaveLogicaComposta": "CODCOLIGADA"
+                    },
+                    {
+                        "TabelaDestino": "SZLABEXAME",
+                        "CamposDestino": "CODCOLIGADA,CODEXAME",
+                        "ChaveLogicaComposta": "CODCOLIGADA,CODEXAME"
+                    },
+                    {
+                        "TabelaDestino": "JSOLICITACAOEXAME",
+                        "CamposDestino": "CODCOLIGADA,CODSOLICITACAOEXAME",
+                        "ChaveLogicaComposta": "CODCOLIGADA,CODSOLICITACAOEXAME"
+                    }
+                ]
+            },
+            {
+                "Coluna": "CODSOLICITACAOEXAMEITEM",
+                "Tipo": "int",
+                "TamanhoBytes": 4,
+                "Precisao": 10,
+                "Escala": 0,
+                "PermiteNulo": "N",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Código (id) do item da solicitação."
+            },
+            {
+                "Coluna": "CODSOLICITACAOEXAME",
+                "Tipo": "int",
+                "TamanhoBytes": 4,
+                "Precisao": 10,
+                "Escala": 0,
+                "PermiteNulo": "N",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Código da solicitação a qual o item está associado.",
+                "RelacionamentosRM": [
+                    {
+                        "TabelaDestino": "JSOLICITACAOEXAME",
+                        "CamposDestino": "CODCOLIGADA,CODSOLICITACAOEXAME",
+                        "ChaveLogicaComposta": "CODCOLIGADA,CODSOLICITACAOEXAME"
+                    }
+                ]
+            },
+            {
+                "Coluna": "DATAEXECUCAO",
+                "Tipo": "datetime2",
+                "TamanhoBytes": 8,
+                "Precisao": 27,
+                "Escala": 7,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Data da execução do exame."
+            },
+            {
+                "Coluna": "REALIZADO",
+                "Tipo": "BOOLEAN",
+                "TamanhoBytes": 1,
+                "Precisao": 0,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Informa se o exame foi ou não realizado."
+            },
+            {
+                "Coluna": "CODEXAME",
+                "Tipo": "int",
+                "TamanhoBytes": 4,
+                "Precisao": 10,
+                "Escala": 0,
+                "PermiteNulo": "N",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Código do exame solicitado.",
+                "RelacionamentosRM": [
+                    {
+                        "TabelaDestino": "SZLABEXAME",
+                        "CamposDestino": "CODCOLIGADA,CODEXAME",
+                        "ChaveLogicaComposta": "CODCOLIGADA,CODEXAME"
+                    }
+                ]
+            },
+            {
+                "Coluna": "RECCREATEDBY",
+                "Tipo": "varchar",
+                "TamanhoBytes": 50,
+                "Precisao": 0,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Usuário criador do registro"
+            },
+            {
+                "Coluna": "RECCREATEDON",
+                "Tipo": "datetime2",
+                "TamanhoBytes": 8,
+                "Precisao": 27,
+                "Escala": 7,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Data de criação do registro"
+            },
+            {
+                "Coluna": "RECMODIFIEDBY",
+                "Tipo": "varchar",
+                "TamanhoBytes": 50,
+                "Precisao": 0,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Autor da última modificação no registro"
+            },
+            {
+                "Coluna": "RECMODIFIEDON",
+                "Tipo": "datetime2",
+                "TamanhoBytes": 8,
+                "Precisao": 27,
+                "Escala": 7,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Data da última modificação no registro"
+            },
+            {
+                "Coluna": "OBSERVACAO",
+                "Tipo": "varchar",
+                "TamanhoBytes": -1,
+                "Precisao": 0,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Observação do exame na solicitação (realizada pelo solicitante)"
+            },
+            {
+                "Coluna": "PRIORIDADE",
+                "Tipo": "smallint",
+                "TamanhoBytes": 2,
+                "Precisao": 5,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Prioridade da execução do exame dentro da solicitação."
+            },
+            {
+                "Coluna": "STATUS",
+                "Tipo": "int",
+                "TamanhoBytes": 4,
+                "Precisao": 10,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Coluna referente ao status do item solicitado"
+            },
+            {
+                "Coluna": "TIPOSOLICITACAOEXAME",
+                "Tipo": "char",
+                "TamanhoBytes": 1,
+                "Precisao": 0,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Tipo da Solicitação do Exame"
+            },
+            {
+                "Coluna": "CODPRESCRICAOITEM",
+                "Tipo": "int",
+                "TamanhoBytes": 4,
+                "Precisao": 10,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "CÓDIGO DO ITEM DA PRESCRIÇÃO"
+            },
+            {
+                "Coluna": "QUANTIDADE",
+                "Tipo": "int",
+                "TamanhoBytes": 4,
+                "Precisao": 10,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "COLUNA PARA ARMAZENAR A QUANTIDADE DE EXAMES DO ITEM"
+            },
+            {
+                "Coluna": "CODMATERIAL",
+                "Tipo": "varchar",
+                "TamanhoBytes": 10,
+                "Precisao": 0,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Código do Material"
+            }
+        ],
+        "Descricao": "Itens (exames) da solicitação de exames"
+    }
+]

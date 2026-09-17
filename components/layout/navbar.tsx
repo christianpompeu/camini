@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Menu, Sparkles, Dumbbell, Home } from "lucide-react";
+import { Menu, Sparkles, Dumbbell, Home, Database } from "lucide-react";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { MobileSidebar } from "@/components/layout/mobile-sidebar";
 
@@ -14,6 +14,7 @@ export function Navbar() {
   const isHome = pathname === "/";
   const isForca = pathname.startsWith("/forca");
   const isPlayground = pathname.startsWith("/playground");
+  const isTotvsRm = pathname.startsWith("/totvs-rm");
 
   const navItems = [
     {
@@ -21,6 +22,12 @@ export function Navbar() {
       label: "Início",
       icon: Home,
       isActive: isHome,
+    },
+    {
+      href: "/totvs-rm",
+      label: "RM SQL AI",
+      icon: Database,
+      isActive: isTotvsRm,
     },
     {
       href: "/forca",

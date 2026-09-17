@@ -1,0 +1,317 @@
+[
+    {
+        "Tabela": "WCONTATO",
+        "Colunas": [
+            {
+                "Coluna": "IDPESSOA",
+                "Tipo": "int",
+                "TamanhoBytes": 4,
+                "Precisao": 10,
+                "Escala": 0,
+                "PermiteNulo": "N",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Código do usuário externo"
+            },
+            {
+                "Coluna": "IDCONTATO",
+                "Tipo": "int",
+                "TamanhoBytes": 4,
+                "Precisao": 10,
+                "Escala": 0,
+                "PermiteNulo": "N",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Código do contato"
+            },
+            {
+                "Coluna": "RECCREATEDBY",
+                "Tipo": "varchar",
+                "TamanhoBytes": 50,
+                "Precisao": 0,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Usuário criador do registro"
+            },
+            {
+                "Coluna": "RECCREATEDON",
+                "Tipo": "datetime",
+                "TamanhoBytes": 8,
+                "Precisao": 23,
+                "Escala": 3,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Data de criação do registro"
+            },
+            {
+                "Coluna": "RECMODIFIEDBY",
+                "Tipo": "varchar",
+                "TamanhoBytes": 50,
+                "Precisao": 0,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Autor da última modificação no registro"
+            },
+            {
+                "Coluna": "RECMODIFIEDON",
+                "Tipo": "datetime",
+                "TamanhoBytes": 8,
+                "Precisao": 23,
+                "Escala": 3,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Data da última modificação no registro"
+            }
+        ],
+        "Descricao": "Tabela de contato do usuário externo"
+    },
+    {
+        "Tabela": "WENDERECO",
+        "Colunas": [
+            {
+                "Coluna": "IDENDERECO",
+                "Tipo": "int",
+                "TamanhoBytes": 4,
+                "Precisao": 10,
+                "Escala": 0,
+                "PermiteNulo": "N",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Código do endereço"
+            },
+            {
+                "Coluna": "IDPESSOA",
+                "Tipo": "int",
+                "TamanhoBytes": 4,
+                "Precisao": 10,
+                "Escala": 0,
+                "PermiteNulo": "N",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Código do usuário externo"
+            },
+            {
+                "Coluna": "LOGRADOURO",
+                "Tipo": "varchar",
+                "TamanhoBytes": 60,
+                "Precisao": 0,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Logradouro do usuário externo"
+            },
+            {
+                "Coluna": "NUMERO",
+                "Tipo": "varchar",
+                "TamanhoBytes": 8,
+                "Precisao": 0,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Número do logradouro do usuário externo"
+            },
+            {
+                "Coluna": "COMPLEMENTO",
+                "Tipo": "varchar",
+                "TamanhoBytes": 20,
+                "Precisao": 0,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Complemento do logradouro"
+            },
+            {
+                "Coluna": "BAIRRO",
+                "Tipo": "varchar",
+                "TamanhoBytes": 20,
+                "Precisao": 0,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Bairro do usuário externo"
+            },
+            {
+                "Coluna": "CIDADE",
+                "Tipo": "varchar",
+                "TamanhoBytes": 32,
+                "Precisao": 0,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Cidade do usuário externo"
+            },
+            {
+                "Coluna": "TIPOENDERECO",
+                "Tipo": "varchar",
+                "TamanhoBytes": 15,
+                "Precisao": 0,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Tipo endereço do usuário externo"
+            },
+            {
+                "Coluna": "UF",
+                "Tipo": "varchar",
+                "TamanhoBytes": 2,
+                "Precisao": 0,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Estado do usuário externo"
+            },
+            {
+                "Coluna": "RECCREATEDBY",
+                "Tipo": "varchar",
+                "TamanhoBytes": 50,
+                "Precisao": 0,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Usuário criador do registro"
+            },
+            {
+                "Coluna": "RECCREATEDON",
+                "Tipo": "datetime",
+                "TamanhoBytes": 8,
+                "Precisao": 23,
+                "Escala": 3,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Data de criação do registro"
+            },
+            {
+                "Coluna": "RECMODIFIEDBY",
+                "Tipo": "varchar",
+                "TamanhoBytes": 50,
+                "Precisao": 0,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Autor da última modificação no registro"
+            },
+            {
+                "Coluna": "RECMODIFIEDON",
+                "Tipo": "datetime",
+                "TamanhoBytes": 8,
+                "Precisao": 23,
+                "Escala": 3,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Data da última modificação no registro"
+            }
+        ],
+        "Descricao": "Tabela de endereço do usuário externo"
+    },
+    {
+        "Tabela": "WTELEFONE",
+        "Colunas": [
+            {
+                "Coluna": "IDTELEFONE",
+                "Tipo": "int",
+                "TamanhoBytes": 4,
+                "Precisao": 10,
+                "Escala": 0,
+                "PermiteNulo": "N",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Código do telefone do usuário externo"
+            },
+            {
+                "Coluna": "IDPESSOA",
+                "Tipo": "int",
+                "TamanhoBytes": 4,
+                "Precisao": 10,
+                "Escala": 0,
+                "PermiteNulo": "N",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Código do usuário externo"
+            },
+            {
+                "Coluna": "TELEFONE",
+                "Tipo": "varchar",
+                "TamanhoBytes": 15,
+                "Precisao": 0,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Telefone do usuário externo"
+            },
+            {
+                "Coluna": "TIPOTELEFONE",
+                "Tipo": "varchar",
+                "TamanhoBytes": 15,
+                "Precisao": 0,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Tipo telefone do usuário externo"
+            },
+            {
+                "Coluna": "RECCREATEDBY",
+                "Tipo": "varchar",
+                "TamanhoBytes": 50,
+                "Precisao": 0,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Usuário criador do registro"
+            },
+            {
+                "Coluna": "RECCREATEDON",
+                "Tipo": "datetime",
+                "TamanhoBytes": 8,
+                "Precisao": 23,
+                "Escala": 3,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Data de criação do registro"
+            },
+            {
+                "Coluna": "RECMODIFIEDBY",
+                "Tipo": "varchar",
+                "TamanhoBytes": 50,
+                "Precisao": 0,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Autor da última modificação no registro"
+            },
+            {
+                "Coluna": "RECMODIFIEDON",
+                "Tipo": "datetime",
+                "TamanhoBytes": 8,
+                "Precisao": 23,
+                "Escala": 3,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "Data da última modificação no registro"
+            }
+        ],
+        "Descricao": "Tabela de telefones do usuário externo"
+    }
+]

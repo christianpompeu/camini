@@ -1,0 +1,349 @@
+[
+    {
+        "Tabela": "'RELATORIOICMS2022'",
+        "Colunas": [
+            {
+                "Coluna": "COMPETÊNCIA",
+                "Tipo": "float",
+                "TamanhoBytes": 8,
+                "Precisao": 53,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "N/A"
+            },
+            {
+                "Coluna": "TIPO DO DOC#",
+                "Tipo": "nvarchar",
+                "TamanhoBytes": 510,
+                "Precisao": 0,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "N/A"
+            },
+            {
+                "Coluna": "TIPO DE NOTAS",
+                "Tipo": "nvarchar",
+                "TamanhoBytes": 510,
+                "Precisao": 0,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "N/A"
+            },
+            {
+                "Coluna": "EMPRESA",
+                "Tipo": "nvarchar",
+                "TamanhoBytes": 510,
+                "Precisao": 0,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "N/A"
+            },
+            {
+                "Coluna": "N° DA NOTA",
+                "Tipo": "nvarchar",
+                "TamanhoBytes": 510,
+                "Precisao": 0,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "N/A"
+            },
+            {
+                "Coluna": "PARTICIPANTE",
+                "Tipo": "nvarchar",
+                "TamanhoBytes": 510,
+                "Precisao": 0,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "N/A"
+            },
+            {
+                "Coluna": "CHAVE DE ACESSO DA NOTA",
+                "Tipo": "nvarchar",
+                "TamanhoBytes": 510,
+                "Precisao": 0,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "N/A"
+            },
+            {
+                "Coluna": "CÓDIGO DE BARRAS",
+                "Tipo": "nvarchar",
+                "TamanhoBytes": 510,
+                "Precisao": 0,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "N/A"
+            },
+            {
+                "Coluna": "CÓDIGO DO ITEM",
+                "Tipo": "nvarchar",
+                "TamanhoBytes": 510,
+                "Precisao": 0,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "N/A"
+            },
+            {
+                "Coluna": "DATA EMISSÃO",
+                "Tipo": "nvarchar",
+                "TamanhoBytes": 510,
+                "Precisao": 0,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "N/A"
+            },
+            {
+                "Coluna": "VALOR",
+                "Tipo": "nvarchar",
+                "TamanhoBytes": 510,
+                "Precisao": 0,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "N/A"
+            },
+            {
+                "Coluna": "OCORRÊNCIAS",
+                "Tipo": "nvarchar",
+                "TamanhoBytes": 510,
+                "Precisao": 0,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "N/A"
+            },
+            {
+                "Coluna": "ORIENTAÇÕES",
+                "Tipo": "nvarchar",
+                "TamanhoBytes": 510,
+                "Precisao": 0,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "N/A"
+            },
+            {
+                "Coluna": "STATUS",
+                "Tipo": "nvarchar",
+                "TamanhoBytes": 510,
+                "Precisao": 0,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "N/A"
+            },
+            {
+                "Coluna": "OBSERVAÇÃO DO CLIENTE",
+                "Tipo": "nvarchar",
+                "TamanhoBytes": 510,
+                "Precisao": 0,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "N/A"
+            },
+            {
+                "Coluna": "F16",
+                "Tipo": "nvarchar",
+                "TamanhoBytes": 510,
+                "Precisao": 0,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "N/A"
+            },
+            {
+                "Coluna": "F17",
+                "Tipo": "nvarchar",
+                "TamanhoBytes": 510,
+                "Precisao": 0,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "N/A"
+            },
+            {
+                "Coluna": "F18",
+                "Tipo": "nvarchar",
+                "TamanhoBytes": 510,
+                "Precisao": 0,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "N/A"
+            },
+            {
+                "Coluna": "F19",
+                "Tipo": "nvarchar",
+                "TamanhoBytes": 510,
+                "Precisao": 0,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "N/A"
+            },
+            {
+                "Coluna": "F20",
+                "Tipo": "nvarchar",
+                "TamanhoBytes": 510,
+                "Precisao": 0,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "N/A"
+            },
+            {
+                "Coluna": "F21",
+                "Tipo": "nvarchar",
+                "TamanhoBytes": 510,
+                "Precisao": 0,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "N/A"
+            },
+            {
+                "Coluna": "F22",
+                "Tipo": "nvarchar",
+                "TamanhoBytes": 510,
+                "Precisao": 0,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "N/A"
+            },
+            {
+                "Coluna": "F23",
+                "Tipo": "nvarchar",
+                "TamanhoBytes": 510,
+                "Precisao": 0,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "N/A"
+            },
+            {
+                "Coluna": "F24",
+                "Tipo": "nvarchar",
+                "TamanhoBytes": 510,
+                "Precisao": 0,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "N/A"
+            },
+            {
+                "Coluna": "F25",
+                "Tipo": "nvarchar",
+                "TamanhoBytes": 510,
+                "Precisao": 0,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "N/A"
+            },
+            {
+                "Coluna": "F26",
+                "Tipo": "nvarchar",
+                "TamanhoBytes": 510,
+                "Precisao": 0,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "N/A"
+            },
+            {
+                "Coluna": "F27",
+                "Tipo": "nvarchar",
+                "TamanhoBytes": 510,
+                "Precisao": 0,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "N/A"
+            },
+            {
+                "Coluna": "F28",
+                "Tipo": "nvarchar",
+                "TamanhoBytes": 510,
+                "Precisao": 0,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "N/A"
+            },
+            {
+                "Coluna": "F29",
+                "Tipo": "nvarchar",
+                "TamanhoBytes": 510,
+                "Precisao": 0,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "N/A"
+            },
+            {
+                "Coluna": "F30",
+                "Tipo": "nvarchar",
+                "TamanhoBytes": 510,
+                "Precisao": 0,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "N/A"
+            },
+            {
+                "Coluna": "F31",
+                "Tipo": "nvarchar",
+                "TamanhoBytes": 510,
+                "Precisao": 0,
+                "Escala": 0,
+                "PermiteNulo": "S",
+                "Identity": "N",
+                "Calculada": "N",
+                "Descricao": "N/A"
+            }
+        ],
+        "Descricao": "N/A"
+    }
+]

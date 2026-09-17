@@ -10,6 +10,7 @@ import {
   Sparkles,
   ArrowRight,
   Zap,
+  Database,
 } from "lucide-react";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 
@@ -42,6 +43,7 @@ export function MobileSidebar({ isOpen, onClose }: MobileSidebarProps) {
   const isHome = pathname === "/";
   const isForca = pathname.startsWith("/forca");
   const isPlayground = pathname.startsWith("/playground");
+  const isTotvsRm = pathname.startsWith("/totvs-rm");
 
   return (
     <div
@@ -123,6 +125,57 @@ export function MobileSidebar({ isOpen, onClose }: MobileSidebarProps) {
               <span className="text-[11px] font-bold uppercase tracking-wider text-text-secondary px-2 mb-2 block">
                 Módulos & Aplicações
               </span>
+
+              {/* Card / Link do RM SQL AI */}
+              <Link
+                href="/totvs-rm"
+                onClick={onClose}
+                className={`flex items-center justify-between p-3.5 rounded-xl border transition-all tap-effect min-h-[56px] ${
+                  isTotvsRm
+                    ? "bg-gradient-energy text-white font-bold border-transparent shadow-lg shadow-energy-blue/25"
+                    : "bg-surface-elevated border-outline hover:border-energy-blue/40 text-text-primary"
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <div
+                    className={`w-9 h-9 rounded-pill flex items-center justify-center shrink-0 ${
+                      isTotvsRm
+                        ? "bg-white/20 text-white"
+                        : "bg-energy-blue/15 text-energy-blue"
+                    }`}
+                  >
+                    <Database className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-sm font-bold block leading-tight">
+                        RM SQL AI
+                      </span>
+                      <span
+                        className={`text-[9px] uppercase font-extrabold px-1.5 py-0.2 rounded-pill ${
+                          isTotvsRm
+                            ? "bg-white/25 text-white"
+                            : "bg-energy-blue text-white"
+                        }`}
+                      >
+                        TOTVS RM
+                      </span>
+                    </div>
+                    <span
+                      className={`text-xs block mt-0.5 ${
+                        isTotvsRm ? "text-white/80" : "text-text-secondary"
+                      }`}
+                    >
+                      Consultas & Dicionário
+                    </span>
+                  </div>
+                </div>
+                <ArrowRight
+                  className={`w-4 h-4 shrink-0 ${
+                    isTotvsRm ? "text-white" : "text-text-secondary"
+                  }`}
+                />
+              </Link>
 
               {/* Card / Link do App FORÇA */}
               <Link
