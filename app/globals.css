@@ -1,0 +1,170 @@
+@import "tailwindcss";
+
+:root {
+  /* Neutros - Light Mode */
+  --surface: #F8F9FC;
+  --surface-elevated: rgba(255, 255, 255, 0.82);
+  --surface-dark: #101319;
+  --text-primary: #171A21;
+  --text-secondary: #626A78;
+  --outline: rgba(23, 26, 33, 0.10);
+
+  /* Cores expressivas */
+  --energy-blue: #5B7CFA;
+  --energy-cyan: #41C7D9;
+  --energy-violet: #9A6CFF;
+  --energy-coral: #FF706A;
+  --energy-amber: #F4B84A;
+  --energy-green: #52B788;
+
+  /* Gradiente principal */
+  --gradient-energy: linear-gradient(
+    120deg,
+    #5B7CFA 0%,
+    #41C7D9 28%,
+    #9A6CFF 52%,
+    #FF706A 76%,
+    #F4B84A 100%
+  );
+
+  /* Gradientes funcionais */
+  --gradient-progress: linear-gradient(90deg, #5B7CFA, #41C7D9, #52B788);
+  --gradient-effort: linear-gradient(90deg, #F4B84A, #FF706A, #9A6CFF);
+
+  /* Glassmorphism */
+  --glass-bg: rgba(255, 255, 255, 0.72);
+  --glass-border: rgba(255, 255, 255, 0.55);
+  --glass-shadow: 0 12px 40px rgba(20, 25, 35, 0.10);
+
+  /* Card shadow */
+  --card-shadow: 0 4px 20px -2px rgba(23, 26, 33, 0.05), 0 2px 6px -1px rgba(23, 26, 33, 0.04);
+}
+
+.dark {
+  /* Neutros - Dark Mode */
+  --surface: #0F1116;
+  --surface-elevated: rgba(28, 31, 39, 0.80);
+  --surface-dark: #171A21;
+  --text-primary: #F1F3F7;
+  --text-secondary: #9AA2B1;
+  --outline: rgba(255, 255, 255, 0.10);
+
+  /* Glassmorphism Dark */
+  --glass-bg: rgba(23, 26, 33, 0.75);
+  --glass-border: rgba(255, 255, 255, 0.10);
+  --glass-shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
+
+  /* Card shadow */
+  --card-shadow: 0 4px 24px -2px rgba(0, 0, 0, 0.40), 0 2px 8px -1px rgba(0, 0, 0, 0.30);
+}
+
+@theme {
+  --font-sans: var(--font-geist-sans), system-ui, -apple-system, sans-serif;
+  --font-mono: var(--font-geist-mono), monospace;
+
+  /* Semantic Colors */
+  --color-surface: var(--surface);
+  --color-surface-elevated: var(--surface-elevated);
+  --color-surface-dark: var(--surface-dark);
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-outline: var(--outline);
+
+  /* Expressive Colors */
+  --color-energy-blue: #5B7CFA;
+  --color-energy-cyan: #41C7D9;
+  --color-energy-violet: #9A6CFF;
+  --color-energy-coral: #FF706A;
+  --color-energy-amber: #F4B84A;
+  --color-energy-green: #52B788;
+
+  /* Border Radius */
+  --radius-sm: 12px;
+  --radius-md: 18px;
+  --radius-lg: 26px;
+  --radius-xl: 34px;
+  --radius-pill: 999px;
+}
+
+/* Base styling */
+body {
+  background-color: var(--surface);
+  color: var(--text-primary);
+  font-family: var(--font-geist-sans), system-ui, sans-serif;
+  transition: background-color 0.25s cubic-bezier(0.2, 0, 0, 1), color 0.25s cubic-bezier(0.2, 0, 0, 1);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Utilitários Expressivos FORÇA */
+.bg-gradient-energy {
+  background-image: var(--gradient-energy);
+}
+
+.text-gradient-energy {
+  background-image: var(--gradient-energy);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.border-gradient-energy {
+  border-image: var(--gradient-energy) 1;
+}
+
+.bg-gradient-progress {
+  background-image: var(--gradient-progress);
+}
+
+.text-gradient-progress {
+  background-image: var(--gradient-progress);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.bg-gradient-effort {
+  background-image: var(--gradient-effort);
+}
+
+.text-gradient-effort {
+  background-image: var(--gradient-effort);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Glassmorphism */
+.glass-surface {
+  background: var(--glass-bg);
+  backdrop-filter: blur(18px) saturate(140%);
+  -webkit-backdrop-filter: blur(18px) saturate(140%);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+}
+
+/* Card Elevation */
+.card-elevation {
+  box-shadow: var(--card-shadow);
+}
+
+/* Micro-motions táteis */
+.tap-effect {
+  transition: transform 0.15s cubic-bezier(0.2, 0, 0, 1), box-shadow 0.15s cubic-bezier(0.2, 0, 0, 1);
+}
+
+.tap-effect:active {
+  transform: scale(0.97);
+}
+
+/* Acessibilidade para Movimento Reduzido */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .tap-effect:active {
+    transform: none !important;
+  }
+}
