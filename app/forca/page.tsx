@@ -20,6 +20,7 @@ import { Button } from "@/components/ui/button";
 import { Chip } from "@/components/ui/chip";
 import { WorkoutCard } from "@/components/workout/workout-card";
 import { ActiveSetCard } from "@/components/workout/active-set-card";
+import { BottomNavigation } from "@/components/workout/bottom-navigation";
 
 export default function ForcaAppPage() {
   return (
