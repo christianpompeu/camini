@@ -24,7 +24,7 @@ import { BottomNavigation } from "@/components/workout/bottom-navigation";
 
 export default function ForcaAppPage() {
   return (
-    <div className="min-h-screen bg-surface text-text-primary flex flex-col selection:bg-energy-blue/20 selection:text-energy-blue">
+    <div className="min-h-screen bg-surface text-text-primary flex flex-col selection:bg-energy-blue/20 selection:text-energy-blue pb-32">
       {/* Barra de Navegação Superior */}
       <Navbar />
 
@@ -324,6 +324,13 @@ export default function ForcaAppPage() {
           </div>
         </div>
       </footer>
+
+      {/* Barra de Navegação Inferior Flutuante Fixa do App FORÇA */}
+      <div className="fixed bottom-4 sm:bottom-6 inset-x-0 px-4 flex justify-center z-50 pointer-events-none">
+        <div className="pointer-events-auto">
+          <BottomNavigation />
+        </div>
+      </div>
     </div>
   );
 }

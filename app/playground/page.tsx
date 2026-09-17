@@ -680,7 +680,7 @@ export default function DesignSystemPlaygroundPage() {
       </main>
 
       {/* Barra de Rodapé Flutuante Fixo para Demonstração Mobile */}
-      <div className="fixed bottom-4 inset-x-0 px-4 flex justify-center z-50 pointer-events-none">
+      <div className="fixed bottom-4 sm:bottom-6 inset-x-0 px-4 flex justify-center z-50 pointer-events-none">
         <div className="pointer-events-auto">
           <BottomNavigation />
         </div>
