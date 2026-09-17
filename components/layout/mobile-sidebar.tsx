@@ -39,27 +39,34 @@ export function MobileSidebar({ isOpen, onClose }: MobileSidebarProps) {
     };
   }, [isOpen, onClose]);
 
-  if (!isOpen) return null;
-
   const isHome = pathname === "/";
   const isForca = pathname.startsWith("/forca");
   const isPlayground = pathname.startsWith("/playground");
 
   return (
-    <div className="fixed inset-0 z-50 md:hidden">
-      {/* Backdrop escuro com blur */}
+    <div
+      className={`fixed inset-0 z-50 md:hidden transition-[visibility] duration-300 ${
+        isOpen ? "visible pointer-events-auto" : "invisible pointer-events-none"
+      }`}
+      aria-hidden={!isOpen}
+    >
+      {/* Backdrop escuro com blur com transição suave de opacidade */}
       <div
         onClick={onClose}
         aria-hidden="true"
-        className="fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity duration-300 animate-in fade-in"
+        className={`fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity duration-300 ease-in-out ${
+          isOpen ? "opacity-100" : "opacity-0"
+        }`}
       />
 
-      {/* Drawer lateral deslizante vindo da direita (mesmo lado do botão toggle) */}
+      {/* Drawer lateral deslizante vindo da direita com física suave Material 3 */}
       <aside
         role="dialog"
         aria-modal="true"
         aria-label="Menu de Navegação camini"
-        className="fixed inset-y-0 right-0 w-4/5 max-w-sm glass-surface bg-surface/95 border-l border-outline p-6 flex flex-col justify-between shadow-2xl transition-transform duration-300 ease-out animate-in slide-in-from-right"
+        className={`fixed inset-y-0 right-0 w-4/5 max-w-sm glass-surface bg-surface/95 border-l border-outline p-6 flex flex-col justify-between shadow-2xl transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] will-change-transform ${
+          isOpen ? "translate-x-0" : "translate-x-full"
+        }`}
       >
         <div>
           {/* Cabeçalho da Sidebar */}

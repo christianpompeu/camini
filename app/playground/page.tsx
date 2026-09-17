@@ -30,6 +30,12 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { StatusBanner } from "@/components/ui/status-banner";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
+import {
+  Skeleton,
+  WorkoutCardSkeleton,
+  ActiveSetCardSkeleton,
+  StatCardSkeleton,
+} from "@/components/ui/skeleton";
 
 import { WorkoutCard } from "@/components/workout/workout-card";
 import { ActiveSetCard } from "@/components/workout/active-set-card";
@@ -41,6 +47,7 @@ import { Navbar } from "@/components/layout/navbar";
 
 export default function DesignSystemPlaygroundPage() {
   const [activeTab, setActiveTab] = useState<"todos" | "tokens" | "ui" | "treino">("todos");
+  const [simulateLoading, setSimulateLoading] = useState(false);
   const [sampleInput, setSampleInput] = useState("80");
   const [sampleError, setSampleError] = useState("");
   const [showSuccessBanner, setShowSuccessBanner] = useState(true);
@@ -548,6 +555,46 @@ export default function DesignSystemPlaygroundPage() {
                   onClose={() => setShowOfflineBanner(false)}
                 />
               )}
+            </div>
+
+            {/* Skeletons e Carregamento Assíncrono com Shimmer */}
+            <div className="p-6 rounded-xl bg-surface-elevated border border-outline card-elevation space-y-6">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-outline/50">
+                <div>
+                  <h3 className="text-sm font-bold uppercase tracking-wider text-text-secondary">
+                    Skeletons & Shimmer (Carregamento Assíncrono)
+                  </h3>
+                  <p className="text-xs text-text-secondary mt-0.5">
+                    Placeholders com animação fluida para simular carregamento futuro de dados sem layout shifts.
+                  </p>
+                </div>
+                <Button
+                  variant={simulateLoading ? "energy" : "secondary"}
+                  size="sm"
+                  onClick={() => setSimulateLoading(!simulateLoading)}
+                  className="self-start sm:self-auto tap-effect"
+                >
+                  <Sparkles className="w-3.5 h-3.5" />
+                  <span>{simulateLoading ? "Skeletons Ativos (Clique para Desativar)" : "Simular Carregamento"}</span>
+                </Button>
+              </div>
+
+              {/* Grid de Demonstração de Skeletons */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+                <div className="space-y-3">
+                  <span className="text-xs font-bold text-text-secondary uppercase tracking-wider block">
+                    Placeholder: Workout Card
+                  </span>
+                  <WorkoutCardSkeleton />
+                </div>
+
+                <div className="space-y-3">
+                  <span className="text-xs font-bold text-text-secondary uppercase tracking-wider block">
+                    Placeholder: Active Set Card
+                  </span>
+                  <ActiveSetCardSkeleton />
+                </div>
+              </div>
             </div>
           </section>
         )}
