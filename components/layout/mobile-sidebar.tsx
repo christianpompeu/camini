@@ -54,12 +54,12 @@ export function MobileSidebar({ isOpen, onClose }: MobileSidebarProps) {
         className="fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity duration-300 animate-in fade-in"
       />
 
-      {/* Drawer lateral deslizante */}
+      {/* Drawer lateral deslizante vindo da direita (mesmo lado do botão toggle) */}
       <aside
         role="dialog"
         aria-modal="true"
         aria-label="Menu de Navegação camini"
-        className="fixed inset-y-0 left-0 w-4/5 max-w-sm glass-surface bg-surface/95 border-r border-outline p-6 flex flex-col justify-between shadow-2xl transition-transform duration-300 ease-out animate-in slide-in-from-left"
+        className="fixed inset-y-0 right-0 w-4/5 max-w-sm glass-surface bg-surface/95 border-l border-outline p-6 flex flex-col justify-between shadow-2xl transition-transform duration-300 ease-out animate-in slide-in-from-right"
       >
         <div>
           {/* Cabeçalho da Sidebar */}
