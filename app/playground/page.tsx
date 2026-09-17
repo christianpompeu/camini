@@ -21,6 +21,7 @@ import {
   Timer,
   Eye,
   Sliders,
+  Home,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -36,6 +37,7 @@ import { RestTimer } from "@/components/workout/rest-timer";
 import { FloatingWorkoutBar } from "@/components/workout/floating-workout-bar";
 import { BottomNavigation } from "@/components/workout/bottom-navigation";
 import { ExerciseHero } from "@/components/workout/exercise-hero";
+import { Navbar } from "@/components/layout/navbar";
 
 export default function DesignSystemPlaygroundPage() {
   const [activeTab, setActiveTab] = useState<"todos" | "tokens" | "ui" | "treino">("todos");
@@ -73,37 +75,30 @@ export default function DesignSystemPlaygroundPage() {
 
   return (
     <div className="min-h-screen bg-surface text-text-primary pb-32">
-      {/* Header Sticky com Blur Glass */}
-      <header className="sticky top-0 z-40 glass-surface border-b border-outline px-4 sm:px-8 py-3.5 flex items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-lg bg-gradient-energy flex items-center justify-center text-white font-black text-lg shadow-md shadow-energy-blue/20">
-            F
-          </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="font-black text-xl tracking-tight text-text-primary">
-                FORÇA
-              </span>
-              <span className="text-[10px] uppercase font-bold tracking-widest px-2 py-0.5 rounded-pill bg-energy-blue/15 text-energy-blue">
-                Playground 2026
-              </span>
-            </div>
-            <p className="text-xs text-text-secondary hidden sm:block">
-              Material 3 Expressive • Mobile-First • Design Tokens
-            </p>
-          </div>
-        </div>
+      {/* Barra de Navegação Superior Padronizada camini */}
+      <Navbar />
 
-        <div className="flex items-center gap-2">
-          {/* Navegação de Abas do Playground */}
-          <div className="hidden md:flex items-center bg-surface border border-outline rounded-pill p-1">
+      {/* Sub-barra de Contexto e Filtros de Abas do Playground */}
+      <div className="bg-surface-elevated/80 border-b border-outline/50 px-4 sm:px-8 py-2.5">
+        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="flex items-center gap-2 text-xs text-text-secondary">
+            <Link href="/" className="hover:text-text-primary transition-colors flex items-center gap-1">
+              <Home className="w-3.5 h-3.5" />
+              <span>camini Hub</span>
+            </Link>
+            <span>/</span>
+            <span className="font-bold text-energy-violet">Design System Playground</span>
+          </div>
+
+          {/* Abas de Navegação de Tokens / Seções */}
+          <div className="flex items-center bg-surface border border-outline rounded-pill p-1 self-start sm:self-auto overflow-x-auto">
             {(["todos", "tokens", "ui", "treino"] as const).map((tab) => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
                 className={`px-3 py-1 rounded-pill text-xs font-semibold capitalize transition-all tap-effect ${
                   activeTab === tab
-                    ? "bg-gradient-energy text-white shadow-sm"
+                    ? "bg-gradient-energy text-white shadow-sm font-bold"
                     : "text-text-secondary hover:text-text-primary"
                 }`}
               >
@@ -111,10 +106,8 @@ export default function DesignSystemPlaygroundPage() {
               </button>
             ))}
           </div>
-
-          <ThemeToggle />
         </div>
-      </header>
+      </div>
 
       {/* Hero do Playground */}
       <section className="px-4 sm:px-8 max-w-6xl mx-auto pt-8 pb-6">
