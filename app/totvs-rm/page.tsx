@@ -34,8 +34,11 @@ export default function TotvsRmChatPage() {
   const [selectedModule, setSelectedModule] = useState("");
 
   const [settings, setSettings] = useState<UserSettings>({
+    llmProvider: "gemini",
     geminiApiKey: "",
     geminiModel: "gemini-2.5-flash",
+    groqApiKey: "",
+    groqModel: "llama-3.3-70b-versatile",
     sqlDialect: "sqlserver",
     includeComments: true,
     defaultColigadaFilter: true,
@@ -48,7 +51,15 @@ export default function TotvsRmChatPage() {
     try {
       const savedSettings = localStorage.getItem(LOCAL_STORAGE_SETTINGS);
       if (savedSettings) {
-        setSettings(JSON.parse(savedSettings));
+        // Trava temporária: somente SQL Server (Oracle em breve).
+        // Defaults primeiro para normalizar settings antigos sem llmProvider.
+        setSettings({
+          llmProvider: "gemini",
+          groqApiKey: "",
+          groqModel: "llama-3.3-70b-versatile",
+          ...JSON.parse(savedSettings),
+          sqlDialect: "sqlserver",
+        });
       }
 
       const savedSessions = localStorage.getItem(LOCAL_STORAGE_SESSIONS);
@@ -79,11 +90,17 @@ export default function TotvsRmChatPage() {
     }
   };
 
-  // 3. Salvar configurações
+  // 3. Salvar configurações (trava temporária: somente SQL Server)
   const handleSaveSettings = (newSettings: UserSettings) => {
-    setSettings(newSettings);
+    const normalized: UserSettings = {
+      ...newSettings,
+      llmProvider: newSettings.llmProvider || "gemini",
+      groqModel: newSettings.groqModel || "llama-3.3-70b-versatile",
+      sqlDialect: "sqlserver",
+    };
+    setSettings(normalized);
     try {
-      localStorage.setItem(LOCAL_STORAGE_SETTINGS, JSON.stringify(newSettings));
+      localStorage.setItem(LOCAL_STORAGE_SETTINGS, JSON.stringify(normalized));
     } catch (err) {
       console.error("Erro ao salvar configurações:", err);
     }
@@ -184,8 +201,11 @@ export default function TotvsRmChatPage() {
           messages: updatedMessages.map((m) => ({ role: m.role, content: m.content })),
           systemModule: selectedModule,
           dialect: settings.sqlDialect,
+          provider: settings.llmProvider,
           userApiKey: settings.geminiApiKey,
           userModel: settings.geminiModel,
+          userGroqKey: settings.groqApiKey,
+          userGroqModel: settings.groqModel,
         }),
       });
 
@@ -306,6 +326,10 @@ export default function TotvsRmChatPage() {
 
               <span className="text-[10px] px-2 py-0.5 rounded-pill bg-surface border border-outline text-text-secondary hidden sm:inline-block font-mono">
                 {settings.sqlDialect === "oracle" ? "Oracle PL/SQL" : "SQL Server T-SQL"}
+              </span>
+
+              <span className="text-[10px] px-2 py-0.5 rounded-pill bg-surface border border-outline text-text-secondary hidden sm:inline-block font-mono">
+                {settings.llmProvider === "groq" ? "Groq" : "Gemini"}
               </span>
             </div>
 

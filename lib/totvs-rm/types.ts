@@ -53,8 +53,11 @@ export interface ChatSession {
 }
 
 export interface UserSettings {
+  llmProvider: "gemini" | "groq" | "openrouter";
   geminiApiKey?: string;
   geminiModel: string;
+  groqApiKey?: string;
+  groqModel: string;
   sqlDialect: "sqlserver" | "oracle";
   includeComments: boolean;
   defaultColigadaFilter: boolean;

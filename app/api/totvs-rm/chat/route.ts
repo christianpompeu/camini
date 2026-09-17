@@ -1,18 +1,30 @@
 import { NextRequest, NextResponse } from "next/server";
-import { identifyRelevantTables, buildSchemaContextPrompt } from "@/lib/totvs-rm/schema-engine";
+import { identifyRelevantTables, buildSchemaContextPrompt, getTableDetails } from "@/lib/totvs-rm/schema-engine";
+import { connectSeedTables } from "@/lib/totvs-rm/join-graph";
+import {
+  chatCompleteWithFailover,
+  DEFAULT_GROQ_MODEL,
+  LlmProviderId,
+  ProviderCredential,
+} from "@/lib/totvs-rm/llm/providers";
 
 interface ChatRequestBody {
   messages: Array<{ role: string; content: string }>;
   systemModule?: string;
   dialect?: "sqlserver" | "oracle";
+  provider?: "gemini" | "groq" | "openrouter";
   userApiKey?: string;
   userModel?: string;
+  userGroqKey?: string;
+  userGroqModel?: string;
 }
 
 export async function POST(req: NextRequest) {
   try {
     const body: ChatRequestBody = await req.json();
-    const { messages, systemModule, dialect = "sqlserver", userApiKey, userModel } = body;
+    const { messages, systemModule, userApiKey, userModel } = body;
+    // Trava temporária: somente Microsoft SQL Server (T-SQL). O campo `dialect`
+    // vindo do client é ignorado de propósito e o Oracle será reintroduzido depois.
 
     if (!messages || messages.length === 0) {
       return NextResponse.json({ error: "Nenhuma mensagem enviada." }, { status: 400 });
@@ -23,18 +35,39 @@ export async function POST(req: NextRequest) {
 
     // 1. Identificar tabelas e relacionamentos relevantes no dicionário do RM
     const identifiedTables = identifyRelevantTables(userPrompt, systemModule);
+    // Tabelas-ponte descobertas pelo grafo de JOINs (ligam as tabelas-semente)
+    const { bridgeTables } = connectSeedTables(identifiedTables.map((t) => t.Tabela));
+    for (const bridge of bridgeTables) {
+      if (!identifiedTables.some((t) => t.Tabela.toUpperCase() === bridge)) {
+        const details = getTableDetails(bridge);
+        if (details) identifiedTables.push(details);
+      }
+    }
     const schemaContext = buildSchemaContextPrompt(identifiedTables);
     const tablesUsed = identifiedTables.map((t) => t.Tabela);
 
-    // 2. Chave de API Gemini (da requisição ou de process.env)
-    const apiKey = userApiKey?.trim() || process.env.GEMINI_API_KEY?.trim();
-    const selectedModel = userModel || "gemini-2.5-flash";
+    // 2. Cadeia de providers LLM: o selecionado primeiro, o outro de failover
+    // (chave do usuário ou de process.env; 429/quota vira rota alternativa)
+    const selectedProvider: LlmProviderId = body.provider === "groq" ? "groq" : "gemini";
+    const geminiKey = userApiKey?.trim() || process.env.GEMINI_API_KEY?.trim() || "";
+    const groqKey = body.userGroqKey?.trim() || process.env.GROQ_API_KEY?.trim() || "";
+    const otherProvider: LlmProviderId = selectedProvider === "groq" ? "gemini" : "groq";
+    const modelFor = (id: LlmProviderId) =>
+      id === "groq" ? body.userGroqModel || DEFAULT_GROQ_MODEL : userModel || "gemini-2.5-flash";
+    const keyFor = (id: LlmProviderId) => (id === "groq" ? groqKey : geminiKey);
+    const chain: ProviderCredential[] = [selectedProvider, otherProvider].map((id) => ({
+      id,
+      apiKey: keyFor(id),
+      model: modelFor(id),
+    }));
 
     // 3. Montagem do prompt do sistema especializado em TOTVS RM
     const systemPrompt = `Você é o maior especialista sênior em banco de dados e desenvolvimento de consultas SQL para o ERP TOTVS Corpore RM.
 Sua missão é gerar scripts SQL de alta performance, precisos e elegantes, rigorosamente alinhados com a arquitetura e dicionário de dados do RM.
 
-DIALETO REQUISITADO: ${dialect === "oracle" ? "Oracle PL/SQL" : "Microsoft SQL Server T-SQL (padrão do RM)"}
+DIALETO OBRIGATÓRIO: Microsoft SQL Server T-SQL (padrão do RM). É PROIBIDO usar qualquer sintaxe Oracle (NVL, SYSDATE, FETCH FIRST, DEFINE, VARCHAR2, NUMBER, binds :VAR, operador || para concatenação, FROM DUAL).
+
+Responda sempre em português (PT-BR), de forma clara e amigável para um consultor funcional do RM.
 
 DIRETRIZES FUNDAMENTAIS DO TOTVS CORPORE RM:
 1. Multi-Coligada: O RM é um sistema multi-empresa. QUASE TODAS as tabelas possuem a coluna CODCOLIGADA. Sempre filtre por CODCOLIGADA ou declare um parâmetro (ex: @CODCOLIGADA = 1).
@@ -49,6 +82,7 @@ DIRETRIZES FUNDAMENTAIS DO TOTVS CORPORE RM:
    - Seção / Centro de Custo RH: PSECAO (PFUNC.CODCOLIGADA = PSECAO.CODCOLIGADA AND PFUNC.CODSECAO = PSECAO.CODIGO).
 6. Performance: No SQL Server, use sempre a dica WITH (NOLOCK) para tabelas de grande volume (FLAN, TMOV, TITMMOV, PFUNC, CPARTIDA) para não bloquear transações concorrentes no ERP.
 7. Formatação: O SQL deve ser limpo, indentado com aliases claros (ex: F para FLAN, C para FCFO, M para TMOV, I para TITMMOV).
+8. JOINs: utilize EXCLUSIVAMENTE as condições da seção JOINS GARANTIDOS do contexto (extraídas do dicionário oficial). Nunca invente colunas de ligação.
 
 CONTEXTO DO ESQUEMA EXTRAÍDO DO DICIONÁRIO RM:
 ${schemaContext}
@@ -57,7 +91,7 @@ FORMATO DA SUA RESPOSTA:
 Você DEVE responder ESTRITAMENTE em formato JSON com a seguinte estrutura:
 {
   "sqlCode": "-- Script SQL completo aqui formatado",
-  "sqlExplanation": "Explicação detalhada em Markdown explicando as tabelas utilizadas, as condições de junção (JOINs) e os filtros aplicados.",
+  "sqlExplanation": "Explicação detalhada EM PORTUGUÊS (Markdown) explicando as tabelas utilizadas, as condições de junção (JOINs) e os filtros aplicados.",
   "tablesUsed": ["TABELA1", "TABELA2"],
   "tips": [
     "Dica prática de performance ou regra de negócio RM relacionada a esta consulta",
@@ -65,69 +99,34 @@ Você DEVE responder ESTRITAMENTE em formato JSON com a seguinte estrutura:
   ]
 }`;
 
-    // Se temos uma chave de API, chama o Gemini oficial
-    if (apiKey) {
-      try {
-        const response = await fetch(
-          `https://generativelanguage.googleapis.com/v1beta/models/${selectedModel}:generateContent?key=${apiKey}`,
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              contents: [
-                {
-                  role: "user",
-                  parts: [
-                    {
-                      text: `${systemPrompt}\n\nSOLICITAÇÃO DO USUÁRIO:\n${userPrompt}`,
-                    },
-                  ],
-                },
-              ],
-              generationConfig: {
-                temperature: 0.2,
-                responseMimeType: "application/json",
-              },
-            }),
-          }
-        );
-
-        if (!response.ok) {
-          const errData = await response.json();
-          console.error("Erro na API do Gemini:", errData);
-          throw new Error(errData?.error?.message || "Falha na comunicação com a API do Gemini.");
-        }
-
-        const data = await response.json();
-        const rawContent = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-
-        if (rawContent) {
-          const parsed = JSON.parse(rawContent);
-          return NextResponse.json({
-            content: parsed.sqlExplanation || "Consulta gerada com sucesso.",
-            sqlCode: parsed.sqlCode || "",
-            sqlExplanation: parsed.sqlExplanation || "",
-            tablesUsed: parsed.tablesUsed?.length > 0 ? parsed.tablesUsed : tablesUsed,
-            tips: parsed.tips || [],
-          });
-        }
-      } catch (geminiErr: unknown) {
-        const errMsg = geminiErr instanceof Error ? geminiErr.message : "Erro desconhecido";
-        console.warn("Falha ao chamar Gemini, acionando gerador especializado RM:", errMsg);
-        // Prossegue para o fallback inteligente abaixo
-      }
+    // 3. Providers LLM com failover (selecionado -> outro -> fallback local)
+    try {
+      const { result } = await chatCompleteWithFailover(chain, { systemPrompt, userPrompt });
+      const normalized = validateAndNormalizeTSql(result.sqlCode || "");
+      return NextResponse.json({
+        content: result.sqlExplanation || "Consulta gerada com sucesso.",
+        sqlCode: normalized.sql,
+        sqlExplanation: result.sqlExplanation || "",
+        tablesUsed: result.tablesUsed?.length > 0 ? result.tablesUsed : tablesUsed,
+        tips: [...normalized.warnings, ...(result.tips || [])],
+      });
+    } catch (llmErr: unknown) {
+      const errMsg = llmErr instanceof Error ? llmErr.message : "Erro desconhecido";
+      console.warn("Falha nos providers LLM, acionando gerador especializado RM:", errMsg);
+      // Prossegue para o fallback inteligente abaixo
     }
 
     // 4. Modo Fallback Inteligente Especializado (Gera SQL real com base no dicionário RM mesmo sem chave configurada)
-    const fallbackResponse = generateSpecializedRMSql(userPrompt, identifiedTables, dialect);
+    const fallbackResponse = generateSpecializedRMSql(userPrompt, identifiedTables);
+    const normalizedFallback = validateAndNormalizeTSql(fallbackResponse.sqlCode);
 
     return NextResponse.json({
       content: fallbackResponse.sqlExplanation,
-      sqlCode: fallbackResponse.sqlCode,
+      sqlCode: normalizedFallback.sql,
       sqlExplanation: fallbackResponse.sqlExplanation,
       tablesUsed: fallbackResponse.tablesUsed.length > 0 ? fallbackResponse.tablesUsed : tablesUsed,
-      tips: fallbackResponse.tips,
-      isFallback: !apiKey,
+      tips: [...normalizedFallback.warnings, ...fallbackResponse.tips],
+      isFallback: true,
     });
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : "Erro interno ao processar consulta.";
@@ -138,15 +137,14 @@ Você DEVE responder ESTRITAMENTE em formato JSON com a seguinte estrutura:
 
 /**
  * Gerador determinístico de consultas TOTVS RM de alta fidelidade
- * Usado como demonstração/fallback imediato caso nenhuma chave Gemini tenha sido configurada ainda.
+ * Usado como demonstração/fallback imediato caso nenhum provider LLM esteja disponível.
  */
 function generateSpecializedRMSql(
   prompt: string,
-  tables: Array<{ Tabela: string; Descricao?: string }>,
-  dialect: "sqlserver" | "oracle"
+  tables: Array<{ Tabela: string; Descricao?: string }>
 ) {
   const p = prompt.toLowerCase();
-  const nolock = dialect === "sqlserver" ? " WITH (NOLOCK)" : "";
+  const nolock = " WITH (NOLOCK)";
 
   // Cenário 1: Financeiro / Lançamentos (FLAN, FCFO)
   if (p.includes("financeiro") || p.includes("pagar") || p.includes("receber") || p.includes("titulo") || p.includes("flan")) {
@@ -157,7 +155,7 @@ function generateSpecializedRMSql(
     const sql = `-- =====================================================================
 -- TOTVS CORPORE RM - GESTÃO FINANCEIRA (RM FLUXUS)
 -- Consulta: Lançamentos Financeiros com Dados do Cliente/Fornecedor
--- Dialeto: ${dialect === "oracle" ? "Oracle PL/SQL" : "Microsoft SQL Server T-SQL"}
+-- Dialeto: Microsoft SQL Server T-SQL
 -- =====================================================================
 
 DECLARE @CODCOLIGADA INT = 1;
@@ -209,7 +207,7 @@ ORDER BY L.DATAVENCIMENTO ASC;`;
     const sql = `-- =====================================================================
 -- TOTVS CORPORE RM - GESTÃO DE ESTOQUE E COMPRAS (RM NUCLEUS)
 -- Consulta: Movimentos (Cabeçalho, Itens e Produtos)
--- Dialeto: ${dialect === "oracle" ? "Oracle PL/SQL" : "Microsoft SQL Server T-SQL"}
+-- Dialeto: Microsoft SQL Server T-SQL
 -- =====================================================================
 
 DECLARE @CODCOLIGADA INT = 1;
@@ -271,7 +269,7 @@ ORDER BY M.DATAEMISSAO DESC, M.IDMOV, I.NSEQITMMOV;`;
     const sql = `-- =====================================================================
 -- TOTVS CORPORE RM - RECURSOS HUMANOS E FOLHA (RM LABORE)
 -- Consulta: Colaboradores Ativos com Cargo, Seção e Salário
--- Dialeto: ${dialect === "oracle" ? "Oracle PL/SQL" : "Microsoft SQL Server T-SQL"}
+-- Dialeto: Microsoft SQL Server T-SQL
 -- =====================================================================
 
 DECLARE @CODCOLIGADA INT = 1;
@@ -324,7 +322,7 @@ ORDER BY S.DESCRICAO, F.NOME;`;
   const genericSql = `-- =====================================================================
 -- TOTVS CORPORE RM - CONSULTA ESPECIALIZADA
 -- Tabelas identificadas: ${targetTables.map((t) => t.Tabela).join(", ")}
--- Dialeto: ${dialect === "oracle" ? "Oracle PL/SQL" : "Microsoft SQL Server T-SQL"}
+-- Dialeto: Microsoft SQL Server T-SQL
 -- =====================================================================
 
 DECLARE @CODCOLIGADA INT = 1;
@@ -344,4 +342,94 @@ ORDER BY 1 DESC;`;
       "Para obter os nomes dos campos exatos, você pode utilizar o botão 'Explorar Dicionário' na barra de ferramentas.",
     ],
   };
+}
+
+/**
+ * Validador/normalizador T-SQL (trava temporária: somente SQL Server).
+ * Converte resquícios de sintaxe Oracle em T-SQL equivalente e devolve
+ * avisos amigáveis em PT-BR, que são anexados ao array `tips` da resposta.
+ */
+function validateAndNormalizeTSql(input: string): { sql: string; warnings: string[] } {
+  const warnings: string[] = [];
+  if (!input) return { sql: input, warnings };
+
+  let sql = input;
+
+  // NVL(...) -> ISNULL(...)
+  if (/\bNVL\s*\(/i.test(sql)) {
+    sql = sql.replace(/\bNVL\s*\(/gi, "ISNULL(");
+    warnings.push("Converti NVL() para ISNULL(), que é a função equivalente no SQL Server.");
+  }
+
+  // SYSDATE -> GETDATE()
+  if (/\bSYSDATE\b/i.test(sql)) {
+    sql = sql.replace(/\bSYSDATE\b/gi, "GETDATE()");
+    warnings.push("Troquei SYSDATE por GETDATE(), a função de data/hora atual do SQL Server.");
+  }
+
+  // VARCHAR2 -> VARCHAR
+  if (/\bVARCHAR2\b/i.test(sql)) {
+    sql = sql.replace(/\bVARCHAR2\b/gi, "VARCHAR");
+    warnings.push("Ajustei VARCHAR2 para VARCHAR, o tipo texto do SQL Server.");
+  }
+
+  // FETCH FIRST N ROWS ONLY (Oracle) -> TOP N (SQL Server, reposicionado após o SELECT)
+  const fetchMatch = sql.match(/FETCH\s+FIRST\s+(\d+)\s+ROWS\s+ONLY/i);
+  if (fetchMatch) {
+    const topN = fetchMatch[1];
+    sql = sql.replace(/FETCH\s+FIRST\s+\d+\s+ROWS\s+ONLY/i, "");
+    if (!/\bSELECT\s+TOP\s+\d+/i.test(sql)) {
+      sql = sql.replace(/\bSELECT\s+(DISTINCT\s+)?/i, (_m, d) => `SELECT TOP ${topN} ${d || ""}`);
+    }
+    warnings.push(`Converti FETCH FIRST ${topN} ROWS ONLY (Oracle) para TOP ${topN} (SQL Server).`);
+  }
+
+  // Atribuição Oracle := -> =
+  if (/:=/.test(sql)) {
+    sql = sql.replace(/:=/g, "=");
+    warnings.push("Troquei o operador de atribuição := (Oracle) por = (T-SQL).");
+  }
+
+  // Binds Oracle :VAR -> variáveis T-SQL @VAR
+  if (/(^|[\s,(=]):([A-Za-z_][A-Za-z0-9_]*)/.test(sql)) {
+    sql = sql.replace(/(^|[\s,(=]):([A-Za-z_][A-Za-z0-9_]*)/g, "$1@$2");
+    warnings.push("Converti variáveis bind :NOME (Oracle) para @NOME (variáveis T-SQL).");
+  }
+
+  // FROM DUAL só existe no Oracle — no SQL Server o SELECT sem tabela é válido
+  if (/\bFROM\s+DUAL\b/i.test(sql)) {
+    sql = sql.replace(/\bFROM\s+DUAL\b/i, "");
+    warnings.push("Removi FROM DUAL, que só existe no Oracle — no SQL Server o SELECT sem tabela é válido.");
+  }
+
+  // Resíduos Oracle sem conversão automática: viram aviso de revisão manual
+  const leftovers: Array<{ pattern: RegExp; hint: string }> = [
+    { pattern: /\bCONNECT\s+BY\b/i, hint: "CONNECT BY (hierarquia Oracle): reescreva com CTE recursiva (WITH ... AS) no SQL Server." },
+    { pattern: /\bSTART\s+WITH\b/i, hint: "START WITH (Oracle): reescreva com CTE recursiva no SQL Server." },
+    { pattern: /\|\|/, hint: "Operador || (concatenação Oracle): use + ou a função CONCAT() no SQL Server." },
+    { pattern: /\bNUMBER\s*\(/i, hint: "Tipo NUMBER (Oracle): use NUMERIC/DECIMAL ou INT no SQL Server." },
+    { pattern: /\.NEXTVAL/i, hint: "Sequences Oracle (.NEXTVAL): use IDENTITY ou SEQUENCE do SQL Server (NEXT VALUE FOR)." },
+  ];
+  for (const item of leftovers) {
+    if (item.pattern.test(sql)) {
+      warnings.push(item.hint);
+    }
+  }
+
+  // Checagem amigável: citou CODCOLIGADA mas não filtra por ela
+  if (/CODCOLIGADA/i.test(sql) && !/WHERE[\s\S]*CODCOLIGADA/i.test(sql)) {
+    warnings.push("Atenção: o script cita CODCOLIGADA mas não filtra por ela no WHERE — restrinja a coligada para aproveitar os índices do RM.");
+  }
+
+  // Checagem amigável: tabelas de grande volume sem WITH (NOLOCK)
+  const bigTables = ["FLAN", "TMOV", "TITMMOV", "PFUNC", "CPARTIDA", "TPRD", "FCFO"];
+  const mentionsBigTable = bigTables.some((t) => new RegExp(`\\b${t}\\b`, "i").test(sql));
+  if (mentionsBigTable && !/WITH\s*\(\s*NOLOCK\s*\)/i.test(sql)) {
+    warnings.push("Tabelas de grande volume (FLAN, TMOV, PFUNC...) sem WITH (NOLOCK): considere adicionar para não bloquear o ERP em produção.");
+  }
+
+  // Limpeza leve de espaços no fim das linhas (ex.: após remover FETCH FIRST)
+  sql = sql.replace(/[ \t]+$/gm, "");
+
+  return { sql, warnings };
 }

@@ -1,6 +1,7 @@
 import fs from "fs";
 import path from "path";
 import { RMTable, RMTableSummary } from "./types";
+import { connectSeedTables, formatJoinCondition } from "./join-graph";
 
 const DATA_DIR = path.join(process.cwd(), "public", "dicionario_rm", "data");
 
@@ -233,6 +234,29 @@ export function identifyRelevantTables(userPrompt: string, selectedModule?: stri
 }
 
 /**
+ * Aloca aliases curtos e únicos para tabelas (F, C, M, I, F2...) usados nas
+ * condições de JOIN garantidas.
+ */
+export function allocateAliases(tableNames: string[]): Map<string, string> {
+  const map = new Map<string, string>();
+  const used = new Set<string>();
+  for (const raw of tableNames) {
+    const name = raw.toUpperCase().trim();
+    if (!name || map.has(name)) continue;
+    const base = name.charAt(0);
+    let alias = base;
+    let n = 2;
+    while (used.has(alias)) {
+      alias = `${base}${n}`;
+      n++;
+    }
+    used.add(alias);
+    map.set(name, alias);
+  }
+  return map;
+}
+
+/**
  * Constrói o resumo das tabelas, colunas e relacionamentos formatado para o prompt do LLM
  */
 export function buildSchemaContextPrompt(tables: RMTable[]): string {
@@ -241,6 +265,29 @@ export function buildSchemaContextPrompt(tables: RMTable[]): string {
   }
 
   let text = "### ESQUEMA DO DICIONÁRIO DE DADOS TOTVS RM IDENTIFICADO PARA ESTA CONSULTA:\n\n";
+
+  // JOINs garantidos pelo grafo do dicionário (GLINKSREL + RelacionamentosRM via BFS)
+  const seedNames = tables.map((t) => t.Tabela);
+  const { joins, bridgeTables } = connectSeedTables(seedNames);
+  if (joins.length > 0) {
+    const aliases = allocateAliases([...seedNames, ...bridgeTables]);
+    text += "### JOINS GARANTIDOS PELO DICIONÁRIO (use EXATAMENTE estas condições de junção):\n";
+    for (const j of joins) {
+      const aFrom = aliases.get(j.from) || j.from;
+      const aTo = aliases.get(j.to) || j.to;
+      text += `- ${j.from} (${aFrom}) ↔ ${j.to} (${aTo}): ${formatJoinCondition(j, aFrom, aTo)}`;
+      if (j.mismatched) {
+        text += " [ATENÇÃO: divergência na chave composta do dicionário — confira os campos antes de usar]";
+      }
+      text += "\n";
+    }
+    if (bridgeTables.length > 0) {
+      text += `Tabelas-ponte incluídas no caminho (podem entrar no FROM apenas para ligar as demais): ${bridgeTables.join(", ")}\n`;
+    }
+    text += "\n";
+  } else if (tables.length > 1) {
+    text += "### JOINS GARANTIDOS PELO DICIONÁRIO: nenhum caminho direto encontrado entre as tabelas acima — prefira subconsultas ou confira os campos no Dicionário RM.\n\n";
+  }
 
   for (const table of tables) {
     const firstChar = table.Tabela.charAt(0);

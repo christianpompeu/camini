@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "build:rm-index": "node scripts/build-rm-index.cjs",
+    "check:rm-golden": "node scripts/check-golden.cjs"
   },
   "dependencies": {
     "lucide-react": "^1.46.0",

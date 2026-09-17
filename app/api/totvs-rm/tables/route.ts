@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getRMTableCatalog, getTableDetails, RM_MODULES_MAP } from "@/lib/totvs-rm/schema-engine";
+import { findJoinPath, formatJoinCondition } from "@/lib/totvs-rm/join-graph";
 
 export async function GET(req: NextRequest) {
   try {
@@ -7,6 +8,29 @@ export async function GET(req: NextRequest) {
     const query = searchParams.get("q")?.trim() || "";
     const modulePrefix = searchParams.get("module")?.toUpperCase().trim() || "";
     const specificTable = searchParams.get("table")?.toUpperCase().trim() || "";
+    const joinPath = searchParams.get("path")?.toUpperCase().trim() || "";
+
+    // Caminho de JOINs entre duas tabelas (ex.: ?path=FLAN,FCFO)
+    if (joinPath) {
+      const [from, to] = joinPath.split(",").map((t) => t.trim());
+      if (!from || !to) {
+        return NextResponse.json({ error: "Use ?path=ORIGEM,DESTINO." }, { status: 400 });
+      }
+      const steps = findJoinPath(from, to);
+      if (!steps) {
+        return NextResponse.json({ from, to, path: [], message: "Sem caminho no grafo do dicionário." });
+      }
+      return NextResponse.json({
+        from,
+        to,
+        path: steps.map((s) => ({
+          from: s.from,
+          to: s.to,
+          condition: formatJoinCondition(s, s.from, s.to),
+          mismatched: s.mismatched,
+        })),
+      });
+    }
 
     // Se solicitou detalhes completos de uma tabela específica
     if (specificTable) {

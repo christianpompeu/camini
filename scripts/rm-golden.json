@@ -1,0 +1,60 @@
+{
+  "cases": [
+    {
+      "name": "financeiro-pagar",
+      "prompt": "Lancamentos financeiros a pagar em aberto com fornecedor e vencimento",
+      "dialect": "sqlserver",
+      "expectTables": ["FLAN", "FCFO"],
+      "expectSnippets": ["CODCOLCFO", "PAGREC", "STATUSLAN"]
+    },
+    {
+      "name": "financeiro-receber-oracle-travado",
+      "prompt": "Lancamentos financeiros a receber em aberto",
+      "dialect": "oracle",
+      "expectTables": ["FLAN", "FCFO"],
+      "expectSnippets": ["CODCOLCFO", "ISNULL"]
+    },
+    {
+      "name": "movimento-compras",
+      "prompt": "Movimentos de compras com itens, produtos, quantidade e fornecedor",
+      "dialect": "sqlserver",
+      "expectTables": ["TMOV", "TITMMOV", "TPRD"],
+      "expectSnippets": ["IDMOV", "IDPRD", "NSEQITMMOV"]
+    },
+    {
+      "name": "funcionario-ativo",
+      "prompt": "Funcionarios ativos com cargo e salario",
+      "dialect": "sqlserver",
+      "expectTables": ["PFUNC", "PSECAO"],
+      "expectSnippets": ["CHAPA", "CODSITUACAO"]
+    },
+    {
+      "name": "contabil-generico",
+      "prompt": "Partidas contabeis do exercicio com conta contabil",
+      "dialect": "sqlserver",
+      "expectTables": ["CPARTIDA", "CCONTA"],
+      "expectSnippets": ["CODCOLIGADA"]
+    },
+    {
+      "name": "cross-sistema-cfo-movimento",
+      "prompt": "Clientes e fornecedores com movimentos de compra",
+      "dialect": "sqlserver",
+      "expectTables": ["TMOV", "FCFO"],
+      "expectSnippets": ["CODCFO"]
+    },
+    {
+      "name": "rh-historico-salarial",
+      "prompt": "Historico salarial dos funcionarios",
+      "dialect": "sqlserver",
+      "expectTables": ["PFUNC", "PSECAO"],
+      "expectSnippets": ["CHAPA"]
+    },
+    {
+      "name": "estoque-produtos",
+      "prompt": "Produtos em estoque no almoxarifado",
+      "dialect": "sqlserver",
+      "expectTables": ["TPRD"],
+      "expectSnippets": ["IDPRD"]
+    }
+  ]
+}
