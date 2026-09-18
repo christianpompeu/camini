@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { X, Search, Database, ArrowRight, Layers, Key, Link2, Copy, Check, Sparkles } from "lucide-react";
-import { RMTable, RMTableSummary } from "@/lib/totvs-rm/types";
+import { RMSemanticTableWithKey, RMTableSummary, RMSemanticColumn, RMSemanticRelationship } from "@/lib/totvs-rm/types";
 
 interface TableInspectorModalProps {
   isOpen: boolean;
@@ -17,7 +17,7 @@ export function TableInspectorModal({ isOpen, onClose, initialTable, onSelectTab
   const [tables, setTables] = useState<RMTableSummary[]>([]);
   const [loadingList, setLoadingList] = useState(false);
   const [activeTable, setActiveTable] = useState<string | null>(initialTable || null);
-  const [tableDetails, setTableDetails] = useState<RMTable | null>(null);
+  const [tableDetails, setTableDetails] = useState<RMSemanticTableWithKey | null>(null);
   const [loadingDetails, setLoadingDetails] = useState(false);
   const [copiedText, setCopiedText] = useState<string | null>(null);
 
@@ -60,7 +60,7 @@ export function TableInspectorModal({ isOpen, onClose, initialTable, onSelectTab
       try {
         const res = await fetch(`/api/totvs-rm/tables?table=${encodeURIComponent(activeTable)}`);
         if (res.ok) {
-          const data: RMTable = await res.json();
+          const data: RMSemanticTableWithKey = await res.json();
           setTableDetails(data);
         }
       } catch (err) {
@@ -203,13 +203,13 @@ export function TableInspectorModal({ isOpen, onClose, initialTable, onSelectTab
                 <div className="p-5 border-b border-outline/60 flex items-center justify-between bg-surface/30">
                   <div>
                     <div className="flex items-center gap-2">
-                      <h3 className="text-xl font-black font-mono text-text-primary">{tableDetails.Tabela}</h3>
+                      <h3 className="text-xl font-black font-mono text-text-primary">{tableDetails.tabela}</h3>
                       <button
-                        onClick={() => handleCopy(tableDetails.Tabela)}
+                        onClick={() => handleCopy(tableDetails.tabela)}
                         className="text-text-secondary hover:text-energy-blue p-1"
                         title="Copiar nome da tabela"
                       >
-                        {copiedText === tableDetails.Tabela ? (
+                        {copiedText === tableDetails.tabela ? (
                           <Check className="w-4 h-4 text-energy-green" />
                         ) : (
                           <Copy className="w-4 h-4" />
@@ -217,14 +217,14 @@ export function TableInspectorModal({ isOpen, onClose, initialTable, onSelectTab
                       </button>
                     </div>
                     <p className="text-xs text-text-secondary mt-0.5">
-                      {tableDetails.Descricao || "Tabela do banco de dados TOTVS RM"} • {tableDetails.Colunas.length} colunas
+                      {tableDetails.descricao || "Tabela do banco de dados TOTVS RM"} • {tableDetails.colunas.length} colunas
                     </p>
                   </div>
 
                   {onSelectTable && (
                     <button
                       onClick={() => {
-                        onSelectTable(tableDetails.Tabela);
+                        onSelectTable(tableDetails.tabela);
                         onClose();
                       }}
                       className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-gradient-energy text-white text-xs font-bold shadow-sm hover:brightness-105"
@@ -250,31 +250,24 @@ export function TableInspectorModal({ isOpen, onClose, initialTable, onSelectTab
                           <tr className="border-b border-outline bg-surface-elevated text-text-secondary font-semibold">
                             <th className="py-2.5 px-3">Coluna</th>
                             <th className="py-2.5 px-3">Tipo</th>
-                            <th className="py-2.5 px-3">Nulo</th>
                             <th className="py-2.5 px-3">Descrição RM</th>
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-outline/50 font-mono">
-                          {tableDetails.Colunas.map((col) => {
-                            const hasFk = col.RelacionamentosRM && col.RelacionamentosRM.length > 0;
-                            const isPk = col.Coluna.startsWith("COD") || col.Coluna.startsWith("ID") || col.Coluna === "CHAPA";
+                          {tableDetails.colunas.map((col: RMSemanticColumn) => {
+                            const isPk = col.nome.startsWith("COD") || col.nome.startsWith("ID") || col.nome === "CHAPA";
 
                             return (
-                              <tr key={col.Coluna} className="hover:bg-surface-elevated/70 transition-colors">
+                              <tr key={col.nome} className="hover:bg-surface-elevated/70 transition-colors">
                                 <td className="py-2 px-3 font-bold text-text-primary flex items-center gap-1.5">
                                   {isPk && <Key className="w-3 h-3 text-energy-amber shrink-0" />}
-                                  {hasFk && <Link2 className="w-3 h-3 text-energy-blue shrink-0" />}
-                                  <span>{col.Coluna}</span>
+                                  <span>{col.nome}</span>
                                 </td>
                                 <td className="py-2 px-3 text-[#38BDF8]">
-                                  {col.Tipo}
-                                  {col.TamanhoBytes ? `(${col.TamanhoBytes})` : ""}
-                                </td>
-                                <td className="py-2 px-3 text-text-secondary text-[11px]">
-                                  {col.PermiteNulo === "N" ? "NÃO" : "SIM"}
+                                  {col.tipo}
                                 </td>
                                 <td className="py-2 px-3 font-sans text-text-secondary text-[11px]">
-                                  {col.Descricao || "-"}
+                                  {col.descricao || "-"}
                                 </td>
                               </tr>
                             );
@@ -285,26 +278,26 @@ export function TableInspectorModal({ isOpen, onClose, initialTable, onSelectTab
                   </div>
 
                   {/* Relacionamentos (Chaves Estrangeiras) */}
-                  {tableDetails.Colunas.some((c) => c.RelacionamentosRM && c.RelacionamentosRM.length > 0) && (
+                  {tableDetails.relacionamentos_saida && tableDetails.relacionamentos_saida.length > 0 && (
                     <div>
                       <h4 className="text-xs font-bold uppercase tracking-wider text-text-secondary mb-3 flex items-center gap-1.5">
                         <Link2 className="w-3.5 h-3.5 text-energy-violet" />
-                        Relacionamentos Canônicos do RM (Chaves Estrangeiras)
+                        Relacionamentos de Saída
                       </h4>
 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
-                        {tableDetails.Colunas.flatMap((c) => c.RelacionamentosRM || []).map((rel, idx) => (
+                        {tableDetails.relacionamentos_saida.map((rel: RMSemanticRelationship, idx: number) => (
                           <div
                             key={idx}
                             className="p-3 rounded-xl border border-outline bg-surface text-xs space-y-1"
                           >
                             <div className="flex items-center gap-1.5 text-text-primary font-bold font-mono">
-                              <span>{tableDetails.Tabela}</span>
+                              <span>{tableDetails.tabela}</span>
                               <ArrowRight className="w-3 h-3 text-energy-blue" />
-                              <span className="text-energy-blue">{rel.TabelaDestino}</span>
+                              <span className="text-energy-blue">{rel.tabela_destino}</span>
                             </div>
                             <div className="text-[11px] font-mono text-text-secondary break-all">
-                              {tableDetails.Tabela}.{rel.ChaveLogicaComposta} = {rel.TabelaDestino}.{rel.CamposDestino}
+                              ON {rel.chaves_ligacao}
                             </div>
                           </div>
                         ))}

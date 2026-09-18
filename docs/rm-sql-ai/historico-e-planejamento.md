@@ -84,7 +84,7 @@ pergunta do usuário
   alternativa, não erro.
 - Settings: seletor Gemini/Groq (+ OpenRouter "em breve"), chave Groq
   (localStorage, como a do Gemini), modelos Groq
-  (`llama-3.3-70b-versatile` padrão); servidor aceita `GROQ_API_KEY` via env.
+  (`llama3-70b-8192` padrão); servidor aceita `GROQ_API_KEY` via env.
   Chip do provider ativo no topo do chat.
 
 ### Verificação executada

@@ -1,35 +1,32 @@
-export interface RMColumnRelationship {
-  TabelaDestino: string;
-  CamposDestino: string;
-  ChaveLogicaComposta: string;
+export interface RMSemanticRelationship {
+  tabela_destino: string;
+  chaves_ligacao: string;
 }
 
-export interface RMColumn {
-  Coluna: string;
-  Tipo: string;
-  TamanhoBytes?: number;
-  Precisao?: number;
-  Escala?: number;
-  PermiteNulo?: string;
-  Identity?: string;
-  Calculada?: string;
-  Descricao?: string;
-  RelacionamentosRM?: RMColumnRelationship[];
+export interface RMSemanticColumn {
+  nome: string;
+  tipo: string;
+  descricao: string;
 }
 
-export interface RMTable {
-  Tabela: string;
-  Descricao?: string;
-  Sistema?: string;
-  Colunas: RMColumn[];
+export interface RMSemanticTable {
+  descricao: string;
+  colunas: RMSemanticColumn[];
+  relacionamentos_saida: RMSemanticRelationship[];
+}
+
+export interface RMSemanticTableWithKey extends RMSemanticTable {
+  tabela: string;
+  Modulo?: string; // Trazido pelo /api/totvs-rm/tables
 }
 
 export interface RMTableSummary {
   tabela: string;
   descricao: string;
   sistema: string;
-  arquivo: string;
 }
+
+export type RMSemanticDictionary = Record<string, RMSemanticTable>;
 
 export interface ChatMessage {
   id: string;

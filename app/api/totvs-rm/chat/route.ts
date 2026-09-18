@@ -1,10 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { identifyRelevantTables, buildSchemaContextPrompt, getTableDetails } from "@/lib/totvs-rm/schema-engine";
-import { connectSeedTables } from "@/lib/totvs-rm/join-graph";
 import { generateSpecializedRMSql } from "@/lib/totvs-rm/fallback-sql";
 import {
   chatCompleteWithFailover,
-  DEFAULT_GROQ_MODEL,
   LlmProviderId,
   ProviderCredential,
 } from "@/lib/totvs-rm/llm/providers";
@@ -36,16 +34,13 @@ export async function POST(req: NextRequest) {
 
     // 1. Identificar tabelas e relacionamentos relevantes no dicionário do RM
     const identifiedTables = identifyRelevantTables(userPrompt, systemModule);
-    // Tabelas-ponte descobertas pelo grafo de JOINs (ligam as tabelas-semente)
-    const { bridgeTables } = connectSeedTables(identifiedTables.map((t) => t.Tabela));
-    for (const bridge of bridgeTables) {
-      if (!identifiedTables.some((t) => t.Tabela.toUpperCase() === bridge)) {
-        const details = getTableDetails(bridge);
-        if (details) identifiedTables.push(details);
-      }
-    }
+    
+    // Opcional: Adicionar regras extras baseadas no prompt se necessário. 
+    // Com o novo motor semântico FTS, os relacionamentos de saída já trazem o contexto direto das tabelas identificadas.
+    
     const schemaContext = buildSchemaContextPrompt(identifiedTables, userPrompt);
-    const tablesUsed = identifiedTables.map((t) => t.Tabela);
+    console.log(`\x1b[36m[RAG ENGINE] Contexto Schema (tamanho): ${schemaContext.length} caracteres\x1b[0m`);
+    const tablesUsed = identifiedTables.map((t) => t.tabela);
 
     // 2. Cadeia de providers LLM: o selecionado primeiro, o outro de failover.
     // Prioridade: process.env (`.env.local`, servidor) > chave do navegador
@@ -54,8 +49,28 @@ export async function POST(req: NextRequest) {
     const geminiKey = process.env.GEMINI_API_KEY?.trim() || userApiKey?.trim() || "";
     const groqKey = process.env.GROQ_API_KEY?.trim() || body.userGroqKey?.trim() || "";
     const otherProvider: LlmProviderId = selectedProvider === "groq" ? "gemini" : "groq";
-    const modelFor = (id: LlmProviderId) =>
-      id === "groq" ? body.userGroqModel || DEFAULT_GROQ_MODEL : userModel || "gemini-2.5-flash";
+
+    // Resolução de modelos com filtragem de versões obsoletas e prioridade de env:
+    const obsoleteGroq = ["llama-3.3-70b-versatile", "openai/gpt-oss-120b"];
+    const obsoleteGemini = ["gemini-2.5-flash", "gemini-1.5-flash"];
+
+    const resolveGroqModel = () => {
+      if (process.env.LLM_MODEL_NAME?.trim()) return process.env.LLM_MODEL_NAME.trim();
+      if (body.userGroqModel?.trim() && !obsoleteGroq.includes(body.userGroqModel.trim())) {
+        return body.userGroqModel.trim();
+      }
+      return process.env.LLM_MODEL_NAME || "llama3-70b-8192";
+    };
+
+    const resolveGeminiModel = () => {
+      if (process.env.GEMINI_MODEL_NAME?.trim()) return process.env.GEMINI_MODEL_NAME.trim();
+      if (userModel?.trim() && !obsoleteGemini.includes(userModel.trim())) {
+        return userModel.trim();
+      }
+      return process.env.GEMINI_MODEL_NAME || "gemini-1.5-pro-latest";
+    };
+
+    const modelFor = (id: LlmProviderId) => (id === "groq" ? resolveGroqModel() : resolveGeminiModel());
     const keyFor = (id: LlmProviderId) => (id === "groq" ? groqKey : geminiKey);
     const chain: ProviderCredential[] = [selectedProvider, otherProvider].map((id) => ({
       id,
@@ -82,7 +97,7 @@ DIRETRIZES FUNDAMENTAIS DO TOTVS CORPORE RM:
    - Chave primária: CODCOLIGADA, CHAPA.
    - Situação: PFHSTSIT ou PFUNC.CODSITUACAO ('A' = Ativo, 'D' = Demitido, 'F' = Férias, etc).
    - Seção / Centro de Custo RH: PSECAO (PFUNC.CODCOLIGADA = PSECAO.CODCOLIGADA AND PFUNC.CODSECAO = PSECAO.CODIGO).
-6. Performance: No SQL Server, use sempre a dica WITH (NOLOCK) para tabelas de grande volume (FLAN, TMOV, TITMMOV, PFUNC, CPARTIDA) para não bloquear transações concorrentes no ERP.
+6. Performance (MUITO CRÍTICO): É ESTRITAMENTE OBRIGATÓRIO o uso da hint WITH (NOLOCK) logo após declarar cada tabela em cláusulas FROM ou JOIN. Exemplo: FROM FLAN F WITH (NOLOCK) INNER JOIN FCFO C WITH (NOLOCK) ON... Se você omitir, a sua query irá derrubar e bloquear o banco inteiro em produção.
 7. Formatação: O SQL deve ser limpo, indentado com aliases claros (ex: F para FLAN, C para FCFO, M para TMOV, I para TITMMOV).
 8. JOINs: utilize EXCLUSIVAMENTE as condições da seção JOINS GARANTIDOS do contexto (extraídas do dicionário oficial). Nunca invente colunas de ligação.
 
@@ -103,7 +118,8 @@ Você DEVE responder ESTRITAMENTE em formato JSON com a seguinte estrutura:
 
     // 3. Providers LLM com failover (selecionado -> outro -> fallback local)
     try {
-      const { result } = await chatCompleteWithFailover(chain, { systemPrompt, userPrompt });
+      const { result, provider } = await chatCompleteWithFailover(chain, { systemPrompt, userPrompt });
+      console.log(`\x1b[32m[RAG ENGINE] Provider utilizado com sucesso: ${provider}\x1b[0m`);
       const normalized = validateAndNormalizeTSql(result.sqlCode || "");
       return NextResponse.json({
         content: result.sqlExplanation || "Consulta gerada com sucesso.",
