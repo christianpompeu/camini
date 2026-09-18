@@ -46,11 +46,12 @@ export async function POST(req: NextRequest) {
     const schemaContext = buildSchemaContextPrompt(identifiedTables);
     const tablesUsed = identifiedTables.map((t) => t.Tabela);
 
-    // 2. Cadeia de providers LLM: o selecionado primeiro, o outro de failover
-    // (chave do usuário ou de process.env; 429/quota vira rota alternativa)
+    // 2. Cadeia de providers LLM: o selecionado primeiro, o outro de failover.
+    // Prioridade: process.env (`.env.local`, servidor) > chave do navegador
+    // (localStorage, enviada no body). O servidor nunca expõe o valor do env.
     const selectedProvider: LlmProviderId = body.provider === "groq" ? "groq" : "gemini";
-    const geminiKey = userApiKey?.trim() || process.env.GEMINI_API_KEY?.trim() || "";
-    const groqKey = body.userGroqKey?.trim() || process.env.GROQ_API_KEY?.trim() || "";
+    const geminiKey = process.env.GEMINI_API_KEY?.trim() || userApiKey?.trim() || "";
+    const groqKey = process.env.GROQ_API_KEY?.trim() || body.userGroqKey?.trim() || "";
     const otherProvider: LlmProviderId = selectedProvider === "groq" ? "gemini" : "groq";
     const modelFor = (id: LlmProviderId) =>
       id === "groq" ? body.userGroqModel || DEFAULT_GROQ_MODEL : userModel || "gemini-2.5-flash";
