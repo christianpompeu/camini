@@ -32,18 +32,7 @@ export async function POST(req: NextRequest) {
     const lastMessage = messages[messages.length - 1];
     const userPrompt = lastMessage.content;
 
-    // 1. Identificar tabelas e relacionamentos relevantes no dicionário do RM
-    const identifiedTables = identifyRelevantTables(userPrompt, systemModule);
-    
-    // Opcional: Adicionar regras extras baseadas no prompt se necessário. 
-    // Com o novo motor semântico FTS, os relacionamentos de saída já trazem o contexto direto das tabelas identificadas.
-    
-    const schemaContext = buildSchemaContextPrompt(identifiedTables, userPrompt);
-    // Logs temporariamente desabilitados
-    // console.log(`\x1b[36m[RAG ENGINE] Contexto Schema (tamanho): ${schemaContext.length} caracteres\x1b[0m`);
-    const tablesUsed = identifiedTables.map((t) => t.tabela);
-
-    // 2. Cadeia de providers LLM: o selecionado primeiro, o outro de failover.
+    // 1. Cadeia de providers LLM: o selecionado primeiro, o outro de failover.
     // Prioridade: process.env (`.env.local`, servidor) > chave do navegador
     // (localStorage, enviada no body). O servidor nunca expõe o valor do env.
     const selectedProvider: LlmProviderId = body.provider === "groq" ? "groq" : "gemini";
@@ -79,6 +68,11 @@ export async function POST(req: NextRequest) {
       model: modelFor(id),
     }));
 
+    // 2. Roteador Semântico (NLP Router): identifica tabelas e relacionamentos relevantes via IA + Grafo
+    const identifiedTables = await identifyRelevantTables(userPrompt, chain);
+    const schemaContext = buildSchemaContextPrompt(identifiedTables, userPrompt);
+    const tablesUsed = identifiedTables.map((t) => t.tabela);
+
     // 3. Montagem do prompt do sistema especializado em TOTVS RM
     const systemPrompt = `Você é o maior especialista sênior em banco de dados e desenvolvimento de consultas SQL para o ERP TOTVS Corpore RM.
 Sua missão é gerar scripts SQL de alta performance, precisos e elegantes, rigorosamente alinhados com a arquitetura e dicionário de dados do RM.
@@ -98,8 +92,11 @@ DIRETRIZES FUNDAMENTAIS DO TOTVS CORPORE RM:
    - Chave primária: CODCOLIGADA, CHAPA.
    - Situação: PFHSTSIT ou PFUNC.CODSITUACAO ('A' = Ativo, 'D' = Demitido, 'F' = Férias, etc).
    - Seção / Centro de Custo RH: PSECAO (PFUNC.CODCOLIGADA = PSECAO.CODCOLIGADA AND PFUNC.CODSECAO = PSECAO.CODIGO).
-6. Performance (MUITO CRÍTICO): É ESTRITAMENTE OBRIGATÓRIO o uso da hint WITH (NOLOCK) logo após declarar cada tabela em cláusulas FROM ou JOIN. Exemplo: FROM FLAN F WITH (NOLOCK) INNER JOIN FCFO C WITH (NOLOCK) ON... Se você omitir, a sua query irá derrubar e bloquear o banco inteiro em produção.
-7. Formatação: O SQL deve ser limpo, indentado com aliases claros (ex: F para FLAN, C para FCFO, M para TMOV, I para TITMMOV).
+6. Performance (MUITO CRÍTICO): É ESTRITAMENTE OBRIGATÓRIO o uso da hint WITH (NOLOCK) logo após declarar cada tabela em cláusulas FROM ou JOIN. Exemplo: FROM FLAN FLAN WITH (NOLOCK) INNER JOIN FCFO FCFO WITH (NOLOCK) ON... Se você omitir, a sua query irá derrubar e bloquear o banco inteiro em produção.
+7. REGRAS INEGOCIÁVEIS DE ALIASES (LEGIBILIDADE TOTAL):
+   - É ESTRITAMENTE PROIBIDO utilizar aliases pobres ou de uma única letra (como L, S, M, A, B, F, C).
+   - Dê preferência absoluta ao uso do PRÓPRIO NOME DA TABELA como alias (exemplo: FROM FLAN FLAN WITH (NOLOCK), INNER JOIN SPARCELA SPARCELA WITH (NOLOCK) ON...).
+   - Se a mesma tabela for acionada mais de uma vez na consulta (auto-relacionamento ou junções com intenções distintas), adicione um sufixo claro indicando a referência de uso (exemplo: FCFO_CLIENTE, FCFO_FORNECEDOR, FLAN_ORIGEM, FLAN_BAIXA).
 8. JOINs: utilize EXCLUSIVAMENTE as condições da seção JOINS GARANTIDOS do contexto (extraídas do dicionário oficial). Nunca invente colunas de ligação.
 
 CONTEXTO DO ESQUEMA EXTRAÍDO DO DICIONÁRIO RM:
