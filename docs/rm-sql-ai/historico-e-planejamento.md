@@ -4,7 +4,7 @@ Módulo `totvs-rm` do camini: chat estilo ChatGPT que gera consultas SQL
 para o ERP TOTVS Corpore RM a partir do dicionário de dados em
 `public/dicionario_rm/data`. Trava temporária: **somente SQL Server (T-SQL)**.
 
-Última atualização: 17/09/2026. Status: Fases 0–1 concluídas e verificadas.
+Última atualização: 18/09/2026. Status: Fases 0–2 concluídas e verificadas.
 
 ## 1. Arquitetura atual (como funciona)
 
@@ -12,7 +12,8 @@ para o ERP TOTVS Corpore RM a partir do dicionário de dados em
 pergunta do usuário
   → identifyRelevantTables()          (sementes: menção direta + keywords + overlap GDIC)
   → connectSeedTables()               (BFS no grafo de JOINs; inclui tabelas-ponte)
-  → buildSchemaContextPrompt()        (detalhes das tabelas + JOINS GARANTIDOS)
+  → buildSchemaContextPrompt(tabelas, pergunta)  (ranking léxico de colunas via
+     column-docs.json + JOINS GARANTIDOS; teto 25/tabela, PK/FKs sempre preservadas)
   → cadeia LLM (selecionado → outro → fallback local)
   → validateAndNormalizeTSql()        (converte resíduos Oracle, gera avisos PT-BR)
   → resposta JSON { sqlCode, sqlExplanation, tablesUsed, tips }
@@ -70,7 +71,7 @@ pergunta do usuário
 
 ```bash
 npm install
-npm run build:rm-index   # regenera public/dicionario_rm/index/join-graph.json
+npm run build:rm-index   # regenera index/join-graph.json + index/column-docs.json
 npm run build
 npm start -- --port 3100
 node scripts/check-golden.cjs http://localhost:3100
@@ -78,15 +79,38 @@ node scripts/check-golden.cjs http://localhost:3100
 
 Para usar IA real: Configurações → provedor → colar chave (Gemini e/ou Groq).
 
-## 4. Fase 2 — Cobertura de colunas (PRÓXIMA)
-1. Estender o build do índice com `column-docs.json`
-   (tabela + coluna + descrição do `DicionarioGDIC.json`).
-2. Em `buildSchemaContextPrompt()`, trocar a heurística atual de prefixos
-   (`COD/DATA/VALOR/STATUS…`) por ranqueamento de colunas pela pergunta
-   (teto ~25/tabela), **preservando sempre PK/FKs usadas nos JOINs da Fase 1**.
-3. Estender o golden set com casos que exijam colunas específicas
-   (ex.: "CNPJ do fornecedor" → `FCFO.CGCCFO`; "histórico salarial" →
-   `PFHSTSAL`) e rodar antes/depois.
+## 4. Fase 2 — Cobertura de colunas (concluída em 18/09/2026)
+1. Build do índice estendido com `column-docs.json`
+   (tabela → coluna → descrição do `DicionarioGDIC.json`):
+   **130.927 colunas / 8.745 tabelas** (~5,8 MB), gerado por
+   `scripts/build-rm-index.cjs` (`npm run build:rm-index`).
+2. `buildSchemaContextPrompt(tabelas, pergunta)` agora ranqueia colunas pela
+   pergunta (teto `MAX_COLUMNS_PER_TABLE = 25`/tabela), **preservando sempre
+   PK/FKs dos JOINs da Fase 1 + `CODCOLIGADA`**:
+   `lib/totvs-rm/schema-engine.ts` — `loadColumnDocs()`, `rankColumnsForTable()`,
+   `scoreColumn()` (casa nome concatenado `NOMEFANTASIA`↔"fantasia" e descrição
+   `CGCCFO`/"CNPJ"↔"cnpj", com radical para `salario/salarial/historico`).
+   Sem pergunta (chamadas legadas), mantém a heurística antiga de prefixos.
+   `app/api/totvs-rm/chat/route.ts` passa `userPrompt` ao contexto.
+3. Golden set estendido de 8 → **10 casos** (`scripts/rm-golden.json`):
+   - `financeiro-cnpj-coluna` ("...CNPJ e nome fantasia do fornecedor" →
+     `FCFO.CGCCFO` + `NOMEFANTASIA`);
+   - `rh-historico-salarial-colunas` ("...historico salarial, data de mudanca
+     e valor do salario" → `PFHSTSAL.SALARIO` + `DTMUDANCA`).
+   Fallback RH (`route.ts`) agora inclui `LEFT JOIN PFHSTSAL` +
+   `SALARIO/DTMUDANCA/MOTIVO` quando a pergunta cita histórico, então os casos
+   novos passam com ou sem chave de LLM. `check-golden.cjs` com contagem
+   dinâmica (`GOLDEN OK (N/N)`).
+4. `identifyRelevantTables()`: `PFHSTSAL` agora casa também `salarial` e
+   `historico` (antes só `salario`/`histórico salarial`).
+
+### Verificação executada (Fase 2)
+- Antes/depois do ranking (sem servidor): `FCFO.CGCCFO` ausente → presente;
+  `PFHSTSAL.SALARIO`/`DTMUDANCA` ausentes → presentes; teto 25/tabela
+  respeitado; JOINs garantidos preservados.
+- `npm run build` OK (TypeScript incluso); ESLint sem erros novos
+  (restam só os `require()` pré-existentes dos scripts `.cjs`).
+- Golden set **10/10 PASS** em servidor prod local (`npm start -- --port 3100`).
 
 ## 5. Futuro (fora de escopo por enquanto)
 - Volta do Oracle: reverter a trava (`route.ts`, settings, tipos),

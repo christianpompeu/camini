@@ -43,7 +43,7 @@ export async function POST(req: NextRequest) {
         if (details) identifiedTables.push(details);
       }
     }
-    const schemaContext = buildSchemaContextPrompt(identifiedTables);
+    const schemaContext = buildSchemaContextPrompt(identifiedTables, userPrompt);
     const tablesUsed = identifiedTables.map((t) => t.Tabela);
 
     // 2. Cadeia de providers LLM: o selecionado primeiro, o outro de failover.
@@ -265,8 +265,15 @@ ORDER BY M.DATAEMISSAO DESC, M.IDMOV, I.NSEQITMMOV;`;
     };
   }
 
-  // Cenário 3: RH / Folha de Pagamento (PFUNC, PSECAO, PFUNCAO)
-  if (p.includes("funcionario") || p.includes("funcionário") || p.includes("salario") || p.includes("salário") || p.includes("folha") || p.includes("pfunc") || p.includes("chapa")) {
+  // Cenário 3: RH / Folha de Pagamento (PFUNC, PSECAO, PFUNCAO, + PFHSTSAL se pedir histórico)
+  if (p.includes("funcionario") || p.includes("funcionário") || p.includes("salario") || p.includes("salário") || p.includes("salarial") || p.includes("historico") || p.includes("histórico") || p.includes("folha") || p.includes("pfunc") || p.includes("chapa")) {
+    const wantsHistory = p.includes("historico") || p.includes("histórico");
+    const historyJoin = wantsHistory
+      ? `\nLEFT JOIN PFHSTSAL H${nolock}\n    ON H.CODCOLIGADA = F.CODCOLIGADA\n    AND H.CHAPA = F.CHAPA`
+      : "";
+    const historyCols = wantsHistory
+      ? `,\n    H.SALARIO AS [Salario_Historico],\n    H.DTMUDANCA AS [Data_Mudanca],\n    H.MOTIVO AS [Motivo_Alteracao]`
+      : "";
     const sql = `-- =====================================================================
 -- TOTVS CORPORE RM - RECURSOS HUMANOS E FOLHA (RM LABORE)
 -- Consulta: Colaboradores Ativos com Cargo, Seção e Salário
@@ -285,7 +292,7 @@ SELECT
     S.CODIGO AS [Codigo_Secao],
     S.DESCRICAO AS [Nome_Secao],
     C.CODIGO AS [Codigo_Funcao],
-    C.NOME AS [Cargo_Funcao],
+    C.NOME AS [Cargo_Funcao]${historyCols},
     CASE F.CODSITUACAO
         WHEN 'A' THEN 'Ativo'
         WHEN 'F' THEN 'Férias'
@@ -300,15 +307,15 @@ INNER JOIN PSECAO S${nolock}
     AND S.CODIGO = F.CODSECAO
 LEFT JOIN PFUNCAO C${nolock}
     ON C.CODCOLIGADA = F.CODCOLIGADA
-    AND C.CODIGO = F.CODFUNCAO
+    AND C.CODIGO = F.CODFUNCAO${historyJoin}
 WHERE F.CODCOLIGADA = @CODCOLIGADA
   AND F.CODSITUACAO = 'A' -- Apenas colaboradores ativos
 ORDER BY S.DESCRICAO, F.NOME;`;
 
     return {
       sqlCode: sql,
-      sqlExplanation: `### Estrutura de Funcionários (RM Labore)\n\nConsulta focada no cadastro central de funcionários (\`PFUNC\`) com suas relações estruturais:\n\n- **Seção / Centro de Custo RH**: Junção com \`PSECAO\` via \`CODSECAO = CODIGO\`.\n- **Cargo / Função**: Junção com \`PFUNCAO\` via \`CODFUNCAO = CODIGO\`.\n- **Filtro de Ativos**: \`CODSITUACAO = 'A'\`.`,
-      tablesUsed: ["PFUNC", "PSECAO", "PFUNCAO"],
+      sqlExplanation: `### Estrutura de Funcionários (RM Labore)\n\nConsulta focada no cadastro central de funcionários (\`PFUNC\`) com suas relações estruturais:\n\n- **Seção / Centro de Custo RH**: Junção com \`PSECAO\` via \`CODSECAO = CODIGO\`.\n- **Cargo / Função**: Junção com \`PFUNCAO\` via \`CODFUNCAO = CODIGO\`.${wantsHistory ? "\n- **Histórico salarial**: Junção com `PFHSTSAL` via `CODCOLIGADA + CHAPA` (`SALARIO`, `DTMUDANCA`, `MOTIVO`)." : ""}\n- **Filtro de Ativos**: \`CODSITUACAO = 'A'\`.`,
+      tablesUsed: wantsHistory ? ["PFUNC", "PSECAO", "PFUNCAO", "PFHSTSAL"] : ["PFUNC", "PSECAO", "PFUNCAO"],
       tips: [
         "Para obter históricos salariais detalhados por período, utilize a tabela PFHSTSAL vinculada por CODCOLIGADA e CHAPA.",
         "A tabela PFFINANC armazena os valores das folhas calculadas por período (ano/mês) e código de evento (PEVENTO).",

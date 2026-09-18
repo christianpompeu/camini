@@ -55,6 +55,20 @@
       "dialect": "sqlserver",
       "expectTables": ["TPRD"],
       "expectSnippets": ["IDPRD"]
+    },
+    {
+      "name": "financeiro-cnpj-coluna",
+      "prompt": "Lancamentos financeiros a pagar com CNPJ e nome fantasia do fornecedor",
+      "dialect": "sqlserver",
+      "expectTables": ["FLAN", "FCFO"],
+      "expectSnippets": ["CGCCFO", "NOMEFANTASIA"]
+    },
+    {
+      "name": "rh-historico-salarial-colunas",
+      "prompt": "Funcionarios com historico salarial, data de mudanca e valor do salario",
+      "dialect": "sqlserver",
+      "expectTables": ["PFUNC", "PFHSTSAL"],
+      "expectSnippets": ["DTMUDANCA", "SALARIO"]
     }
   ]
 }
