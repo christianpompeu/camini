@@ -4,7 +4,7 @@ Módulo `totvs-rm` do camini: chat estilo ChatGPT que gera consultas SQL
 para o ERP TOTVS Corpore RM a partir do dicionário de dados em
 `public/dicionario_rm/data`. Trava temporária: **somente SQL Server (T-SQL)**.
 
-Última atualização: 18/09/2026. Status: Fases 0–2 concluídas e verificadas.
+Última atualização: 18/09/2026. Status: Fases 0–2 concluídas e verificadas + fallback determinístico corrigido.
 
 ## 1. Arquitetura atual (como funciona)
 
@@ -51,6 +51,32 @@ pergunta do usuário
   (`npm run check:rm-golden [baseUrl]`): 8 casos
   (financeiro, movimento, RH, contábil, cross-sistema, trava anti-Oracle).
 
+### Fallback determinístico (corrigido em 18/09/2026)
+- Bug: pedido de vendas com lançamentos ("...movimentos... com ...lançamentos
+  financeiros...", coligada 9, filial 3, CODTMV 2.2.58, TPAGTO) caía no cenário
+  financeiro (FLAN+FCFO, `PAGREC=1`, `STATUSLAN=0`, coligada 1), porque
+  "financeiros" contém "financeiro" e o cenário financeiro era checado antes
+  do de movimentos. O caminho LLM estava correto (identifica TMOV+TPAGTO e o
+  grafo tem a cadeia TMOV→TMOVPAGTO→TPAGTO→FLAN) — a resposta errada veio do
+  fallback, i.e. sem LLM ativo (dev server não reiniciado após preencher
+  `.env.local`, ou falha dos providers).
+- Correção em `lib/totvs-rm/fallback-sql.ts` (extraído de `route.ts` para
+  módulo puro e testável; rota só importa):
+  1. cenário de movimentos agora vem **antes** do financeiro;
+  2. novo ramo de pagamentos: `tpagto/tmovpagto/"forma de pagamento"` →
+     `TMOV→TMOVPAGTO→TPAGTO→FLAN` com os JOINs canônicos do dicionário;
+  3. extração de parâmetros do prompt (`extractColigada`, `extractFilial`,
+     `extractCodtmvList`, `extractDays`, com defaults 1/1/30d) aplicada aos
+     cenários de movimento.
+- `FREQUENT_RM_TABLES`: novas entradas `TPAGTO` e `TMOVPAGTO`; `FLAN` casa
+  também `financeiro/lancamento/lançamento`. System prompt (item 3) documenta
+  a cadeia de pagamentos.
+- Golden 10 → **11 casos** (`vendas-pagto-lancamentos`: coligada 9, filial 3,
+  `2.2.58` → `TMOV+TMOVPAGTO+TPAGTO+FLAN`).
+- Operacional: o Next lê `.env.local` só no boot — **sempre reinicie
+  `npm run dev` após editar as chaves**. Resposta do fallback vem marcada
+  com `isFallback: true`.
+
 ### Providers chaveáveis (concluído)
 - `lib/totvs-rm/llm/providers.ts`: `chatCompleteWithFailover()` + adaptadores
   Gemini (existente), Groq (OpenAI-compatível) e OpenRouter (implementado,
@@ -64,8 +90,8 @@ pergunta do usuário
 ### Verificação executada
 - `npm run build` OK (TypeScript incluso); lint sem erros novos
   (erros restantes são padrões pré-existentes de hooks).
-- Golden set **8/8 PASS** em servidor prod local; failover Groq com chave
-  inválida testado (401 → fallback local T-SQL válido).
+- Golden set **11/11 PASS** em servidor prod local (era 8/8 nas Fases 0–1);
+  failover Groq com chave inválida testado (401 → fallback local T-SQL válido).
 
 ## 3. Como continuar em outra máquina
 

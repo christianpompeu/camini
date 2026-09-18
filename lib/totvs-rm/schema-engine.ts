@@ -28,7 +28,7 @@ export const RM_MODULES_MAP: Record<string, { nome: string; sigla: string; descr
 
 // Tabelas mais frequentes e cruciais do TOTVS RM
 export const FREQUENT_RM_TABLES: Record<string, { tabela: string; modulo: string; desc: string; keywords: string[] }> = {
-  FLAN: { tabela: "FLAN", modulo: "RM Fluxus", desc: "Lançamentos Financeiros (Pagar e Receber)", keywords: ["titulo", "documento", "vencimento", "baixa", "pagar", "receber", "aberto", "duplicata", "boleto"] },
+  FLAN: { tabela: "FLAN", modulo: "RM Fluxus", desc: "Lançamentos Financeiros (Pagar e Receber)", keywords: ["titulo", "documento", "vencimento", "baixa", "pagar", "receber", "aberto", "duplicata", "boleto", "financeiro", "lancamento", "lançamento"] },
   FCFO: { tabela: "FCFO", modulo: "RM Fluxus / Global", desc: "Clientes e Fornecedores", keywords: ["cliente", "fornecedor", "cnpj", "cpf", "razao social", "nome fantasia", "parceiro"] },
   FTDO: { tabela: "FTDO", modulo: "RM Fluxus", desc: "Tipos de Documento Financeiro", keywords: ["tipo documento", "especie", "boleto", "promissoria", "nf"] },
   FLANBAIXA: { tabela: "FLANBAIXA", modulo: "RM Fluxus", desc: "Histórico de Baixas dos Lançamentos Financeiros", keywords: ["baixa", "pagamento", "liquidacao", "juros", "multa", "desconto"] },
@@ -40,6 +40,8 @@ export const FREQUENT_RM_TABLES: Record<string, { tabela: string; modulo: string
   TPRD: { tabela: "TPRD", modulo: "RM Nucleus", desc: "Cadastro de Produtos / Serviços", keywords: ["produto", "codigo produto", "descricao produto", "ncm", "unidade de medida"] },
   TTMV: { tabela: "TTMV", modulo: "RM Nucleus", desc: "Tipos de Movimento (Regras e Códigos 1.1.XX, 2.1.XX, etc)", keywords: ["tipo de movimento", "codtmv", "natureza da operacao"] },
   TMOVHISTORICO: { tabela: "TMOVHISTORICO", modulo: "RM Nucleus", desc: "Histórico do Movimento", keywords: ["historico", "observacao"] },
+  TMOVPAGTO: { tabela: "TMOVPAGTO", modulo: "RM Nucleus", desc: "Pagamentos por Movimento (liga TMOV a TPAGTO)", keywords: ["tmovpagto", "pagamento do movimento", "parcela da venda"] },
+  TPAGTO: { tabela: "TPAGTO", modulo: "RM Nucleus", desc: "Lançamentos do Movimento / Formas de Pagamento da venda", keywords: ["tpagto", "forma de pagamento", "condicao de pagamento", "condição de pagamento", "pagamento"] },
   TTRBLOCAL: { tabela: "TTRBLOCAL", modulo: "RM Nucleus", desc: "Locais de Estoque", keywords: ["almoxarifado", "local de estoque", "armazem"] },
   
   PFUNC: { tabela: "PFUNC", modulo: "RM Labore", desc: "Cadastro de Funcionários / Colaboradores", keywords: ["funcionario", "colaborador", "chapa", "admissao", "demissao", "salario", "ativo", "afastado"] },
@@ -289,11 +291,11 @@ const PT_STOPWORDS = new Set([
 ]);
 
 function normalizeText(s: string): string {
-  return s
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[̀-ͯ]/g, "")
-    .replace(/[^a-z0-9]+/g, " ");
+  return stripAccents(s.toLowerCase()).replace(/[^a-z0-9]+/g, " ");
+}
+
+export function stripAccents(s: string): string {
+  return s.normalize("NFD").replace(/[̀-ͯ]/g, "");
 }
 
 function tokenizePt(text: string): string[] {
