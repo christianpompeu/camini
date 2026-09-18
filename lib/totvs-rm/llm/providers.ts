@@ -55,7 +55,8 @@ async function callGemini(cred: ProviderCredential, params: LlmCallParams): Prom
       ? cred.model.trim()
       : process.env.GEMINI_MODEL_NAME || "gemini-1.5-pro-latest";
 
-  console.log(`\x1b[36m[RAG ENGINE] Disparando Gemini com modelo: ${model}\x1b[0m`);
+  // Logs temporariamente desabilitados
+  // console.log(`\x1b[36m[RAG ENGINE] Disparando Gemini com modelo: ${model}\x1b[0m`);
 
   const response = await fetch(
     `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${cred.apiKey}`,
@@ -106,7 +107,8 @@ async function callOpenAiCompatible(
       ? cred.model.trim()
       : defaultModel;
 
-  console.log(`\x1b[36m[RAG ENGINE] Disparando ${cred.id} com modelo: ${model}\x1b[0m`);
+  // Logs temporariamente desabilitados
+  // console.log(`\x1b[36m[RAG ENGINE] Disparando ${cred.id} com modelo: ${model}\x1b[0m`);
 
   const response = await fetch(`${baseUrl}/chat/completions`, {
     method: "POST",
@@ -171,7 +173,8 @@ export async function chatCompleteWithFailover(
       return { result, provider: "openrouter" };
     } catch (err) {
       const msg = err instanceof Error ? err.message : "erro desconhecido";
-      console.log(`\x1b[31m[RAG ENGINE][ERRO] Provider ${cred.id} falhou:\x1b[0m`, msg);
+      // Logs temporariamente desabilitados
+      // console.log(`\x1b[31m[RAG ENGINE][ERRO] Provider ${cred.id} falhou:\x1b[0m`, msg);
       errors.push(`${cred.id}: ${msg}`);
     }
   }

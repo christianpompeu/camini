@@ -3,7 +3,7 @@ import path from "path";
 import { RMSemanticDictionary, RMSemanticTable, RMSemanticColumn, RMSemanticRelationship, RMSemanticTableWithKey } from "./types";
 
 const DATA_DIR = path.join(process.cwd(), "public", "dicionario_rm", "data");
-const DICT_FILE = path.join(DATA_DIR, "DicionarioSemantico_FTS.json");
+const DICT_FILE = path.join(DATA_DIR, "DicionarioSemantico_Completo.json");
 
 let cachedDictionary: RMSemanticDictionary | null = null;
 
@@ -24,7 +24,7 @@ export function loadSemanticDictionary(): RMSemanticDictionary {
     cachedDictionary = JSON.parse(raw);
     return cachedDictionary!;
   } catch (err) {
-    console.error("Erro ao carregar DicionarioSemantico_FTS.json:", err);
+    console.error("Erro ao carregar DicionarioSemantico_Completo.json:", err);
     return {};
   }
 }
@@ -54,7 +54,8 @@ export function getTableDetails(tableName: string): RMSemanticTableWithKey | nul
 
 export function identifyRelevantTables(userPrompt: string, selectedModule?: string): RMSemanticTableWithKey[] {
   const dict = loadSemanticDictionary();
-  console.log(`\x1b[36m[RAG ENGINE] Input do Usuário: "${userPrompt}"\x1b[0m`);
+  // Logs temporariamente desabilitados
+  // console.log(`\x1b[36m[RAG ENGINE] Input do Usuário: "${userPrompt}"\x1b[0m`);
   const promptUpper = userPrompt.toUpperCase();
   const promptLower = userPrompt.toLowerCase();
   const identifiedNames = new Set<string>();
@@ -107,13 +108,14 @@ export function identifyRelevantTables(userPrompt: string, selectedModule?: stri
     }
   }
 
-  console.log(`\x1b[35m[RAG ENGINE] Tabelas Detectadas: [${result.map(t => `'${t.tabela}'`).join(", ")}]\x1b[0m`);
+  // Logs temporariamente desabilitados
+  // console.log(`\x1b[35m[RAG ENGINE] Tabelas Detectadas: [${result.map(t => `'${t.tabela}'`).join(", ")}]\x1b[0m`);
   return result;
 }
 
 export function buildSchemaContextPrompt(tables: RMSemanticTableWithKey[], userPrompt = ""): string {
   if (tables.length === 0) {
-    return "Nenhuma tabela do Dicionário FTS foi identificada. Use seu conhecimento base do TOTVS RM.";
+    return "Nenhuma tabela do Dicionário RM foi identificada. Use seu conhecimento base do TOTVS RM.";
   }
 
   let text = "### ESQUEMA DO DICIONÁRIO RM IDENTIFICADO PARA ESTA CONSULTA (GRAFO EM MEMÓRIA):\n\n";

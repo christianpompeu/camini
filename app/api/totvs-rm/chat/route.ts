@@ -39,7 +39,8 @@ export async function POST(req: NextRequest) {
     // Com o novo motor semântico FTS, os relacionamentos de saída já trazem o contexto direto das tabelas identificadas.
     
     const schemaContext = buildSchemaContextPrompt(identifiedTables, userPrompt);
-    console.log(`\x1b[36m[RAG ENGINE] Contexto Schema (tamanho): ${schemaContext.length} caracteres\x1b[0m`);
+    // Logs temporariamente desabilitados
+    // console.log(`\x1b[36m[RAG ENGINE] Contexto Schema (tamanho): ${schemaContext.length} caracteres\x1b[0m`);
     const tablesUsed = identifiedTables.map((t) => t.tabela);
 
     // 2. Cadeia de providers LLM: o selecionado primeiro, o outro de failover.
@@ -119,7 +120,8 @@ Você DEVE responder ESTRITAMENTE em formato JSON com a seguinte estrutura:
     // 3. Providers LLM com failover (selecionado -> outro -> fallback local)
     try {
       const { result, provider } = await chatCompleteWithFailover(chain, { systemPrompt, userPrompt });
-      console.log(`\x1b[32m[RAG ENGINE] Provider utilizado com sucesso: ${provider}\x1b[0m`);
+      // Logs temporariamente desabilitados
+      // console.log(`\x1b[32m[RAG ENGINE] Provider utilizado com sucesso: ${provider}\x1b[0m`);
       const normalized = validateAndNormalizeTSql(result.sqlCode || "");
       return NextResponse.json({
         content: result.sqlExplanation || "Consulta gerada com sucesso.",
