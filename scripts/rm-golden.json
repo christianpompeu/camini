@@ -55,6 +55,27 @@
       "dialect": "sqlserver",
       "expectTables": ["TPRD"],
       "expectSnippets": ["IDPRD"]
+    },
+    {
+      "name": "financeiro-cnpj-coluna",
+      "prompt": "Lancamentos financeiros a pagar com CNPJ e nome fantasia do fornecedor",
+      "dialect": "sqlserver",
+      "expectTables": ["FLAN", "FCFO"],
+      "expectSnippets": ["CGCCFO", "NOMEFANTASIA"]
+    },
+    {
+      "name": "rh-historico-salarial-colunas",
+      "prompt": "Funcionarios com historico salarial, data de mudanca e valor do salario",
+      "dialect": "sqlserver",
+      "expectTables": ["PFUNC", "PFHSTSAL"],
+      "expectSnippets": ["DTMUDANCA", "SALARIO"]
+    },
+    {
+      "name": "vendas-pagto-lancamentos",
+      "prompt": "Movimentos emitidos para a coligada 9 nos ultimos 30 dias da filial 3 com tpagto e lancamentos financeiros dessas vendas, tipos de movimento 2.2.58",
+      "dialect": "sqlserver",
+      "expectTables": ["TMOV", "TPAGTO"],
+      "expectSnippets": ["TMOVPAGTO", "CODTMV"]
     }
   ]
 }

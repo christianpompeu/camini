@@ -1,6 +1,6 @@
 import fs from "fs";
 import path from "path";
-import { RMTable, RMTableSummary } from "./types";
+import { RMColumn, RMTable, RMTableSummary } from "./types";
 import { connectSeedTables, formatJoinCondition } from "./join-graph";
 
 const DATA_DIR = path.join(process.cwd(), "public", "dicionario_rm", "data");
@@ -28,7 +28,7 @@ export const RM_MODULES_MAP: Record<string, { nome: string; sigla: string; descr
 
 // Tabelas mais frequentes e cruciais do TOTVS RM
 export const FREQUENT_RM_TABLES: Record<string, { tabela: string; modulo: string; desc: string; keywords: string[] }> = {
-  FLAN: { tabela: "FLAN", modulo: "RM Fluxus", desc: "Lançamentos Financeiros (Pagar e Receber)", keywords: ["titulo", "documento", "vencimento", "baixa", "pagar", "receber", "aberto", "duplicata", "boleto"] },
+  FLAN: { tabela: "FLAN", modulo: "RM Fluxus", desc: "Lançamentos Financeiros (Pagar e Receber)", keywords: ["titulo", "documento", "vencimento", "baixa", "pagar", "receber", "aberto", "duplicata", "boleto", "financeiro", "lancamento", "lançamento"] },
   FCFO: { tabela: "FCFO", modulo: "RM Fluxus / Global", desc: "Clientes e Fornecedores", keywords: ["cliente", "fornecedor", "cnpj", "cpf", "razao social", "nome fantasia", "parceiro"] },
   FTDO: { tabela: "FTDO", modulo: "RM Fluxus", desc: "Tipos de Documento Financeiro", keywords: ["tipo documento", "especie", "boleto", "promissoria", "nf"] },
   FLANBAIXA: { tabela: "FLANBAIXA", modulo: "RM Fluxus", desc: "Histórico de Baixas dos Lançamentos Financeiros", keywords: ["baixa", "pagamento", "liquidacao", "juros", "multa", "desconto"] },
@@ -40,10 +40,12 @@ export const FREQUENT_RM_TABLES: Record<string, { tabela: string; modulo: string
   TPRD: { tabela: "TPRD", modulo: "RM Nucleus", desc: "Cadastro de Produtos / Serviços", keywords: ["produto", "codigo produto", "descricao produto", "ncm", "unidade de medida"] },
   TTMV: { tabela: "TTMV", modulo: "RM Nucleus", desc: "Tipos de Movimento (Regras e Códigos 1.1.XX, 2.1.XX, etc)", keywords: ["tipo de movimento", "codtmv", "natureza da operacao"] },
   TMOVHISTORICO: { tabela: "TMOVHISTORICO", modulo: "RM Nucleus", desc: "Histórico do Movimento", keywords: ["historico", "observacao"] },
+  TMOVPAGTO: { tabela: "TMOVPAGTO", modulo: "RM Nucleus", desc: "Pagamentos por Movimento (liga TMOV a TPAGTO)", keywords: ["tmovpagto", "pagamento do movimento", "parcela da venda"] },
+  TPAGTO: { tabela: "TPAGTO", modulo: "RM Nucleus", desc: "Lançamentos do Movimento / Formas de Pagamento da venda", keywords: ["tpagto", "forma de pagamento", "condicao de pagamento", "condição de pagamento", "pagamento"] },
   TTRBLOCAL: { tabela: "TTRBLOCAL", modulo: "RM Nucleus", desc: "Locais de Estoque", keywords: ["almoxarifado", "local de estoque", "armazem"] },
   
   PFUNC: { tabela: "PFUNC", modulo: "RM Labore", desc: "Cadastro de Funcionários / Colaboradores", keywords: ["funcionario", "colaborador", "chapa", "admissao", "demissao", "salario", "ativo", "afastado"] },
-  PFHSTSAL: { tabela: "PFHSTSAL", modulo: "RM Labore", desc: "Histórico Salarial do Funcionário", keywords: ["salario", "aumento", "reajuste", "historico salarial"] },
+  PFHSTSAL: { tabela: "PFHSTSAL", modulo: "RM Labore", desc: "Histórico Salarial do Funcionário", keywords: ["salario", "salarial", "aumento", "reajuste", "historico salarial", "historico"] },
   PSECAO: { tabela: "PSECAO", modulo: "RM Labore", desc: "Seções / Departamentos / Centros de Custo RH", keywords: ["secao", "departamento", "setor", "unidade"] },
   PFUNCAO: { tabela: "PFUNCAO", modulo: "RM Labore", desc: "Funções / Cargos dos Funcionários", keywords: ["cargo", "funcao", "cbo"] },
   PFHSTSIT: { tabela: "PFHSTSIT", modulo: "RM Labore", desc: "Histórico de Situação do Funcionário", keywords: ["situacao", "ferias", "afastamento", "licenca", "ativo"] },
@@ -212,7 +214,7 @@ export function identifyRelevantTables(userPrompt: string, selectedModule?: stri
     identifiedNames.add("TITMMOV");
     identifiedNames.add("TPRD");
   }
-  if (identifiedNames.has("PFUNC") && (promptLower.includes("salario") || promptLower.includes("salário")) && !identifiedNames.has("PFHSTSAL")) {
+  if (identifiedNames.has("PFUNC") && (promptLower.includes("salario") || promptLower.includes("salário") || promptLower.includes("salarial") || promptLower.includes("historico")) && !identifiedNames.has("PFHSTSAL")) {
     identifiedNames.add("PFHSTSAL");
   }
 
@@ -256,10 +258,141 @@ export function allocateAliases(tableNames: string[]): Map<string, string> {
   return map;
 }
 
+// --- Fase 2: cobertura de colunas (ranking léxico pela pergunta) ---
+
+const COLUMN_DOCS_FILE = path.join(process.cwd(), "public", "dicionario_rm", "index", "column-docs.json");
+let cachedColumnDocs: Record<string, Record<string, string>> | null = null;
+
+function loadColumnDocs(): Record<string, Record<string, string>> {
+  if (cachedColumnDocs) return cachedColumnDocs;
+  try {
+    if (!fs.existsSync(COLUMN_DOCS_FILE)) {
+      cachedColumnDocs = {};
+      return cachedColumnDocs;
+    }
+    const parsed = JSON.parse(fs.readFileSync(COLUMN_DOCS_FILE, "utf8"));
+    cachedColumnDocs = (parsed.docs || {}) as Record<string, Record<string, string>>;
+    return cachedColumnDocs;
+  } catch (err) {
+    console.warn("column-docs.json não encontrado ou inválido:", err);
+    cachedColumnDocs = {};
+    return cachedColumnDocs;
+  }
+}
+
+/** Teto de colunas por tabela no prompt (Fase 2). */
+export const MAX_COLUMNS_PER_TABLE = 25;
+
+const PT_STOPWORDS = new Set([
+  "de", "da", "do", "das", "dos", "com", "para", "por", "em", "um", "uma",
+  "e", "o", "a", "os", "as", "que", "se", "nos", "nas", "ao", "aos",
+  "no", "na", "dos", "das", "como", "mais", "menos", "entre", "sobre",
+  "qual", "quais", "todo", "todos", "toda", "todas", "este", "esta",
+]);
+
+function normalizeText(s: string): string {
+  return stripAccents(s.toLowerCase()).replace(/[^a-z0-9]+/g, " ");
+}
+
+export function stripAccents(s: string): string {
+  return s.normalize("NFD").replace(/[̀-ͯ]/g, "");
+}
+
+function tokenizePt(text: string): string[] {
+  return normalizeText(text)
+    .split(/\s+/)
+    .filter((t) => t.length > 2 && !PT_STOPWORDS.has(t));
+}
+
+function prefixMatch(a: string, b: string, min = 5): boolean {
+  if (a.length < 4 || b.length < 4) return a === b;
+  const n = Math.min(min, a.length, b.length);
+  return a.slice(0, n) === b.slice(0, n);
+}
+
 /**
- * Constrói o resumo das tabelas, colunas e relacionamentos formatado para o prompt do LLM
+ * Pontua uma coluna contra os tokens da pergunta.
+ * Usa nome da coluna (ex.: NOMEFANTASIA casa com "fantasia") +
+ * descrição do dicionário (ex.: CGCCFO/"CNPJ" casa com "cnpj").
  */
-export function buildSchemaContextPrompt(tables: RMTable[]): string {
+function scoreColumn(colName: string, colDesc: string, promptTokens: string[]): number {
+  if (promptTokens.length === 0) return 0;
+  const nameNorm = normalizeText(colName).replace(/\s+/g, "");
+  const descTokens = tokenizePt(colDesc);
+  let score = 0;
+  for (const pt of promptTokens) {
+    // Nome da coluna contém o token (ex.: "fantasia" em "nomefantasia")
+    if (pt.length >= 4 && nameNorm.includes(pt)) {
+      score += 2.5;
+      continue;
+    }
+    // Token da pergunta contém o nome (ex.: pergunta cita "cgccfo")
+    if (pt.length >= 5 && nameNorm.length >= 4 && pt.includes(nameNorm)) {
+      score += 2.5;
+      continue;
+    }
+    // Descrição: igualdade exata vale mais
+    if (descTokens.includes(pt)) {
+      score += 3;
+      continue;
+    }
+    // Descrição: variação de radical (salario/salarial, historico/historicos)
+    for (const dt of descTokens) {
+      if (prefixMatch(pt, dt)) {
+        score += 2;
+        break;
+      }
+    }
+  }
+  // Sinônimos curtos do RM que o dicionário nem sempre aproxima
+  const nameUp = colName.toUpperCase();
+  if (promptTokens.includes("cnpj") && nameUp === "CGCCFO") score += 2;
+  if (promptTokens.includes("cpf") && (nameUp === "CGCCFO" || nameUp === "CPF")) score += 2;
+  return score;
+}
+
+/**
+ * Ranqueia as colunas de uma tabela pela pergunta, preservando sempre os
+ * campos obrigatórios (JOINs da Fase 1 + CODCOLIGADA). Retorna no máximo
+ * `limit` colunas: obrigatórias primeiro (ordem original), depois as de
+ * maior escore (desempate pela ordem original, determinístico).
+ */
+export function rankColumnsForTable(
+  table: RMTable,
+  userPrompt: string,
+  requiredFields: Set<string> = new Set(),
+  limit: number = MAX_COLUMNS_PER_TABLE
+): RMColumn[] {
+  const requiredUp = new Set(Array.from(requiredFields).map((f) => f.toUpperCase().trim()));
+  if (table.Colunas.some((c) => c.Coluna.toUpperCase() === "CODCOLIGADA")) {
+    requiredUp.add("CODCOLIGADA");
+  }
+  const promptTokens = tokenizePt(userPrompt || "");
+  const required: RMColumn[] = [];
+  const rest: Array<{ col: RMColumn; score: number; idx: number }> = [];
+  table.Colunas.forEach((col, idx) => {
+    if (requiredUp.has(col.Coluna.toUpperCase())) {
+      required.push(col);
+    } else {
+      const desc = col.Descricao && col.Descricao !== "N/A" ? col.Descricao : "";
+      rest.push({ col, score: scoreColumn(col.Coluna, desc, promptTokens), idx });
+    }
+  });
+  rest.sort((a, b) => b.score - a.score || a.idx - b.idx);
+  const out = [...required];
+  for (const r of rest) {
+    if (out.length >= limit) break;
+    out.push(r.col);
+  }
+  return out.slice(0, limit);
+}
+
+/**
+ * Constrói o resumo das tabelas, colunas e relacionamentos formatado para o prompt do LLM.
+ * Fase 2: colunas ranqueadas pela pergunta (teto MAX_COLUMNS_PER_TABLE/tabela),
+ * preservando sempre PK/FKs dos JOINs garantidos + CODCOLIGADA.
+ */
+export function buildSchemaContextPrompt(tables: RMTable[], userPrompt = ""): string {
   if (tables.length === 0) {
     return "Nenhuma tabela específica do RM identificada automaticamente. O modelo deve utilizar seu conhecimento geral das convenções do TOTVS Corpore RM.";
   }
@@ -289,6 +422,35 @@ export function buildSchemaContextPrompt(tables: RMTable[]): string {
     text += "### JOINS GARANTIDOS PELO DICIONÁRIO: nenhum caminho direto encontrado entre as tabelas acima — prefira subconsultas ou confira os campos no Dicionário RM.\n\n";
   }
 
+  const seedSet = new Set(seedNames.map((s) => s.toUpperCase()));
+  // Campos obrigatórios por tabela: JOINs garantidos + FKs p/ tabelas do conjunto
+  const requiredByTable = new Map<string, Set<string>>();
+  const ensure = (t: string) => {
+    const k = t.toUpperCase();
+    if (!requiredByTable.has(k)) requiredByTable.set(k, new Set());
+    return requiredByTable.get(k)!;
+  };
+  for (const j of joins) {
+    for (const f of j.fromFields) ensure(j.from).add(f.toUpperCase());
+    for (const f of j.toFields) ensure(j.to).add(f.toUpperCase());
+  }
+  for (const table of tables) {
+    const tUp = table.Tabela.toUpperCase();
+    for (const col of table.Colunas) {
+      if (!col.RelacionamentosRM) continue;
+      for (const rel of col.RelacionamentosRM) {
+        if (seedSet.has(rel.TabelaDestino.toUpperCase())) {
+          for (const f of String(rel.ChaveLogicaComposta || "").split(",")) {
+            const clean = f.trim().toUpperCase();
+            if (clean) ensure(tUp).add(clean);
+          }
+        }
+      }
+    }
+  }
+
+  const colDocs = loadColumnDocs();
+
   for (const table of tables) {
     const firstChar = table.Tabela.charAt(0);
     const mod = RM_MODULES_MAP[firstChar]?.nome || "TOTVS RM";
@@ -298,31 +460,46 @@ export function buildSchemaContextPrompt(tables: RMTable[]): string {
     }
     text += "Colunas relevantes e tipos:\n";
 
-    // Destacar colunas principais (chaves, códigos, datas, valores, status)
-    const importantCols = table.Colunas.filter((c) => {
-      const col = c.Coluna.toUpperCase();
-      return (
-        col.startsWith("COD") ||
-        col.startsWith("ID") ||
-        col.startsWith("DATA") ||
-        col.startsWith("VALOR") ||
-        col.startsWith("STATUS") ||
-        col.startsWith("PAGREC") ||
-        col.startsWith("NUMERO") ||
-        col.startsWith("CHAPA") ||
-        col.startsWith("NOME") ||
-        col.startsWith("HIST") ||
-        col.startsWith("DESC") ||
-        (c.RelacionamentosRM && c.RelacionamentosRM.length > 0)
+    const required = requiredByTable.get(table.Tabela.toUpperCase()) || new Set<string>();
+    const promptTokens = tokenizePt(userPrompt || "");
+    let displayCols: RMColumn[];
+    if (promptTokens.length === 0) {
+      // Sem pergunta (chamadas legadas/testes): heurística antiga de prefixos
+      const importantCols = table.Colunas.filter((c) => {
+        const col = c.Coluna.toUpperCase();
+        return (
+          col.startsWith("COD") ||
+          col.startsWith("ID") ||
+          col.startsWith("DATA") ||
+          col.startsWith("VALOR") ||
+          col.startsWith("STATUS") ||
+          col.startsWith("PAGREC") ||
+          col.startsWith("NUMERO") ||
+          col.startsWith("CHAPA") ||
+          col.startsWith("NOME") ||
+          col.startsWith("HIST") ||
+          col.startsWith("DESC") ||
+          (c.RelacionamentosRM && c.RelacionamentosRM.length > 0)
+        );
+      });
+      const base = importantCols.length > 0 ? importantCols : table.Colunas.slice(0, 25);
+      // Garante obrigatórias mesmo no fallback legado
+      const baseSet = new Set(base.map((c) => c.Coluna.toUpperCase()));
+      const missing = table.Colunas.filter(
+        (c) => required.has(c.Coluna.toUpperCase()) && !baseSet.has(c.Coluna.toUpperCase())
       );
-    });
+      displayCols = [...missing, ...base].slice(0, MAX_COLUMNS_PER_TABLE + missing.length);
+    } else {
+      displayCols = rankColumnsForTable(table, userPrompt, required, MAX_COLUMNS_PER_TABLE);
+    }
 
-    const displayCols = importantCols.length > 0 ? importantCols : table.Colunas.slice(0, 25);
-
-    for (const col of displayCols.slice(0, 30)) {
+    const tableDocs = colDocs[table.Tabela.toUpperCase()] || {};
+    for (const col of displayCols.slice(0, MAX_COLUMNS_PER_TABLE)) {
       const typeStr = col.TamanhoBytes ? `${col.Tipo}(${col.TamanhoBytes})` : col.Tipo;
-      const desc = col.Descricao ? ` - ${col.Descricao}` : "";
-      text += `- \`${col.Coluna}\` (${typeStr}${col.PermiteNulo === "N" ? ", NOT NULL" : ""})${desc}\n`;
+      const gdicDesc = tableDocs[col.Coluna.toUpperCase()] || "";
+      const desc =
+        col.Descricao && col.Descricao !== "N/A" ? col.Descricao : gdicDesc;
+      text += `- \`${col.Coluna}\` (${typeStr}${col.PermiteNulo === "N" ? ", NOT NULL" : ""})${desc ? ` - ${desc}` : ""}\n`;
     }
 
     // Listar relacionamentos com outras tabelas presentes na consulta

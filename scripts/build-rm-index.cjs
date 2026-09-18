@@ -1,10 +1,15 @@
 /**
  * Build offline do índice do dicionário TOTVS RM.
  *
- * Lê public/dicionario_rm/data e gera public/dicionario_rm/index/join-graph.json:
- * um grafo de JOINs (tabela -> tabela, com chaves compostas origem/destino)
- * alimentado por DicionarioGLINKSREL.json + RelacionamentosRM dos
- * DicionarioMaster_*.json. Rode com: npm run build:rm-index
+ * Lê public/dicionario_rm/data e gera em public/dicionario_rm/index:
+ *  - join-graph.json: grafo de JOINs (tabela -> tabela, com chaves compostas
+ *    origem/destino) alimentado por DicionarioGLINKSREL.json + RelacionamentosRM
+ *    dos DicionarioMaster_*.json.
+ *  - column-docs.json: descrições de colunas por tabela (tabela -> coluna ->
+ *    descrição) extraídas de DicionarioGDIC.json. Usado na Fase 2 para
+ *    ranquear as colunas mais relevantes à pergunta do usuário.
+ *
+ * Rode com: npm run build:rm-index
  *
  * Node puro, sem dependências.
  */
@@ -13,7 +18,8 @@ const path = require("path");
 
 const DATA_DIR = path.join(__dirname, "..", "public", "dicionario_rm", "data");
 const OUT_DIR = path.join(__dirname, "..", "public", "dicionario_rm", "index");
-const OUT_FILE = path.join(OUT_DIR, "join-graph.json");
+const JOIN_OUT_FILE = path.join(OUT_DIR, "join-graph.json");
+const COLDOC_OUT_FILE = path.join(OUT_DIR, "column-docs.json");
 
 function splitFields(raw) {
   return String(raw || "")
@@ -114,7 +120,7 @@ function main() {
 
   fs.mkdirSync(OUT_DIR, { recursive: true });
   fs.writeFileSync(
-    OUT_FILE,
+    JOIN_OUT_FILE,
     JSON.stringify(
       {
         version: 1,
@@ -127,8 +133,52 @@ function main() {
     )
   );
 
-  console.log(`OK: ${edgeList.length} arestas, ${tableSet.size} tabelas -> ${OUT_FILE}`);
+  console.log(`OK: ${edgeList.length} arestas, ${tableSet.size} tabelas -> ${JOIN_OUT_FILE}`);
   console.log(JSON.stringify(stats, null, 2));
+
+  buildColumnDocs();
+}
+
+/**
+ * Fase 2: índice de descrições de colunas (GDIC, linhas Coluna !== "#").
+ * Formato: { TABELA: { COLUNA: "descricao" } }, escrita compacta.
+ */
+function buildColumnDocs() {
+  const gdicPath = path.join(DATA_DIR, "DicionarioGDIC.json");
+  const rows = JSON.parse(fs.readFileSync(gdicPath, "utf8")).DicionarioGDIC || [];
+  const docs = {};
+  let colCount = 0;
+  let skipped = 0;
+  for (const row of rows) {
+    const table = String(row.Tabela || "").trim().toUpperCase();
+    const col = String(row.Coluna || "").trim().toUpperCase();
+    const desc = String(row.Descricao || "").trim();
+    if (!table || !col || col === "#") {
+      skipped++;
+      continue;
+    }
+    if (!desc) {
+      skipped++;
+      continue;
+    }
+    if (!docs[table]) docs[table] = {};
+    if (!docs[table][col]) colCount++;
+    docs[table][col] = desc;
+  }
+
+  const tables = Object.keys(docs).length;
+  fs.mkdirSync(OUT_DIR, { recursive: true });
+  fs.writeFileSync(
+    COLDOC_OUT_FILE,
+    JSON.stringify({
+      version: 1,
+      builtAt: new Date().toISOString(),
+      stats: { tables, columns: colCount, skipped },
+      docs,
+    })
+  );
+
+  console.log(`OK: ${colCount} colunas documentadas, ${tables} tabelas -> ${COLDOC_OUT_FILE}`);
 }
 
 main();

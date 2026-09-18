@@ -57,7 +57,7 @@ async function main() {
       for (const p of problems) console.log(`     - ${p}`);
     }
   }
-  console.log(failed === 0 ? "GOLDEN OK (8/8)" : `GOLDEN FALHOU (${failed} caso(s))`);
+  console.log(failed === 0 ? `GOLDEN OK (${golden.cases.length}/${golden.cases.length})` : `GOLDEN FALHOU (${failed} caso(s))`);
   process.exit(failed === 0 ? 0 : 1);
 }
 
