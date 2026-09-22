@@ -70,7 +70,7 @@ export function getTableDetails(tableName: string): RMSemanticTableWithKey | nul
  * Chamada ultrarrápida e direta ao LLM para roteamento semântico de tabelas (NLP Router)
  */
 async function callRouterLlm(cred: ProviderCredential, userPrompt: string): Promise<string[]> {
-  const routerSystemPrompt = `Você é um especialista em banco de dados TOTVS RM. Analise a pergunta do usuário e identifique as tabelas necessárias para construir a consulta. Retorne EXCLUSIVAMENTE um array JSON contendo os nomes das tabelas em maiúsculo, sem crases, sem markdown, sem explicações. Exemplo: ["FLAN", "FCFO", "SPARCELA"].`;
+  const routerSystemPrompt = `Você é um DBA especialista no ERP TOTVS Corpore RM. Analise a solicitação do usuário em linguagem natural e identifique estritamente quais tabelas do banco são necessárias para montar a consulta (incluindo tabelas ponte de relacionamento, como SLAN para ligar FLAN e SPARCELA). Retorne EXCLUSIVAMENTE um array JSON contendo os nomes das tabelas em maiúsculo, sem markdown, sem crases, sem texto introdutório. Exemplo: ["FLAN", "SLAN", "SPARCELA", "FCFO"].`;
 
   if (cred.id === "gemini") {
     const response = await fetch(
@@ -192,18 +192,7 @@ export async function identifyRelevantTables(
     }
   }
 
-  // 2. Se nenhuma tabela foi identificada via LLM (ex: offline ou erro de API),
-  // faz fallback para busca direta de nomes exatos de tabelas no prompt
-  if (identifiedNames.size === 0) {
-    const promptWords = userPrompt.toUpperCase().match(/[A-Z0-9_]{3,20}/g) || [];
-    for (const word of promptWords) {
-      if (dict[word]) {
-        identifiedNames.add(word);
-      }
-    }
-  }
-
-  // 3. Expansão via Grafo em Memória: adiciona relacionamentos de saída diretos
+  // 2. Expansão via Grafo em Memória: adiciona relacionamentos de saída diretos
   const initialList = Array.from(identifiedNames);
   for (const tableName of initialList) {
     const tableData = dict[tableName];

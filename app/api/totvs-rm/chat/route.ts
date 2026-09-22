@@ -93,12 +93,12 @@ DIRETRIZES FUNDAMENTAIS DO TOTVS CORPORE RM:
    - Chave primária: CODCOLIGADA, CHAPA.
    - Situação: PFHSTSIT ou PFUNC.CODSITUACAO ('A' = Ativo, 'D' = Demitido, 'F' = Férias, etc).
    - Seção / Centro de Custo RH: PSECAO (PFUNC.CODCOLIGADA = PSECAO.CODCOLIGADA AND PFUNC.CODSECAO = PSECAO.CODIGO).
-6. Performance (MUITO CRÍTICO): É ESTRITAMENTE OBRIGATÓRIO o uso da hint WITH (NOLOCK) logo após declarar cada tabela em cláusulas FROM ou JOIN. Exemplo: FROM FLAN FLAN WITH (NOLOCK) INNER JOIN FCFO FCFO WITH (NOLOCK) ON... Se você omitir, a sua query irá derrubar e bloquear o banco inteiro em produção.
-7. REGRAS INEGOCIÁVEIS DE ALIASES (LEGIBILIDADE TOTAL):
-   - É ESTRITAMENTE PROIBIDO utilizar aliases pobres ou de uma única letra (como L, S, M, A, B, F, C).
-   - Dê preferência absoluta ao uso do PRÓPRIO NOME DA TABELA como alias (exemplo: FROM FLAN FLAN WITH (NOLOCK), INNER JOIN SPARCELA SPARCELA WITH (NOLOCK) ON...).
-   - Se a mesma tabela for acionada mais de uma vez na consulta (auto-relacionamento ou junções com intenções distintas), adicione um sufixo claro indicando a referência de uso (exemplo: FCFO_CLIENTE, FCFO_FORNECEDOR, FLAN_ORIGEM, FLAN_BAIXA).
-8. JOINs: utilize EXCLUSIVAMENTE as condições da seção JOINS GARANTIDOS do contexto (extraídas do dicionário oficial). Nunca invente colunas de ligação.
+6. WITH (NOLOCK) Obrigatório: Todas as tabelas após cada cláusula FROM e JOIN devem conter impreterivelmente a diretiva WITH (NOLOCK). Se você omitir, a sua query irá derrubar e bloquear o banco inteiro em produção.
+7. Política Rigorosa de Aliases:
+   - É expressamente proibido usar aliases monocaracteres ou pobres (ex: L, S, F, P, A, B).
+   - Use preferencialmente o próprio nome da tabela como alias (ex: FROM FLAN FLAN WITH (NOLOCK) INNER JOIN FCFO FCFO WITH (NOLOCK)).
+   - Quando a mesma tabela for chamada mais de uma vez (auto-relacionamentos ou múltiplos propósitos), use obrigatoriamente um sufixo descritivo que identifique o contexto (ex: FLAN FLAN, FLAN FLAN_ORIGEM, FCFO FCFO_CLIENTE, FCFO FCFO_FORNECEDOR).
+8. Respeito aos Relacionamentos do Grafo: Nunca invente atalhos de junção. Se uma tabela precisar de uma tabela intermediária/ponte para se ligar à principal (ex: FLAN <-> SLAN <-> SPARCELA), monte a cadeia completa de JOIN com suas chaves compostas (sem esquecer o CODCOLIGADA).
 
 CONTEXTO DO ESQUEMA EXTRAÍDO DO DICIONÁRIO RM:
 ${schemaContext}
@@ -129,8 +129,7 @@ Você DEVE responder ESTRITAMENTE em formato JSON com a seguinte estrutura:
       });
     try {
       const { result, provider } = await chatCompleteWithFailover(chain, { systemPrompt, userPrompt });
-      // Logs temporariamente desabilitados
-      // console.log(`\x1b[32m[RAG ENGINE] Provider utilizado com sucesso: ${provider}\x1b[0m`);
+      console.log(`\x1b[32m[RAG ENGINE] Provider utilizado com sucesso: ${provider}\x1b[0m`);
       const normalized = validateAndNormalizeTSql(result.sqlCode || "");
       const firstCheck = checkSql(normalized.sql);
       if (firstCheck.ok) {
