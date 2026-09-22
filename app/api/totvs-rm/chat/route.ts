@@ -23,6 +23,7 @@ interface ChatRequestBody {
 }
 
 export async function POST(req: NextRequest) {
+  const requestStartTime = performance.now();
   try {
     const body: ChatRequestBody = await req.json();
     const { messages, systemModule, userApiKey, userModel } = body;
@@ -94,9 +95,18 @@ export async function POST(req: NextRequest) {
     }));
 
     // 2. Roteador Semântico (NLP Router): identifica tabelas e relacionamentos relevantes via IA + Grafo
-    const identifiedTables = await identifyRelevantTables(userPrompt, chain);
+    const { tables: identifiedTables, contextMetadata } = await identifyRelevantTables(userPrompt, chain);
     const schemaContext = buildSchemaContextPrompt(identifiedTables, userPrompt);
     const tablesUsed = identifiedTables.map((t) => t.tabela);
+
+    const contextLatency = performance.now() - requestStartTime;
+    
+    // Log do Context Builder
+    const rT = contextMetadata.routerTables.length ? contextMetadata.routerTables.join(", ") : "nenhuma";
+    const sT = contextMetadata.seedTables.length ? contextMetadata.seedTables.join(", ") : "nenhuma";
+    const eT = contextMetadata.expandedTables.length ? contextMetadata.expandedTables.join(", ") : "nenhuma";
+    const aT = contextMetadata.finalAllowedTables.length ? contextMetadata.finalAllowedTables.join(", ") : "nenhuma";
+    console.log(`\x1b[36m[RAG ENGINE] [CONTEXT]\x1b[0m\nRouterRawTables: ${rT}\nSeedTables: ${sT}\nExpandedTables: ${eT}\nAllowedTables: ${aT}\nLatency: ${Math.round(contextLatency)}ms\n`);
 
     // 3. Montagem do prompt do sistema especializado em TOTVS RM
     const systemPrompt = buildGeneratorSystemPrompt(schemaContext);
@@ -127,11 +137,13 @@ export async function POST(req: NextRequest) {
         requiredFilters: /CODCOLIGADA/i.test(sql) ? ["CODCOLIGADA"] : [],
       });
 
-    let totalInput = 0;
-    let totalOutput = 0;
-    let totalTokens = 0;
-    let totalLatency = 0;
+    let totalInput = contextMetadata.routerMetadata?.usage?.inputTokens || 0;
+    let totalOutput = contextMetadata.routerMetadata?.usage?.outputTokens || 0;
+    let totalTokens = contextMetadata.routerMetadata?.usage?.totalTokens || 0;
+    let totalLatency = contextMetadata.routerMetadata?.usage?.latencyMs || 0;
     let wasRepaired = false;
+    let generatorTokens = 0;
+    let repairTokens = 0;
 
     try {
       const { result, provider, usage, model } = await chatCompleteWithFailover<LlmSqlJson>(generatorChain, { 
@@ -144,6 +156,7 @@ export async function POST(req: NextRequest) {
       });
       
       if (usage) {
+        generatorTokens = usage.totalTokens || 0;
         totalInput += usage.inputTokens || 0;
         totalOutput += usage.outputTokens || 0;
         totalTokens += usage.totalTokens || 0;
@@ -159,7 +172,8 @@ export async function POST(req: NextRequest) {
       console.log(`\x1b[36m[RAG ENGINE] [VERIFY]\x1b[0m\nFirstPass: ${firstCheck.ok ? "PASS" : "FAIL"}\nErrors: ${firstCheck.problems.length}\n`);
 
       if (firstCheck.ok) {
-        console.log(`\x1b[36m[RAG ENGINE] [RESULT]\x1b[0m\nRepair: false\nFallback: false\nFinalVerification: PASS\nTotalInputTokens: ${totalInput}\nTotalOutputTokens: ${totalOutput}\nTotalTokens: ${totalTokens}\nTotalLatency: ${Math.round(totalLatency)}ms\n`);
+        const pipelineLatency = performance.now() - requestStartTime;
+        console.log(`\x1b[36m[RAG ENGINE] [RESULT]\x1b[0m\nRouterTokens: ${contextMetadata.routerMetadata?.usage?.totalTokens || 0}\nGeneratorTokens: ${generatorTokens}\nRepairTokens: ${repairTokens}\nRequestInputTokens: ${totalInput}\nRequestOutputTokens: ${totalOutput}\nRequestTotalTokens: ${totalTokens}\nRequestPipelineLatency: ${Math.round(pipelineLatency)}ms\n`);
         return NextResponse.json({
           content: result.sqlExplanation || "Consulta gerada com sucesso.",
           sqlCode: normalized.sql,
@@ -184,6 +198,7 @@ export async function POST(req: NextRequest) {
         });
         
         if (repairUsage) {
+           repairTokens = repairUsage.totalTokens || 0;
            totalInput += repairUsage.inputTokens || 0;
            totalOutput += repairUsage.outputTokens || 0;
            totalTokens += repairUsage.totalTokens || 0;
@@ -200,7 +215,8 @@ export async function POST(req: NextRequest) {
 
         if (secondCheck.ok) {
           wasRepaired = true;
-          console.log(`\x1b[36m[RAG ENGINE] [RESULT]\x1b[0m\nRepair: true\nFallback: false\nFinalVerification: PASS\nTotalInputTokens: ${totalInput}\nTotalOutputTokens: ${totalOutput}\nTotalTokens: ${totalTokens}\nTotalLatency: ${Math.round(totalLatency)}ms\n`);
+          const pipelineLatency = performance.now() - requestStartTime;
+          console.log(`\x1b[36m[RAG ENGINE] [RESULT]\x1b[0m\nRouterTokens: ${contextMetadata.routerMetadata?.usage?.totalTokens || 0}\nGeneratorTokens: ${generatorTokens}\nRepairTokens: ${repairTokens}\nRequestInputTokens: ${totalInput}\nRequestOutputTokens: ${totalOutput}\nRequestTotalTokens: ${totalTokens}\nRequestPipelineLatency: ${Math.round(pipelineLatency)}ms\n`);
           return NextResponse.json({
             content: repaired.sqlExplanation || "Consulta gerada com sucesso.",
             sqlCode: normalizedRepair.sql,
@@ -231,7 +247,8 @@ export async function POST(req: NextRequest) {
     const fallbackResponse = generateSpecializedRMSql(userPrompt, identifiedTables);
     const normalizedFallback = validateAndNormalizeTSql(fallbackResponse.sqlCode);
 
-    console.log(`\x1b[36m[RAG ENGINE] [RESULT]\x1b[0m\nRepair: ${wasRepaired}\nFallback: true\nFinalVerification: PASS\nTotalInputTokens: ${totalInput}\nTotalOutputTokens: ${totalOutput}\nTotalTokens: ${totalTokens}\nTotalLatency: ${Math.round(totalLatency)}ms\n`);
+    const pipelineLatency = performance.now() - requestStartTime;
+    console.log(`\x1b[36m[RAG ENGINE] [RESULT]\x1b[0m\nRouterTokens: ${contextMetadata.routerMetadata?.usage?.totalTokens || 0}\nGeneratorTokens: ${generatorTokens}\nRepairTokens: ${repairTokens}\nRequestInputTokens: ${totalInput}\nRequestOutputTokens: ${totalOutput}\nRequestTotalTokens: ${totalTokens}\nRequestPipelineLatency: ${Math.round(pipelineLatency)}ms\n`);
 
     return NextResponse.json({
       content: fallbackResponse.sqlExplanation,

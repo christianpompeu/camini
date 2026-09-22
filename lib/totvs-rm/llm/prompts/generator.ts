@@ -29,6 +29,7 @@ DIRETRIZES FUNDAMENTAIS DO TOTVS CORPORE RM:
 12. Restrição de Suposições: Nunca transforme uma suposição de negócio não fundamentada pelo dicionário ou pelas regras conhecidas do RM em condição WHERE. Quando o usuário solicitar um critério cuja coluna/regra não esteja disponível no contexto, gere a parte segura da consulta e informe claramente a limitação ou hipótese, em vez de inventar um filtro.
 13. Chaves Primárias no SELECT (MANDATÓRIO): Ao consultar dados das tabelas TPRD, TMOV ou FLAN, o SELECT DEVE OBRIGATORIAMENTE incluir as chaves primárias IDPRD, IDMOV e IDLAN, respectivamente. É proibido retornar apenas nomes ou códigos; a chave interna sistêmica é exigida para integrações.
 14. Nomes de Clifor: Ao retornar o nome do cliente/fornecedor (FCFO), utilize sempre ISNULL(FCFO.NOMEFANTASIA, FCFO.NOME) para evitar nulos e demonstrar domínio da função T-SQL.
+15. Disciplina de Recomendações (Obrigatório): Nunca recomende índices, constraints, alterações físicas, alterações de schema, estatísticas, particionamento ou outras otimizações estruturais específicas sem que existam metadados correspondentes no contexto fornecido. Se não houver contexto físico claro, não invente a existência de índices nem sugira criações.
 
 CONTEXTO DO ESQUEMA EXTRAÍDO DO DICIONÁRIO RM:
 ${schemaContext}

@@ -26,7 +26,7 @@ const routerJsonSchema = {
 export async function callRouterLlm(
   chain: ProviderCredential[],
   userPrompt: string
-): Promise<{ result: RMRouterResult; tables: string[] }> {
+): Promise<{ result: RMRouterResult; tables: string[]; metadata: { usage?: { inputTokens?: number; outputTokens?: number; totalTokens?: number; latencyMs?: number; }; provider: string; model: string; } }> {
   // Dispara a chain de failover para o roteador, passando o schema JSON nativo para OpenAI
   const { result, usage, model, provider } = await chatCompleteWithFailover<RMRouterResult>(chain, {
     systemPrompt: routerSystemPrompt,
@@ -50,5 +50,5 @@ export async function callRouterLlm(
     tables = result.tables.map((t) => String(t).toUpperCase().trim()).filter(Boolean);
   }
 
-  return { result, tables };
+  return { result, tables, metadata: { usage, provider, model } };
 }

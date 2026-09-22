@@ -71,18 +71,35 @@ import { callRouterLlm } from "./llm/router";
  * Roteador Semântico (NLP Router): Identifica tabelas utilizando IA em etapa prévia,
  * consulta o Dicionário Completo em memória e enriquece com o Grafo de relacionamentos.
  */
+export interface RAGContextMetadata {
+  routerTables: string[];
+  seedTables: string[];
+  expandedTables: string[];
+  finalAllowedTables: string[];
+  routerMetadata?: {
+    usage?: { inputTokens?: number; outputTokens?: number; totalTokens?: number; latencyMs?: number; };
+    provider: string;
+    model: string;
+  };
+}
+
 export async function identifyRelevantTables(
   userPrompt: string,
   routerCredentials?: ProviderCredential[]
-): Promise<RMSemanticTableWithKey[]> {
+): Promise<{ tables: RMSemanticTableWithKey[]; contextMetadata: RAGContextMetadata }> {
   const dict = loadSemanticDictionary();
   const identifiedNames = new Set<string>();
+
+  let routerTables: string[] = [];
+  let routerMetadata: RAGContextMetadata["routerMetadata"];
 
   // 1. Tentar Roteador Semântico via LLM (Agentic Workflow)
   if (routerCredentials && routerCredentials.length > 0) {
     try {
-      const { tables } = await callRouterLlm(routerCredentials, userPrompt);
+      const { tables, metadata } = await callRouterLlm(routerCredentials, userPrompt);
       if (tables.length > 0) {
+        routerTables = [...tables];
+        routerMetadata = metadata;
         for (const tbl of tables) {
           if (dict[tbl]) {
             identifiedNames.add(tbl);
@@ -129,6 +146,8 @@ export async function identifyRelevantTables(
     ["TMOV", "FLAN", "FCFO"].forEach(t => identifiedNames.add(t));
   }
 
+  const seedTables = Array.from(identifiedNames);
+
   // 3. Expansão via Grafo e Intenção: adiciona tabelas-ponte cruciais com base no contexto
   const textContext = userPrompt.toLowerCase();
   const initialList = Array.from(identifiedNames);
@@ -148,20 +167,33 @@ export async function identifyRelevantTables(
     identifiedNames.add("FLANMOV");
   }
 
+  const expandedTables = Array.from(identifiedNames).filter(t => !seedTables.includes(t));
+
   // Monta o micro-contexto estruturado limitando a um teto seguro (ex: até 10 tabelas)
   const limit = Math.min(identifiedNames.size, 10);
   const result: RMSemanticTableWithKey[] = [];
+  const finalAllowedTables: string[] = [];
   let count = 0;
 
   for (const name of identifiedNames) {
     if (count >= limit) break;
     if (dict[name]) {
       result.push({ tabela: name, ...dict[name] });
+      finalAllowedTables.push(name);
       count++;
     }
   }
 
-  return result;
+  return {
+    tables: result,
+    contextMetadata: {
+      routerTables,
+      seedTables,
+      expandedTables,
+      finalAllowedTables,
+      routerMetadata
+    }
+  };
 }
 
 export function buildSchemaContextPrompt(tables: RMSemanticTableWithKey[], userPrompt = ""): string {
