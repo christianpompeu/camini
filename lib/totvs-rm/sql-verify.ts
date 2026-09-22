@@ -214,6 +214,7 @@ export function verifySql(input: VerifyInput): VerifyResult {
         const lt = aliasToTable.get(eq.lTable.toUpperCase()) || eq.lTable.toUpperCase();
         const rt = aliasToTable.get(eq.rTable.toUpperCase()) || eq.rTable.toUpperCase();
         if (cteNames.has(lt) || cteNames.has(rt)) continue;
+        if (lt === rt) continue; // Bypass para auto-relacionamento garantido
         const key = pairKey(lt, eq.lCol, rt, eq.rCol);
         if (!grounded.has(key)) {
           problems.push({

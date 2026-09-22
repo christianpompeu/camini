@@ -18,6 +18,7 @@ export interface LlmCallParams {
   systemPrompt: string;
   userPrompt: string;
   temperature?: number;
+  stage?: "router" | "generator";
 }
 
 export interface LlmSqlJson {
@@ -49,11 +50,17 @@ function extractJson(raw: string): LlmSqlJson {
 }
 
 async function callGemini(cred: ProviderCredential, params: LlmCallParams): Promise<LlmSqlJson> {
-  const obsoleteGemini = ["gemini-2.5-flash", "gemini-1.5-flash"];
-  const model =
-    cred.model?.trim() && !obsoleteGemini.includes(cred.model.trim())
-      ? cred.model.trim()
-      : process.env.GEMINI_MODEL_NAME || "gemini-1.5-pro-latest";
+  let model = cred.model;
+  if (params.stage === "router" && process.env.GEMINI_ROUTER_MODEL) {
+    model = process.env.GEMINI_ROUTER_MODEL.trim();
+  } else if (params.stage === "generator" && process.env.GEMINI_GENERATOR_MODEL) {
+    model = process.env.GEMINI_GENERATOR_MODEL.trim();
+  } else {
+    const obsoleteGemini = ["gemini-2.5-flash", "gemini-1.5-flash"];
+    model = cred.model?.trim() && !obsoleteGemini.includes(cred.model.trim())
+        ? cred.model.trim()
+        : process.env.GEMINI_MODEL_NAME || "gemini-1.5-pro-latest";
+  }
 
   // Logs temporariamente desabilitados
   // console.log(`\x1b[36m[RAG ENGINE] Disparando Gemini com modelo: ${model}\x1b[0m`);
@@ -96,16 +103,20 @@ async function callOpenAiCompatible(
   params: LlmCallParams,
   extraHeaders?: Record<string, string>
 ): Promise<LlmSqlJson> {
-  const obsoleteGroq = ["llama-3.3-70b-versatile", "openai/gpt-oss-120b"];
-  const defaultModel =
-    cred.id === "groq"
-      ? process.env.LLM_MODEL_NAME || "llama3-70b-8192"
-      : "openai/gpt-oss-120b";
-
-  const model =
-    cred.model?.trim() && !obsoleteGroq.includes(cred.model.trim())
-      ? cred.model.trim()
-      : defaultModel;
+  let model = cred.model;
+  if (cred.id === "groq") {
+    if (params.stage === "router" && process.env.GROQ_ROUTER_MODEL) {
+      model = process.env.GROQ_ROUTER_MODEL.trim();
+    } else if (params.stage === "generator" && process.env.GROQ_GENERATOR_MODEL) {
+      model = process.env.GROQ_GENERATOR_MODEL.trim();
+    } else {
+      const obsoleteGroq = ["llama-3.3-70b-versatile", "openai/gpt-oss-120b"];
+      const defaultModel = process.env.LLM_MODEL_NAME || "llama3-70b-8192";
+      model = cred.model?.trim() && !obsoleteGroq.includes(cred.model.trim())
+          ? cred.model.trim()
+          : defaultModel;
+    }
+  }
 
   // Logs temporariamente desabilitados
   // console.log(`\x1b[36m[RAG ENGINE] Disparando ${cred.id} com modelo: ${model}\x1b[0m`);

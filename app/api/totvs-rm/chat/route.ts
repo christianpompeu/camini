@@ -45,28 +45,38 @@ export async function POST(req: NextRequest) {
     const obsoleteGroq = ["llama-3.3-70b-versatile", "openai/gpt-oss-120b"];
     const obsoleteGemini = ["gemini-2.5-flash", "gemini-1.5-flash"];
 
-    const resolveGroqModel = () => {
-      if (process.env.LLM_MODEL_NAME?.trim()) return process.env.LLM_MODEL_NAME.trim();
-      if (body.userGroqModel?.trim() && !obsoleteGroq.includes(body.userGroqModel.trim())) {
-        return body.userGroqModel.trim();
+    const resolveGeneratorModel = (id: LlmProviderId) => {
+      if (id === "groq") {
+        if (process.env.GROQ_GENERATOR_MODEL?.trim()) return process.env.GROQ_GENERATOR_MODEL.trim();
+        if (process.env.LLM_MODEL_NAME?.trim()) return process.env.LLM_MODEL_NAME.trim();
+        if (body.userGroqModel?.trim() && !obsoleteGroq.includes(body.userGroqModel.trim())) {
+          return body.userGroqModel.trim();
+        }
+        return "llama3-70b-8192";
+      } else {
+        if (process.env.GEMINI_GENERATOR_MODEL?.trim()) return process.env.GEMINI_GENERATOR_MODEL.trim();
+        if (process.env.GEMINI_MODEL_NAME?.trim()) return process.env.GEMINI_MODEL_NAME.trim();
+        if (userModel?.trim() && !obsoleteGemini.includes(userModel.trim())) {
+          return userModel.trim();
+        }
+        return "gemini-1.5-pro-latest";
       }
-      return process.env.LLM_MODEL_NAME || "llama3-70b-8192";
     };
 
-    const resolveGeminiModel = () => {
-      if (process.env.GEMINI_MODEL_NAME?.trim()) return process.env.GEMINI_MODEL_NAME.trim();
-      if (userModel?.trim() && !obsoleteGemini.includes(userModel.trim())) {
-        return userModel.trim();
-      }
-      return process.env.GEMINI_MODEL_NAME || "gemini-1.5-pro-latest";
-    };
-
-    const modelFor = (id: LlmProviderId) => (id === "groq" ? resolveGroqModel() : resolveGeminiModel());
     const keyFor = (id: LlmProviderId) => (id === "groq" ? groqKey : geminiKey);
+    
+    // Chain original usada pelo Roteador (que sobrescreve o modelo lá dentro se ROUTER_MODEL_NAME existir)
     const chain: ProviderCredential[] = [selectedProvider, otherProvider].map((id) => ({
       id,
       apiKey: keyFor(id),
-      model: modelFor(id),
+      model: id === "groq" ? "llama3-70b-8192" : "gemini-1.5-pro-latest", // valores dummy para o roteador sobrescrever ou usar padrão
+    }));
+
+    // Chain estrita para o Gerador T-SQL
+    const generatorChain: ProviderCredential[] = [selectedProvider, otherProvider].map((id) => ({
+      id,
+      apiKey: keyFor(id),
+      model: resolveGeneratorModel(id),
     }));
 
     // 2. Roteador Semântico (NLP Router): identifica tabelas e relacionamentos relevantes via IA + Grafo
@@ -93,12 +103,12 @@ DIRETRIZES FUNDAMENTAIS DO TOTVS CORPORE RM:
    - Chave primária: CODCOLIGADA, CHAPA.
    - Situação: PFHSTSIT ou PFUNC.CODSITUACAO ('A' = Ativo, 'D' = Demitido, 'F' = Férias, etc).
    - Seção / Centro de Custo RH: PSECAO (PFUNC.CODCOLIGADA = PSECAO.CODCOLIGADA AND PFUNC.CODSECAO = PSECAO.CODIGO).
-6. WITH (NOLOCK) Obrigatório: Todas as tabelas após cada cláusula FROM e JOIN devem conter impreterivelmente a diretiva WITH (NOLOCK). Se você omitir, a sua query irá derrubar e bloquear o banco inteiro em produção.
-7. Política Rigorosa de Aliases:
-   - É expressamente proibido usar aliases monocaracteres ou pobres (ex: L, S, F, P, A, B).
-   - Use preferencialmente o próprio nome da tabela como alias (ex: FROM FLAN FLAN WITH (NOLOCK) INNER JOIN FCFO FCFO WITH (NOLOCK)).
-   - Quando a mesma tabela for chamada mais de uma vez (auto-relacionamentos ou múltiplos propósitos), use obrigatoriamente um sufixo descritivo que identifique o contexto (ex: FLAN FLAN, FLAN FLAN_ORIGEM, FCFO FCFO_CLIENTE, FCFO FCFO_FORNECEDOR).
-8. Respeito aos Relacionamentos do Grafo: Nunca invente atalhos de junção. Se uma tabela precisar de uma tabela intermediária/ponte para se ligar à principal (ex: FLAN <-> SLAN <-> SPARCELA), monte a cadeia completa de JOIN com suas chaves compostas (sem esquecer o CODCOLIGADA).
+6. Diretiva Universal: Insira WITH (NOLOCK) após TODA tabela declarada no FROM e nos JOINs.
+7. Aliases Contextuais: É EXPRESSAMENTE PROIBIDO o uso de aliases monocaracteres (T, F, L, A). Utilize o próprio nome da tabela ou sufixos semânticos (ex: FLAN FLAN, TMOV TMOV_ORIGEM).
+8. Regra de Amarração Global: Todos os JOINs devem validar o CODCOLIGADA em conjunto com a chave primária.
+9. Relacionamento TMOV x FCFO: Sempre que relacionar TMOV com FCFO, utilize OBRIGATORIAMENTE as chaves de direcionamento: TMOV.CODCOLCFO = FCFO.CODCOLIGADA AND TMOV.CODCFO = FCFO.CODCFO. É proibido cruzar apenas por CODCOLIGADA.
+10. Rastreabilidade de Movimentos e Origens: Quando o usuário pedir a "origem" de um movimento (ex: pedido que gerou a nota, cotação que gerou o pedido), NUNCA utilize colunas textuais como NORDEM. Utilize ESTRITAMENTE a tabela TMOVRELAC, cruzando CODCOLIGADAORIGEM, IDMOVORIGEM com o movimento pai, e CODCOLIGADADESTINO, IDMOVDESTINO com o movimento filho. Da mesma forma, para vincular lançamentos financeiros pai/filho, utilize ESTRITAMENTE FLAN.IDLANMOVORIGEM = FLAN.IDLAN.
+11. Filtros de Data SARGables (Obrigatório): É ESTRITAMENTE PROIBIDO utilizar funções lógicas do lado da coluna em cláusulas WHERE (ex: YEAR(DATAEMISSAO) = ... ou MONTH(DATA) = ...). Para filtragem de datas correntes, declare variáveis no topo do script calculando o @INICIO_MES e @FIM_MES e utilize TMOV.DATAEMISSAO >= @INICIO_MES AND TMOV.DATAEMISSAO <= @FIM_MES.
 
 CONTEXTO DO ESQUEMA EXTRAÍDO DO DICIONÁRIO RM:
 ${schemaContext}
@@ -128,8 +138,9 @@ Você DEVE responder ESTRITAMENTE em formato JSON com a seguinte estrutura:
         requiredFilters: /CODCOLIGADA/i.test(sql) ? ["CODCOLIGADA"] : [],
       });
     try {
-      const { result, provider } = await chatCompleteWithFailover(chain, { systemPrompt, userPrompt });
-      console.log(`\x1b[32m[RAG ENGINE] Provider utilizado com sucesso: ${provider}\x1b[0m`);
+      const { result, provider } = await chatCompleteWithFailover(generatorChain, { systemPrompt, userPrompt, stage: "generator" });
+      const usedModel = generatorChain.find((c) => c.id === provider)?.model || "desconhecido";
+      console.log(`\x1b[32m[RAG ENGINE] [GENERATOR] Provider utilizado com sucesso: ${provider} (Modelo: ${usedModel})\x1b[0m`);
       const normalized = validateAndNormalizeTSql(result.sqlCode || "");
       const firstCheck = checkSql(normalized.sql);
       if (firstCheck.ok) {
@@ -146,9 +157,10 @@ Você DEVE responder ESTRITAMENTE em formato JSON com a seguinte estrutura:
       console.warn("SQL rejeitado pelo verificador, tentando reparo:", firstCheck.problems.map((p) => p.message));
       try {
         const addendum = buildRepairAddendum(firstCheck.problems, normalized.sql, allowedTables);
-        const { result: repaired } = await chatCompleteWithFailover(chain, {
+        const { result: repaired } = await chatCompleteWithFailover(generatorChain, {
           systemPrompt: systemPrompt + addendum,
           userPrompt,
+          stage: "generator"
         });
         const normalizedRepair = validateAndNormalizeTSql(repaired.sqlCode || "");
         const secondCheck = checkSql(normalizedRepair.sql);

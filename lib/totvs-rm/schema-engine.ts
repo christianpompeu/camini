@@ -70,11 +70,21 @@ export function getTableDetails(tableName: string): RMSemanticTableWithKey | nul
  * Chamada ultrarrápida e direta ao LLM para roteamento semântico de tabelas (NLP Router)
  */
 async function callRouterLlm(cred: ProviderCredential, userPrompt: string): Promise<string[]> {
-  const routerSystemPrompt = `Você é um DBA especialista no ERP TOTVS Corpore RM. Analise a solicitação do usuário em linguagem natural e identifique estritamente quais tabelas do banco são necessárias para montar a consulta (incluindo tabelas ponte de relacionamento, como SLAN para ligar FLAN e SPARCELA). Retorne EXCLUSIVAMENTE um array JSON contendo os nomes das tabelas em maiúsculo, sem markdown, sem crases, sem texto introdutório. Exemplo: ["FLAN", "SLAN", "SPARCELA", "FCFO"].`;
+  const routerSystemPrompt = `Você é um classificador rápido do TOTVS RM. Retorne ESTRITAMENTE um array JSON válido com as tabelas do TOTVS RM necessárias para a consulta (ex: ["TMOV", "FCFO", "FLAN", "TMOVRELAC"]). Jamais retorne um array vazio se o usuário pedir dados de negócio. Se envolver faturamento e financeiro, lembre-se da tabela ponte FLANMOV. Se envolver relacionamento entre notas, lembre-se da TMOVRELAC.`;
+
+  let routerModel = cred.model;
+  if (cred.id === "gemini" && process.env.GEMINI_ROUTER_MODEL) {
+    routerModel = process.env.GEMINI_ROUTER_MODEL.trim();
+  } else if (cred.id === "groq" && process.env.GROQ_ROUTER_MODEL) {
+    routerModel = process.env.GROQ_ROUTER_MODEL.trim();
+  } else if (process.env.ROUTER_MODEL_NAME) {
+    routerModel = process.env.ROUTER_MODEL_NAME.trim();
+  }
+  console.log(`\x1b[32m[RAG ENGINE] [ROUTER] Acionando modelo: ${routerModel} via ${cred.id}\x1b[0m`);
 
   if (cred.id === "gemini") {
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/${cred.model}:generateContent?key=${cred.apiKey}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/${routerModel}:generateContent?key=${cred.apiKey}`,
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -109,7 +119,7 @@ async function callRouterLlm(cred: ProviderCredential, userPrompt: string): Prom
       Authorization: `Bearer ${cred.apiKey}`
     },
     body: JSON.stringify({
-      model: cred.model,
+      model: routerModel,
       temperature: 0.1,
       messages: [
         { role: "system", content: routerSystemPrompt },
@@ -192,7 +202,16 @@ export async function identifyRelevantTables(
     }
   }
 
-  // 2. Expansão via Grafo em Memória: adiciona relacionamentos de saída diretos
+  // 2. Fallback de Segurança (Injeção Manual)
+  // Se, por alguma falha sistêmica, o Roteador devolver [], forçamos as tabelas básicas
+  if (identifiedNames.size === 0) {
+    const fallbackTables = ["TMOV", "FLAN", "FCFO", "SLAN"];
+    for (const tbl of fallbackTables) {
+      if (dict[tbl]) identifiedNames.add(tbl);
+    }
+  }
+
+  // 3. Expansão via Grafo em Memória: adiciona relacionamentos de saída diretos
   const initialList = Array.from(identifiedNames);
   for (const tableName of initialList) {
     const tableData = dict[tableName];
@@ -237,21 +256,42 @@ export function buildSchemaContextPrompt(tables: RMSemanticTableWithKey[], userP
     }
 
     text += "Colunas Relevantes:\n";
-    let displayCols = table.colunas;
-    if (displayCols.length > 30) {
-      displayCols = displayCols.filter((c) => {
-        const n = c.nome.toUpperCase();
-        return (
-          n.includes("ID") ||
-          n.includes("COD") ||
-          n.includes("VALOR") ||
-          n.includes("DATA") ||
-          n.includes("STATUS") ||
-          n.includes("NUM") ||
-          n.includes("NOME")
-        );
-      });
-      if (displayCols.length === 0) displayCols = table.colunas.slice(0, 30);
+    
+    // Identificar colunas que são chaves de junção (usadas em relacionamentos_saida)
+    const relColumns = new Set<string>();
+    if (table.relacionamentos_saida) {
+      for (const rel of table.relacionamentos_saida) {
+        const matches = rel.chaves_ligacao.match(/\b([A-Z0-9_]+)\b/gi);
+        if (matches) {
+          for (const match of matches) relColumns.add(match.toUpperCase());
+        }
+      }
+    }
+
+    let displayCols = table.colunas.filter((c) => {
+      const n = c.nome.toUpperCase();
+      const t = c.tipo.toUpperCase();
+      const isRequested = userPrompt && userPrompt.toUpperCase().includes(n);
+      
+      // Se for explicitamente solicitada no prompt, inclui sempre
+      if (isRequested) return true;
+
+      // Omitir colunas puramente de auditoria interna e colunas irrelevantes para as queries geradas
+      const isAudit = ["RECCREATEDBY", "RECMODIFIEDBY", "RECCREATEDON", "RECMODIFIEDON", "CODUSUARIO", "SECAD", "IDIMAGEM", "CODSISTEMA"].includes(n);
+      if (isAudit) return false;
+
+      // Colunas de Chave Primária / Estrangeira (começam com ID, COD ou estão em relacionamentos_saida)
+      if (n.startsWith("ID") || n.startsWith("COD") || relColumns.has(n)) return true;
+
+      // Colunas com tipos relevantes
+      if (t.includes("DATETIME") || t.includes("VARCHAR") || t.includes("NUMERIC") || t.includes("DECIMAL")) return true;
+
+      return false;
+    });
+
+    // Limite a no máximo as 25 principais colunas por tabela
+    if (displayCols.length > 25) {
+      displayCols = displayCols.slice(0, 25);
     }
 
     for (const col of displayCols) {
