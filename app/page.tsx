@@ -37,7 +37,7 @@ export default function CaminiHomePage() {
           <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[650px] h-[350px] bg-gradient-energy opacity-15 rounded-full blur-[120px] pointer-events-none" />
 
           {/* Doodles Discretos de Fundo */}
-          <div className="absolute inset-0 z-0 opacity-[0.03] dark:opacity-[0.07] pointer-events-none mix-blend-overlay dark:mix-blend-screen">
+          <div className="absolute inset-0 z-0 opacity-10 dark:opacity-5 pointer-events-none mix-blend-multiply dark:mix-blend-screen">
             <Image src="/doodle_camini_2.png" alt="Background Doodle" fill className="object-cover object-center" priority />
           </div>
 
@@ -62,7 +62,7 @@ export default function CaminiHomePage() {
 
             {/* Ações Rápidas de Boas-Vindas */}
             <div className="pt-4 flex flex-col sm:flex-row items-center justify-center gap-3.5 max-w-lg mx-auto">
-              <Link href="/totvs-rm" className="w-full sm:w-auto">
+              <Link href="/dashboard" className="w-full sm:w-auto">
                 <Button
                   variant="energy"
                   size="lg"
@@ -70,7 +70,7 @@ export default function CaminiHomePage() {
                   className="shadow-xl shadow-energy-blue/25 gap-2"
                 >
                   <Database className="w-5 h-5 fill-white" />
-                  <span>Acessar RM SQL AI</span>
+                  <span>Acessar Dashboard</span>
                 </Button>
               </Link>
 
@@ -104,7 +104,7 @@ export default function CaminiHomePage() {
         {/* ========================================================
             SEÇÃO: CARDS DE APLICAÇÕES E MÓDULOS
            ======================================================== */}
-        <section className="py-12 sm:py-16 px-4 sm:px-8 border-t border-outline/60 bg-surface-elevated/30">
+        <section className="py-12 sm:py-16 px-4 sm:px-8 border-t border-outline/60 bg-surface-elevated/30 dark:bg-gradient-to-b dark:from-surface-elevated/10 dark:to-transparent">
           <div className="max-w-6xl mx-auto space-y-10">
             <div className="text-center sm:text-left flex flex-col sm:flex-row sm:items-end justify-between gap-4">
               <div>
@@ -121,6 +121,100 @@ export default function CaminiHomePage() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {/* CARD: DASHBOARD CAMINI */}
+              <div className="relative overflow-hidden rounded-xl border-2 border-energy-coral/50 bg-surface-elevated p-6 card-elevation flex flex-col justify-between transition-all duration-200 hover:border-energy-coral hover:shadow-xl hover:shadow-energy-coral/15">
+                <div className="absolute top-0 left-0 right-0 h-1.5 bg-energy-coral" />
+
+                <div>
+                  <div className="flex items-center justify-between gap-2 mb-4">
+                    <div className="w-12 h-12 rounded-lg bg-energy-coral/15 border border-energy-coral/30 flex items-center justify-center text-energy-coral">
+                      <Layers className="w-6 h-6" />
+                    </div>
+                    <Chip variant="outline" size="sm" className="font-bold text-energy-coral border-energy-coral/30">
+                      Central
+                    </Chip>
+                  </div>
+
+                  <h3 className="text-xl font-bold text-text-primary tracking-tight">
+                    Dashboard Central
+                  </h3>
+                  <span className="text-xs font-semibold text-energy-coral block mt-0.5">
+                    Visão Geral e Acesso Rápido
+                  </span>
+
+                  <p className="text-xs sm:text-sm text-text-secondary leading-relaxed mt-3">
+                    Acesse todos os módulos da plataforma, visualize métricas consolidadas e gerencie suas configurações a partir de um único lugar.
+                  </p>
+
+                  <ul className="mt-4 space-y-1.5 text-xs text-text-secondary">
+                    <li className="flex items-center gap-2">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-energy-coral" />
+                      <span>Integração de todos os módulos</span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-energy-coral" />
+                      <span>Gestão unificada de acessos</span>
+                    </li>
+                  </ul>
+                </div>
+
+                <div className="mt-6 pt-4 border-t border-outline/60">
+                  <Link href="/dashboard">
+                    <Button variant="secondary" size="md" fullWidth className="border-outline hover:border-energy-coral">
+                      <span>Acessar Dashboard</span>
+                      <ArrowRight className="w-4 h-4 text-energy-coral" />
+                    </Button>
+                  </Link>
+                </div>
+              </div>
+
+              {/* CARD: GESTÃO FINANCEIRA E ACADÊMICA */}
+              <div className="relative overflow-hidden rounded-xl border border-outline bg-surface-elevated p-6 card-elevation flex flex-col justify-between transition-all duration-200 hover:border-energy-amber/50 hover:shadow-lg">
+                <div className="absolute top-0 left-0 right-0 h-1.5 bg-energy-amber" />
+
+                <div>
+                  <div className="flex items-center justify-between gap-2 mb-4">
+                    <div className="w-12 h-12 rounded-lg bg-energy-amber/15 border border-energy-amber/30 flex items-center justify-center text-energy-amber">
+                      <Activity className="w-6 h-6" />
+                    </div>
+                    <Chip variant="outline" size="sm" className="font-bold text-energy-amber border-energy-amber/30">
+                      Disponível
+                    </Chip>
+                  </div>
+
+                  <h3 className="text-xl font-bold text-text-primary tracking-tight">
+                    Gestão Integrada
+                  </h3>
+                  <span className="text-xs font-semibold text-energy-amber block mt-0.5">
+                    Financeiro e Acadêmico
+                  </span>
+
+                  <p className="text-xs sm:text-sm text-text-secondary leading-relaxed mt-3">
+                    Soluções completas para a administração eficiente. Controle de finanças, mensalidades, gestão de turmas e acompanhamento acadêmico.
+                  </p>
+
+                  <ul className="mt-4 space-y-1.5 text-xs text-text-secondary">
+                    <li className="flex items-center gap-2">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-energy-amber" />
+                      <span>Fluxo de caixa e conciliação bancária</span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-energy-amber" />
+                      <span>Diário de classe e boletins</span>
+                    </li>
+                  </ul>
+                </div>
+
+                <div className="mt-6 pt-4 border-t border-outline/60">
+                  <Link href="/dashboard/gestao">
+                    <Button variant="secondary" size="md" fullWidth className="border-outline hover:border-energy-amber">
+                      <span>Acessar Módulos</span>
+                      <ArrowRight className="w-4 h-4 text-energy-amber" />
+                    </Button>
+                  </Link>
+                </div>
+              </div>
+
               {/* CARD 0: TOTVS RM SQL STUDIO */}
               <div className="relative overflow-hidden rounded-xl border-2 border-energy-blue/50 bg-surface-elevated p-6 card-elevation flex flex-col justify-between transition-all duration-200 hover:border-energy-blue hover:shadow-xl hover:shadow-energy-blue/15">
                 <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-energy" />
@@ -388,11 +482,22 @@ export default function CaminiHomePage() {
       <footer className="border-t border-outline py-8 px-4 sm:px-8 bg-surface-elevated/60 text-xs text-text-secondary">
         <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded-md bg-gradient-energy flex items-center justify-center text-white font-extrabold text-xs">
-              C
+            <div className="relative w-20 h-6">
+              <Image 
+                src="/logo_camini_5.png" 
+                alt="Camini Logo Light" 
+                fill 
+                className="object-contain object-left camini-logo-light dark:hidden" 
+              />
+              <Image 
+                src="/logo_camini_2.png" 
+                alt="Camini Logo Dark" 
+                fill 
+                className="object-contain object-left camini-logo-dark hidden dark:block" 
+              />
             </div>
-            <span className="font-extrabold text-text-primary tracking-tight">
-              camini © 2026
+            <span className="font-extrabold text-text-primary tracking-tight ml-1">
+              © 2026
             </span>
             <span>•</span>
             <span>Ecossistema Integrado de Alta Performance</span>
@@ -402,8 +507,8 @@ export default function CaminiHomePage() {
             <Link href="/" className="hover:text-text-primary transition-colors">
               Início
             </Link>
-            <Link href="/forca" className="hover:text-energy-blue transition-colors">
-              App FORÇA
+            <Link href="/dashboard" className="hover:text-energy-coral transition-colors">
+              Dashboard
             </Link>
             <Link href="/playground" className="hover:text-energy-violet transition-colors">
               Design System Playground

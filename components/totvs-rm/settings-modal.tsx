@@ -24,6 +24,7 @@ export function SettingsModal({ isOpen, onClose, settings, onSave }: SettingsMod
   const [savedNotice, setSavedNotice] = useState(false);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setApiKey(settings.geminiApiKey || "");
     setModel(cleanGemini(settings.geminiModel));
     setProvider(settings.llmProvider || "gemini");

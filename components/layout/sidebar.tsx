@@ -15,7 +15,9 @@ import {
   SlidersHorizontal,
   HelpCircle,
   LogOut,
-  ChevronDown
+  ChevronDown,
+  Database,
+  Dumbbell
 } from "lucide-react";
 
 export function Sidebar() {
@@ -53,6 +55,12 @@ export function Sidebar() {
           <NavItem href="/dashboard/workflows" icon={<FolderGit2 size={18} />} label="Workflows" />
           <NavItem href="#" icon={<CreditCard size={18} />} label="Financeiro" disabled badge="Em breve" />
           <NavItem href="#" icon={<Users size={18} />} label="RH" disabled badge="Em breve" />
+        </div>
+
+        <div className="mb-4">
+          <p className="px-2 text-xs font-semibold text-gray-400 mb-2 tracking-wider">APLICAÇÕES</p>
+          <NavItem href="/dashboard/totvs-rm" icon={<Database size={18} />} label="RM SQL AI" active={pathname.startsWith("/dashboard/totvs-rm")} />
+          <NavItem href="/dashboard/forca" icon={<Dumbbell size={18} />} label="App FORÇA" active={pathname.startsWith("/dashboard/forca")} />
         </div>
 
         <div className="mb-4">

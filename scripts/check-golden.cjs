@@ -4,6 +4,7 @@
  *   1. npm run build && (npm start -- --port 3100 &)
  *   2. node scripts/check-golden.cjs http://localhost:3100
  */
+/* eslint-disable @typescript-eslint/no-require-imports */
 const fs = require("fs");
 const path = require("path");
 

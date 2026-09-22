@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { Menu, Sparkles, Dumbbell, Home, Database } from "lucide-react";
+import { Menu, Sparkles, Home, Layers, Dumbbell, Database } from "lucide-react";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { MobileSidebar } from "@/components/layout/mobile-sidebar";
 
@@ -13,8 +13,9 @@ export function Navbar() {
   const pathname = usePathname();
 
   const isHome = pathname === "/";
-  const isForca = pathname.startsWith("/forca");
+  const isDashboard = pathname.startsWith("/dashboard");
   const isPlayground = pathname.startsWith("/playground");
+  const isForca = pathname.startsWith("/forca");
   const isTotvsRm = pathname.startsWith("/totvs-rm");
 
   const navItems = [
@@ -22,7 +23,13 @@ export function Navbar() {
       href: "/",
       label: "Início",
       icon: Home,
-      isActive: isHome,
+      isActive: isHome && !isDashboard, // Avoid highlighting Home when in dashboard
+    },
+    {
+      href: "/dashboard",
+      label: "Dashboard",
+      icon: Layers,
+      isActive: isDashboard,
     },
     {
       href: "/totvs-rm",
