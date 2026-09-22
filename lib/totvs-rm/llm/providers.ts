@@ -250,12 +250,25 @@ export async function chatCompleteWithFailover<T = LlmSqlJson>(
   params: LlmCallParams<T>
 ): Promise<ProviderResult<T>> {
   const errors: string[] = [];
+  let attempt = 1;
+  const stageName = (params.stage || "UNKNOWN").toUpperCase(); // ROUTER, GENERATOR, REPAIR
+
   for (const cred of chain) {
     if (!cred.apiKey) continue;
     if (cred.id === "openrouter" && !OPENROUTER_ENABLED) {
       console.warn("OpenRouter solicitado mas desabilitado (OPENROUTER_ENABLED=false); pulando.");
       continue;
     }
+
+    // Identificar o modelo real que será usado (espelhando a lógica das calls)
+    let actualModel = cred.model || "default";
+    if (cred.id === "groq") {
+      if (params.stage === "router" && process.env.GROQ_ROUTER_MODEL) actualModel = process.env.GROQ_ROUTER_MODEL.trim();
+      else if (params.stage === "generator" && process.env.GROQ_GENERATOR_MODEL) actualModel = process.env.GROQ_GENERATOR_MODEL.trim();
+    }
+
+    console.log(`\x1b[36m[RAG ENGINE] [${stageName} ATTEMPT]\x1b[0m\nProvider: ${cred.id}\nModel: ${actualModel}\nAttempt: ${attempt}\n`);
+
     try {
       if (cred.id === "gemini") {
         const { result, usage, model } = await callGemini<T>(cred, params);
@@ -275,8 +288,21 @@ export async function chatCompleteWithFailover<T = LlmSqlJson>(
       });
       return { result, provider: "openrouter", model, usage };
     } catch (err) {
-      const msg = err instanceof Error ? err.message : "erro desconhecido";
-      errors.push(`${cred.id}: ${msg}`);
+      let status = "Unknown";
+      let errorType = "Exception";
+      let message = "erro desconhecido";
+      
+      if (err instanceof Error) {
+        message = err.message;
+        if ((err as any).status) status = (err as any).status.toString();
+        if ((err as any).type) errorType = (err as any).type;
+        else errorType = err.name;
+      }
+      
+      console.log(`\x1b[31m[RAG ENGINE] [${stageName} FAILOVER]\x1b[0m\nProvider: ${cred.id}\nModel: ${actualModel}\nStatus: ${status}\nErrorType: ${errorType}\nMessage: ${message.substring(0, 300)}\n`);
+      
+      errors.push(`${cred.id}: ${message}`);
+      attempt++;
     }
   }
   throw new Error(
