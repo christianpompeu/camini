@@ -12,20 +12,23 @@ interface SettingsModalProps {
 }
 
 export function SettingsModal({ isOpen, onClose, settings, onSave }: SettingsModalProps) {
+  const cleanGemini = (m?: string) => (m && m !== "gemini-2.5-flash" && m !== "gemini-1.5-flash" ? m : "gemini-1.5-pro-latest");
+  const cleanGroq = (m?: string) => (m && m !== "llama-3.3-70b-versatile" ? m : "llama3-70b-8192");
+
   const [apiKey, setApiKey] = useState(settings.geminiApiKey || "");
-  const [model, setModel] = useState(settings.geminiModel || "gemini-2.5-flash");
+  const [model, setModel] = useState(cleanGemini(settings.geminiModel));
   const [provider, setProvider] = useState<"gemini" | "groq" | "openrouter">(settings.llmProvider || "gemini");
   const [groqKey, setGroqKey] = useState(settings.groqApiKey || "");
-  const [groqModel, setGroqModel] = useState(settings.groqModel || "llama-3.3-70b-versatile");
+  const [groqModel, setGroqModel] = useState(cleanGroq(settings.groqModel));
   const [dialect, setDialect] = useState<"sqlserver" | "oracle">(settings.sqlDialect || "sqlserver");
   const [savedNotice, setSavedNotice] = useState(false);
 
   useEffect(() => {
     setApiKey(settings.geminiApiKey || "");
-    setModel(settings.geminiModel || "gemini-2.5-flash");
+    setModel(cleanGemini(settings.geminiModel));
     setProvider(settings.llmProvider || "gemini");
     setGroqKey(settings.groqApiKey || "");
-    setGroqModel(settings.groqModel || "llama-3.3-70b-versatile");
+    setGroqModel(cleanGroq(settings.groqModel));
     setDialect(settings.sqlDialect || "sqlserver");
   }, [settings, isOpen]);
 
@@ -171,7 +174,8 @@ export function SettingsModal({ isOpen, onClose, settings, onSave }: SettingsMod
                   onChange={(e) => setGroqModel(e.target.value)}
                   className="w-full px-3.5 py-2.5 rounded-xl border border-outline bg-surface text-text-primary text-xs focus:outline-none focus:ring-2 focus:ring-energy-blue"
                 >
-                  <option value="llama-3.3-70b-versatile">Llama 3.3 70B (Equilibrado, Recomendado)</option>
+                  <option value="llama3-70b-8192">Llama 3 70B (llama3-70b-8192 - Recomendado)</option>
+                  <option value="llama-3.1-70b-versatile">Llama 3.1 70B (Versatile)</option>
                   <option value="llama-3.1-8b-instant">Llama 3.1 8B (Ultrarrápido, Alta Quota)</option>
                   <option value="qwen/qwen3-32b">Qwen3 32B (Raciocínio)</option>
                   <option value="openai/gpt-oss-120b">GPT-OSS 120B (Máxima Capacidade)</option>
@@ -221,9 +225,8 @@ export function SettingsModal({ isOpen, onClose, settings, onSave }: SettingsMod
                   onChange={(e) => setModel(e.target.value)}
                   className="w-full px-3.5 py-2.5 rounded-xl border border-outline bg-surface text-text-primary text-xs focus:outline-none focus:ring-2 focus:ring-energy-blue"
                 >
-                  <option value="gemini-2.5-flash">Gemini 2.5 Flash (Ultrarrápido, Recomendado)</option>
-                  <option value="gemini-1.5-flash">Gemini 1.5 Flash (Leve & Estável)</option>
-                  <option value="gemini-1.5-pro">Gemini 1.5 Pro (Raciocínio Complexo)</option>
+                  <option value="gemini-1.5-pro-latest">Gemini 1.5 Pro Latest (Recomendado)</option>
+                  <option value="gemini-1.5-pro">Gemini 1.5 Pro (Estável)</option>
                 </select>
               </div>
             </>

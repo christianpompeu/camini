@@ -12,8 +12,8 @@
  */
 
 export interface FallbackTableRef {
-  Tabela: string;
-  Descricao?: string;
+  tabela: string;
+  descricao?: string;
 }
 
 export interface FallbackResult {
@@ -317,12 +317,12 @@ ORDER BY S.DESCRICAO, F.NOME;`;
   }
 
   // Cenário Genérico Baseado nas Tabelas Identificadas
-  const targetTables = tables.length > 0 ? tables : [{ Tabela: "FLAN", Descricao: "Lançamentos Financeiros" }];
-  const mainTable = targetTables[0].Tabela;
+  const targetTables = tables.length > 0 ? tables : [{ tabela: "FLAN", descricao: "Lançamentos Financeiros" }];
+  const mainTable = targetTables[0].tabela;
 
   const genericSql = `-- =====================================================================
 -- TOTVS CORPORE RM - CONSULTA ESPECIALIZADA
--- Tabelas identificadas: ${targetTables.map((t) => t.Tabela).join(", ")}
+-- Tabelas identificadas: ${targetTables.map((t) => t.tabela).join(", ")}
 -- Dialeto: Microsoft SQL Server T-SQL
 -- =====================================================================
 
@@ -336,8 +336,8 @@ ORDER BY 1 DESC;`;
 
   return {
     sqlCode: genericSql,
-    sqlExplanation: `### Consulta Base para ${mainTable} no TOTVS RM\n\nIdentificamos a tabela **\`${mainTable}\`** (${targetTables[0].Descricao || "Tabela do RM"}) como o ponto focal para o seu pedido.\n\nPara personalizar com filtros avançados, campos específicos e junções relacionais, você pode detalhar sua solicitação ou configurar sua chave de API Gemini no ícone de configurações acima.`,
-    tablesUsed: targetTables.map((t) => t.Tabela),
+    sqlExplanation: `### Consulta Base para ${mainTable} no TOTVS RM\n\nIdentificamos a tabela **\`${mainTable}\`** (${targetTables[0].descricao || "Tabela do RM"}) como o ponto focal para o seu pedido.\n\nPara personalizar com filtros avançados, campos específicos e junções relacionais, você pode detalhar sua solicitação ou configurar sua chave de API Gemini no ícone de configurações acima.`,
+    tablesUsed: targetTables.map((t) => t.tabela),
     tips: [
       "Sempre restrinja o filtro por CODCOLIGADA para aproveitar os índices nativos do TOTVS RM.",
       "Para obter os nomes dos campos exatos, você pode utilizar o botão 'Explorar Dicionário' na barra de ferramentas.",

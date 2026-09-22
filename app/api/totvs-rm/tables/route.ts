@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getRMTableCatalog, getTableDetails, RM_MODULES_MAP } from "@/lib/totvs-rm/schema-engine";
-import { findJoinPath, formatJoinCondition } from "@/lib/totvs-rm/join-graph";
 
 export async function GET(req: NextRequest) {
   try {
@@ -10,27 +9,11 @@ export async function GET(req: NextRequest) {
     const specificTable = searchParams.get("table")?.toUpperCase().trim() || "";
     const joinPath = searchParams.get("path")?.toUpperCase().trim() || "";
 
-    // Caminho de JOINs entre duas tabelas (ex.: ?path=FLAN,FCFO)
+    // Caminho de JOINs entre duas tabelas (obsoleto com o novo motor FTS)
     if (joinPath) {
-      const [from, to] = joinPath.split(",").map((t) => t.trim());
-      if (!from || !to) {
-        return NextResponse.json({ error: "Use ?path=ORIGEM,DESTINO." }, { status: 400 });
-      }
-      const steps = findJoinPath(from, to);
-      if (!steps) {
-        return NextResponse.json({ from, to, path: [], message: "Sem caminho no grafo do dicionário." });
-      }
-      return NextResponse.json({
-        from,
-        to,
-        path: steps.map((s) => ({
-          from: s.from,
-          to: s.to,
-          condition: formatJoinCondition(s, s.from, s.to),
-          mismatched: s.mismatched,
-        })),
-      });
+      return NextResponse.json({ error: "Funcionalidade de path obsoleta com o novo motor semântico FTS." }, { status: 400 });
     }
+
 
     // Se solicitou detalhes completos de uma tabela específica
     if (specificTable) {
@@ -39,8 +22,8 @@ export async function GET(req: NextRequest) {
         return NextResponse.json({ error: `Tabela '${specificTable}' não encontrada.` }, { status: 404 });
       }
 
-      const firstChar = details.Tabela.charAt(0);
-      const modulo = RM_MODULES_MAP[firstChar]?.nome || "Geral RM";
+      const firstChar = details.tabela.charAt(0);
+      const modulo = RM_MODULES_MAP[firstChar] || "Geral RM";
 
       return NextResponse.json({
         ...details,

@@ -1,11 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { identifyRelevantTables, buildSchemaContextPrompt, getTableDetails } from "@/lib/totvs-rm/schema-engine";
-import { connectSeedTables } from "@/lib/totvs-rm/join-graph";
+import { identifyRelevantTables, buildSchemaContextPrompt } from "@/lib/totvs-rm/schema-engine";
 import { generateSpecializedRMSql } from "@/lib/totvs-rm/fallback-sql";
 import { verifySql, buildRepairAddendum } from "@/lib/totvs-rm/sql-verify";
 import {
   chatCompleteWithFailover,
-  DEFAULT_GROQ_MODEL,
   LlmProviderId,
   ProviderCredential,
 } from "@/lib/totvs-rm/llm/providers";
@@ -35,34 +33,46 @@ export async function POST(req: NextRequest) {
     const lastMessage = messages[messages.length - 1];
     const userPrompt = lastMessage.content;
 
-    // 1. Identificar tabelas e relacionamentos relevantes no dicionário do RM
-    const identifiedTables = identifyRelevantTables(userPrompt, systemModule);
-    // Tabelas-ponte descobertas pelo grafo de JOINs (ligam as tabelas-semente)
-    const { joins: guaranteedJoins, bridgeTables } = connectSeedTables(identifiedTables.map((t) => t.Tabela));
-    for (const bridge of bridgeTables) {
-      if (!identifiedTables.some((t) => t.Tabela.toUpperCase() === bridge)) {
-        const details = getTableDetails(bridge);
-        if (details) identifiedTables.push(details);
-      }
-    }
-    const schemaContext = buildSchemaContextPrompt(identifiedTables, userPrompt);
-    const tablesUsed = identifiedTables.map((t) => t.Tabela);
-
-    // 2. Cadeia de providers LLM: o selecionado primeiro, o outro de failover.
+    // 1. Cadeia de providers LLM: o selecionado primeiro, o outro de failover.
     // Prioridade: process.env (`.env.local`, servidor) > chave do navegador
     // (localStorage, enviada no body). O servidor nunca expõe o valor do env.
     const selectedProvider: LlmProviderId = body.provider === "groq" ? "groq" : "gemini";
     const geminiKey = process.env.GEMINI_API_KEY?.trim() || userApiKey?.trim() || "";
     const groqKey = process.env.GROQ_API_KEY?.trim() || body.userGroqKey?.trim() || "";
     const otherProvider: LlmProviderId = selectedProvider === "groq" ? "gemini" : "groq";
-    const modelFor = (id: LlmProviderId) =>
-      id === "groq" ? body.userGroqModel || DEFAULT_GROQ_MODEL : userModel || "gemini-2.5-flash";
+
+    // Resolução de modelos com filtragem de versões obsoletas e prioridade de env:
+    const obsoleteGroq = ["llama-3.3-70b-versatile", "openai/gpt-oss-120b"];
+    const obsoleteGemini = ["gemini-2.5-flash", "gemini-1.5-flash"];
+
+    const resolveGroqModel = () => {
+      if (process.env.LLM_MODEL_NAME?.trim()) return process.env.LLM_MODEL_NAME.trim();
+      if (body.userGroqModel?.trim() && !obsoleteGroq.includes(body.userGroqModel.trim())) {
+        return body.userGroqModel.trim();
+      }
+      return process.env.LLM_MODEL_NAME || "llama3-70b-8192";
+    };
+
+    const resolveGeminiModel = () => {
+      if (process.env.GEMINI_MODEL_NAME?.trim()) return process.env.GEMINI_MODEL_NAME.trim();
+      if (userModel?.trim() && !obsoleteGemini.includes(userModel.trim())) {
+        return userModel.trim();
+      }
+      return process.env.GEMINI_MODEL_NAME || "gemini-1.5-pro-latest";
+    };
+
+    const modelFor = (id: LlmProviderId) => (id === "groq" ? resolveGroqModel() : resolveGeminiModel());
     const keyFor = (id: LlmProviderId) => (id === "groq" ? groqKey : geminiKey);
     const chain: ProviderCredential[] = [selectedProvider, otherProvider].map((id) => ({
       id,
       apiKey: keyFor(id),
       model: modelFor(id),
     }));
+
+    // 2. Roteador Semântico (NLP Router): identifica tabelas e relacionamentos relevantes via IA + Grafo
+    const identifiedTables = await identifyRelevantTables(userPrompt, chain);
+    const schemaContext = buildSchemaContextPrompt(identifiedTables, userPrompt);
+    const tablesUsed = identifiedTables.map((t) => t.tabela);
 
     // 3. Montagem do prompt do sistema especializado em TOTVS RM
     const systemPrompt = `Você é o maior especialista sênior em banco de dados e desenvolvimento de consultas SQL para o ERP TOTVS Corpore RM.
@@ -83,8 +93,11 @@ DIRETRIZES FUNDAMENTAIS DO TOTVS CORPORE RM:
    - Chave primária: CODCOLIGADA, CHAPA.
    - Situação: PFHSTSIT ou PFUNC.CODSITUACAO ('A' = Ativo, 'D' = Demitido, 'F' = Férias, etc).
    - Seção / Centro de Custo RH: PSECAO (PFUNC.CODCOLIGADA = PSECAO.CODCOLIGADA AND PFUNC.CODSECAO = PSECAO.CODIGO).
-6. Performance: No SQL Server, use sempre a dica WITH (NOLOCK) para tabelas de grande volume (FLAN, TMOV, TITMMOV, PFUNC, CPARTIDA) para não bloquear transações concorrentes no ERP.
-7. Formatação: O SQL deve ser limpo, indentado com aliases claros (ex: F para FLAN, C para FCFO, M para TMOV, I para TITMMOV).
+6. Performance (MUITO CRÍTICO): É ESTRITAMENTE OBRIGATÓRIO o uso da hint WITH (NOLOCK) logo após declarar cada tabela em cláusulas FROM ou JOIN. Exemplo: FROM FLAN FLAN WITH (NOLOCK) INNER JOIN FCFO FCFO WITH (NOLOCK) ON... Se você omitir, a sua query irá derrubar e bloquear o banco inteiro em produção.
+7. REGRAS INEGOCIÁVEIS DE ALIASES (LEGIBILIDADE TOTAL):
+   - É ESTRITAMENTE PROIBIDO utilizar aliases pobres ou de uma única letra (como L, S, M, A, B, F, C).
+   - Dê preferência absoluta ao uso do PRÓPRIO NOME DA TABELA como alias (exemplo: FROM FLAN FLAN WITH (NOLOCK), INNER JOIN SPARCELA SPARCELA WITH (NOLOCK) ON...).
+   - Se a mesma tabela for acionada mais de uma vez na consulta (auto-relacionamento ou junções com intenções distintas), adicione um sufixo claro indicando a referência de uso (exemplo: FCFO_CLIENTE, FCFO_FORNECEDOR, FLAN_ORIGEM, FLAN_BAIXA).
 8. JOINs: utilize EXCLUSIVAMENTE as condições da seção JOINS GARANTIDOS do contexto (extraídas do dicionário oficial). Nunca invente colunas de ligação.
 
 CONTEXTO DO ESQUEMA EXTRAÍDO DO DICIONÁRIO RM:
@@ -106,17 +119,18 @@ Você DEVE responder ESTRITAMENTE em formato JSON com a seguinte estrutura:
     // + verificação semântica do SQL (Fase D): tabelas/JOINs lastreados no
     // dicionário; rejeitado => 1 tentativa de reparo com o diagnóstico.
     const allowedTables = Array.from(
-      new Set([...identifiedTables.map((t) => t.Tabela), ...bridgeTables])
+      new Set(identifiedTables.map((t) => t.tabela))
     );
     const checkSql = (sql: string) =>
       verifySql({
         sql,
         allowedTables,
-        guaranteedJoins,
         requiredFilters: /CODCOLIGADA/i.test(sql) ? ["CODCOLIGADA"] : [],
       });
     try {
-      const { result } = await chatCompleteWithFailover(chain, { systemPrompt, userPrompt });
+      const { result, provider } = await chatCompleteWithFailover(chain, { systemPrompt, userPrompt });
+      // Logs temporariamente desabilitados
+      // console.log(`\x1b[32m[RAG ENGINE] Provider utilizado com sucesso: ${provider}\x1b[0m`);
       const normalized = validateAndNormalizeTSql(result.sqlCode || "");
       const firstCheck = checkSql(normalized.sql);
       if (firstCheck.ok) {
@@ -177,6 +191,7 @@ Você DEVE responder ESTRITAMENTE em formato JSON com a seguinte estrutura:
       tablesUsed: fallbackResponse.tablesUsed.length > 0 ? fallbackResponse.tablesUsed : tablesUsed,
       tips: [...normalizedFallback.warnings, ...fallbackResponse.tips],
       isFallback: true,
+      repaired: false,
     });
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : "Erro interno ao processar consulta.";

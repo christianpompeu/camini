@@ -36,9 +36,9 @@ export default function TotvsRmChatPage() {
   const [settings, setSettings] = useState<UserSettings>({
     llmProvider: "gemini",
     geminiApiKey: "",
-    geminiModel: "gemini-2.5-flash",
+    geminiModel: "gemini-1.5-pro-latest",
     groqApiKey: "",
-    groqModel: "llama-3.3-70b-versatile",
+    groqModel: "llama3-70b-8192",
     sqlDialect: "sqlserver",
     includeComments: true,
     defaultColigadaFilter: true,
@@ -51,13 +51,22 @@ export default function TotvsRmChatPage() {
     try {
       const savedSettings = localStorage.getItem(LOCAL_STORAGE_SETTINGS);
       if (savedSettings) {
+        const parsed = JSON.parse(savedSettings);
+        const cleanGemini = parsed.geminiModel && parsed.geminiModel !== "gemini-2.5-flash" && parsed.geminiModel !== "gemini-1.5-flash" 
+          ? parsed.geminiModel 
+          : "gemini-1.5-pro-latest";
+        const cleanGroq = parsed.groqModel && parsed.groqModel !== "llama-3.3-70b-versatile" 
+          ? parsed.groqModel 
+          : "llama3-70b-8192";
+
         // Trava temporária: somente SQL Server (Oracle em breve).
         // Defaults primeiro para normalizar settings antigos sem llmProvider.
         setSettings({
           llmProvider: "gemini",
           groqApiKey: "",
-          groqModel: "llama-3.3-70b-versatile",
-          ...JSON.parse(savedSettings),
+          ...parsed,
+          geminiModel: cleanGemini,
+          groqModel: cleanGroq,
           sqlDialect: "sqlserver",
         });
       }
@@ -92,10 +101,18 @@ export default function TotvsRmChatPage() {
 
   // 3. Salvar configurações (trava temporária: somente SQL Server)
   const handleSaveSettings = (newSettings: UserSettings) => {
+    const cleanGemini = newSettings.geminiModel && newSettings.geminiModel !== "gemini-2.5-flash" && newSettings.geminiModel !== "gemini-1.5-flash" 
+      ? newSettings.geminiModel 
+      : "gemini-1.5-pro-latest";
+    const cleanGroq = newSettings.groqModel && newSettings.groqModel !== "llama-3.3-70b-versatile" 
+      ? newSettings.groqModel 
+      : "llama3-70b-8192";
+
     const normalized: UserSettings = {
       ...newSettings,
       llmProvider: newSettings.llmProvider || "gemini",
-      groqModel: newSettings.groqModel || "llama-3.3-70b-versatile",
+      geminiModel: cleanGemini,
+      groqModel: cleanGroq,
       sqlDialect: "sqlserver",
     };
     setSettings(normalized);

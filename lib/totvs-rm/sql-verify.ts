@@ -13,7 +13,7 @@
  * Módulo puro, testável offline via tsc + node.
  */
 import { Parser } from "node-sql-parser";
-import { getAllEdges, type JoinEdge, type OrientedJoin } from "./join-graph";
+import { loadSemanticDictionary } from "./schema-engine";
 
 export interface VerifyProblem {
   code: "PARSE_ERROR" | "UNKNOWN_TABLE" | "JOIN_NOT_GROUNDED" | "MISSING_FILTER";
@@ -24,8 +24,8 @@ export interface VerifyInput {
   sql: string;
   /** Tabelas permitidas (identificadas + pontes), em qualquer caixa. */
   allowedTables: string[];
-  /** JOINs do plano (usados no prompt); informativos no diagnóstico. */
-  guaranteedJoins: OrientedJoin[];
+  /** JOINs do plano (informativos no diagnóstico / compatibilidade retroativa). */
+  guaranteedJoins?: unknown[];
   /** Colunas que precisam aparecer no WHERE (ex.: ["CODCOLIGADA"]). */
   requiredFilters?: string[];
 }
@@ -57,13 +57,27 @@ function pairKey(t1: string, c1: string, t2: string, c2: string): string {
   return a < b ? `${a}=${b}` : `${b}=${a}`;
 }
 
-function edgePairs(edge: JoinEdge): string[] {
-  const n = Math.min(edge.of.length, edge.df.length);
-  const out: string[] = [];
-  for (let i = 0; i < n; i++) {
-    out.push(pairKey(edge.o, edge.of[i], edge.d, edge.df[i]));
+let cachedGroundedPairs: Set<string> | null = null;
+
+export function getGroundedJoinPairs(): Set<string> {
+  if (cachedGroundedPairs) return cachedGroundedPairs;
+  const dict = loadSemanticDictionary();
+  const set = new Set<string>();
+  for (const [origem, dados] of Object.entries(dict)) {
+    for (const rel of dados.relacionamentos_saida || []) {
+      const parts = rel.chaves_ligacao.split("=");
+      if (parts.length === 2) {
+        const leftCols = parts[0].split(",").map((c) => c.trim().toUpperCase());
+        const rightCols = parts[1].split(",").map((c) => c.trim().toUpperCase());
+        const n = Math.min(leftCols.length, rightCols.length);
+        for (let i = 0; i < n; i++) {
+          set.add(pairKey(origem, leftCols[i], rel.tabela_destino, rightCols[i]));
+        }
+      }
+    }
   }
-  return out;
+  cachedGroundedPairs = set;
+  return cachedGroundedPairs;
 }
 
 function isColumnRef(node: unknown): node is { type: string; table: string | null; column: string } {
@@ -188,11 +202,8 @@ export function verifySql(input: VerifyInput): VerifyResult {
     }
   }
 
-  // Pares de JOIN com lastro no grafo (qualquer aresta do dicionário)
-  const grounded = new Set<string>();
-  for (const e of getAllEdges()) {
-    for (const k of edgePairs(e)) grounded.add(k);
-  }
+  // Pares de JOIN com lastro no dicionário (qualquer relacionamento)
+  const grounded = getGroundedJoinPairs();
 
   for (const stmt of stmts) {
     for (const f of stmt.from || []) {

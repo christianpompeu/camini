@@ -14,8 +14,6 @@ export type LlmProviderId = "gemini" | "groq" | "openrouter";
 
 export const OPENROUTER_ENABLED = false;
 
-export const DEFAULT_GROQ_MODEL = "llama-3.3-70b-versatile";
-
 export interface LlmCallParams {
   systemPrompt: string;
   userPrompt: string;
@@ -51,8 +49,17 @@ function extractJson(raw: string): LlmSqlJson {
 }
 
 async function callGemini(cred: ProviderCredential, params: LlmCallParams): Promise<LlmSqlJson> {
+  const obsoleteGemini = ["gemini-2.5-flash", "gemini-1.5-flash"];
+  const model =
+    cred.model?.trim() && !obsoleteGemini.includes(cred.model.trim())
+      ? cred.model.trim()
+      : process.env.GEMINI_MODEL_NAME || "gemini-1.5-pro-latest";
+
+  // Logs temporariamente desabilitados
+  // console.log(`\x1b[36m[RAG ENGINE] Disparando Gemini com modelo: ${model}\x1b[0m`);
+
   const response = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/${cred.model}:generateContent?key=${cred.apiKey}`,
+    `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${cred.apiKey}`,
     {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -89,6 +96,20 @@ async function callOpenAiCompatible(
   params: LlmCallParams,
   extraHeaders?: Record<string, string>
 ): Promise<LlmSqlJson> {
+  const obsoleteGroq = ["llama-3.3-70b-versatile", "openai/gpt-oss-120b"];
+  const defaultModel =
+    cred.id === "groq"
+      ? process.env.LLM_MODEL_NAME || "llama3-70b-8192"
+      : "openai/gpt-oss-120b";
+
+  const model =
+    cred.model?.trim() && !obsoleteGroq.includes(cred.model.trim())
+      ? cred.model.trim()
+      : defaultModel;
+
+  // Logs temporariamente desabilitados
+  // console.log(`\x1b[36m[RAG ENGINE] Disparando ${cred.id} com modelo: ${model}\x1b[0m`);
+
   const response = await fetch(`${baseUrl}/chat/completions`, {
     method: "POST",
     headers: {
@@ -97,7 +118,7 @@ async function callOpenAiCompatible(
       ...extraHeaders,
     },
     body: JSON.stringify({
-      model: cred.model,
+      model,
       temperature: params.temperature ?? 0.2,
       response_format: { type: "json_object" },
       messages: [
@@ -152,7 +173,8 @@ export async function chatCompleteWithFailover(
       return { result, provider: "openrouter" };
     } catch (err) {
       const msg = err instanceof Error ? err.message : "erro desconhecido";
-      console.warn(`Provider ${cred.id} falhou, tentando próximo:`, msg);
+      // Logs temporariamente desabilitados
+      // console.log(`\x1b[31m[RAG ENGINE][ERRO] Provider ${cred.id} falhou:\x1b[0m`, msg);
       errors.push(`${cred.id}: ${msg}`);
     }
   }
