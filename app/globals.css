@@ -29,15 +29,15 @@ html.dark .camini-logo-light,
 
   /* Camini Brand Colors */
   --camini-navy: #0D1540;
-  --camini-indigo: #1737FF;
-  --camini-cobalt: #215FFF;
-  --camini-cyan: #1AB8FF;
-  --camini-aqua: #24E4D0;
+  --camini-indigo: #0038FF;
+  --camini-cobalt: #0088FF;
+  --camini-cyan: #00C8FF;
+  --camini-aqua: #00F5A0;
   --camini-graphite: #1F2937;
   --camini-softgray: #E9EEF5;
 
-  /* Camini Gradient */
-  --gradient-camini: linear-gradient(135deg, var(--camini-indigo) 0%, var(--camini-cobalt) 40%, var(--camini-cyan) 100%);
+  /* Camini Gradient — Fiel ao icon_camini.png (Azul Real -> Ciano -> Aqua/Esmeralda) */
+  --gradient-camini: linear-gradient(135deg, #0038FF 0%, #0099FF 45%, #00F5A0 100%);
 
   /* Cores expressivas */
   --energy-blue: #5B7CFA;

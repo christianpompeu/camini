@@ -3,7 +3,7 @@
 import React, { forwardRef } from "react";
 
 export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: "energy" | "secondary" | "outline" | "ghost" | "effort" | "coral";
+  variant?: "energy" | "camini" | "secondary" | "outline" | "ghost" | "effort" | "coral";
   size?: "sm" | "md" | "lg" | "icon";
   fullWidth?: boolean;
 }
@@ -28,6 +28,8 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     const variantClasses = {
       energy:
         "bg-gradient-energy text-white font-semibold shadow-md hover:brightness-105 active:brightness-95",
+      camini:
+        "bg-gradient-camini text-white font-semibold shadow-md shadow-blue-500/25 hover:brightness-105 active:brightness-95",
       secondary:
         "bg-surface-elevated text-text-primary border border-outline hover:bg-surface-elevated/90 dark:hover:bg-surface-elevated/70",
       outline:

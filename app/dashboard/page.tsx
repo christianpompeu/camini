@@ -31,7 +31,7 @@ export default function DashboardHomePage() {
             Sua central de operações. Gerencie módulos, acesse estatísticas e acompanhe o fluxo da sua instituição de forma unificada.
           </p>
           <Link href="/dashboard/ctc">
-            <Button className="bg-camini-cyan hover:bg-white hover:text-camini-navy text-camini-navy border-none font-semibold px-6 py-6 transition-colors shadow-lg">
+            <Button variant="camini" size="lg" className="shadow-xl px-6 py-6 text-base font-semibold">
               Acessar Módulo CTC <ArrowRight className="ml-2 w-5 h-5" />
             </Button>
           </Link>
@@ -40,30 +40,30 @@ export default function DashboardHomePage() {
 
       {/* Modules Shortcuts */}
       <div>
-        <h2 className="text-xl font-bold text-camini-graphite mb-6 flex items-center gap-2">
+        <h2 className="text-xl font-bold text-camini-graphite dark:text-white mb-6 flex items-center gap-2">
           Módulos Ativos
         </h2>
         <div className="grid md:grid-cols-3 gap-6">
           <Link href="/dashboard/ctc" className="group">
-            <div className="bg-white rounded-xl p-6 border border-gray-100 shadow-sm hover:shadow-md hover:border-camini-cyan/30 transition-all">
-              <div className="w-12 h-12 bg-camini-softgray rounded-lg flex items-center justify-center mb-4 group-hover:bg-camini-cyan/10 transition-colors">
-                <BookOpen className="w-6 h-6 text-camini-indigo" />
+            <div className="bg-white dark:bg-slate-900 rounded-xl p-6 border border-gray-100 dark:border-slate-800 shadow-sm hover:shadow-md hover:border-camini-cyan/30 transition-all">
+              <div className="w-12 h-12 bg-gradient-camini text-white rounded-xl flex items-center justify-center mb-4 shadow-md shadow-blue-500/20 group-hover:scale-105 transition-all">
+                <BookOpen className="w-6 h-6 stroke-[2.5]" />
               </div>
-              <h3 className="text-lg font-bold text-camini-graphite mb-2">Gestão CTC</h3>
-              <p className="text-sm text-gray-500">
+              <h3 className="text-lg font-bold text-camini-graphite dark:text-white mb-2">Gestão CTC</h3>
+              <p className="text-sm text-gray-500 dark:text-gray-400">
                 Curso de Teologia Cristã. Controle de professores, disciplinas e calendário de aulas.
               </p>
             </div>
           </Link>
 
           <Link href="#" className="group pointer-events-none opacity-60">
-            <div className="bg-white rounded-xl p-6 border border-gray-100 shadow-sm transition-all relative overflow-hidden">
-              <div className="absolute top-4 right-4 text-[10px] uppercase font-bold tracking-wider bg-gray-100 text-gray-500 px-2 py-1 rounded">Em breve</div>
-              <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center mb-4">
+            <div className="bg-white dark:bg-slate-900 rounded-xl p-6 border border-gray-100 dark:border-slate-800 shadow-sm transition-all relative overflow-hidden">
+              <div className="absolute top-4 right-4 text-[10px] uppercase font-bold tracking-wider bg-gray-100 dark:bg-slate-800 text-gray-500 dark:text-gray-400 px-2 py-1 rounded">Em breve</div>
+              <div className="w-12 h-12 bg-gray-100 dark:bg-slate-800 rounded-lg flex items-center justify-center mb-4">
                 <UserCircle2 className="w-6 h-6 text-gray-400" />
               </div>
-              <h3 className="text-lg font-bold text-gray-400 mb-2">Recursos Humanos</h3>
-              <p className="text-sm text-gray-400">
+              <h3 className="text-lg font-bold text-gray-400 dark:text-gray-500 mb-2">Recursos Humanos</h3>
+              <p className="text-sm text-gray-400 dark:text-gray-500">
                 Gestão de funcionários, folha de pagamento e benefícios.
               </p>
             </div>

@@ -35,6 +35,25 @@ export type Aula = {
 };
 
 // ==========================================
+// ESTATÍSTICAS E CONTADORES
+// ==========================================
+
+export async function getCtcStats() {
+  const supabase = await createClient();
+  const [professoresRes, disciplinasRes, aulasRes] = await Promise.all([
+    supabase.from("ctc_professores").select("*", { count: "exact", head: true }),
+    supabase.from("ctc_disciplinas").select("*", { count: "exact", head: true }),
+    supabase.from("ctc_aulas").select("*", { count: "exact", head: true }),
+  ]);
+
+  return {
+    professores: professoresRes.count ?? 0,
+    disciplinas: disciplinasRes.count ?? 0,
+    aulas: aulasRes.count ?? 0,
+  };
+}
+
+// ==========================================
 // CRUD PROFESSORES
 // ==========================================
 

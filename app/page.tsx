@@ -61,7 +61,7 @@ export default function CaminiHomePage() {
             </p>
 
             {/* Ações Rápidas de Boas-Vindas */}
-            <div className="pt-4 flex flex-col sm:flex-row items-center justify-center gap-3.5 max-w-lg mx-auto">
+            <div className="pt-4 flex flex-col sm:flex-row flex-wrap items-center justify-center gap-3.5 max-w-4xl mx-auto">
               <Link href="/dashboard" className="w-full sm:w-auto">
                 <Button
                   variant="energy"
@@ -69,8 +69,20 @@ export default function CaminiHomePage() {
                   fullWidth
                   className="shadow-xl shadow-energy-blue/25 gap-2"
                 >
-                  <Database className="w-5 h-5 fill-white" />
+                  <Layers className="w-5 h-5" />
                   <span>Acessar Dashboard</span>
+                </Button>
+              </Link>
+
+              <Link href="/totvs-rm" className="w-full sm:w-auto">
+                <Button
+                  variant="secondary"
+                  size="lg"
+                  fullWidth
+                  className="border-outline hover:border-energy-cyan text-text-primary gap-2"
+                >
+                  <Database className="w-5 h-5 text-energy-cyan" />
+                  <span>RM SQL AI</span>
                 </Button>
               </Link>
 
@@ -481,22 +493,22 @@ export default function CaminiHomePage() {
          ======================================================== */}
       <footer className="border-t border-outline py-8 px-4 sm:px-8 bg-surface-elevated/60 text-xs text-text-secondary">
         <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-2">
-            <div className="relative w-20 h-6">
+          <div className="flex items-center gap-3">
+            <div className="relative w-36 sm:w-44 h-9 sm:h-10">
               <Image 
-                src="/logo_camini_5.png" 
+                src="/logo_camini_light.png" 
                 alt="Camini Logo Light" 
                 fill 
                 className="object-contain object-left camini-logo-light dark:hidden" 
               />
               <Image 
-                src="/logo_camini_2.png" 
+                src="/logo_camini_dark.png" 
                 alt="Camini Logo Dark" 
                 fill 
                 className="object-contain object-left camini-logo-dark hidden dark:block" 
               />
             </div>
-            <span className="font-extrabold text-text-primary tracking-tight ml-1">
+            <span className="font-extrabold text-text-primary tracking-tight">
               © 2026
             </span>
             <span>•</span>
