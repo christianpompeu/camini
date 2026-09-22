@@ -197,6 +197,23 @@ async function callOpenAi<T>(cred: ProviderCredential, params: LlmCallParams<T>)
     }
   } : { type: "json_object" };
 
+  const payload: any = {
+    model,
+    response_format: responseFormat,
+    messages: [
+      { role: "system", content: params.systemPrompt },
+      { role: "user", content: params.userPrompt },
+    ],
+  };
+
+  // Helpers de capacidades: omite 'temperature' para modelos que não a suportam (ex: o1, gpt-5.6-luna)
+  const modelsWithoutTemperature = ["o1-preview", "o1-mini", "gpt-5.6-luna"];
+  const supportsTemperature = !modelsWithoutTemperature.some(m => model.includes(m));
+  
+  if (supportsTemperature) {
+    payload.temperature = params.temperature ?? 0.2;
+  }
+
   const startTime = performance.now();
   const response = await fetch("https://api.openai.com/v1/chat/completions", {
     method: "POST",
@@ -204,15 +221,7 @@ async function callOpenAi<T>(cred: ProviderCredential, params: LlmCallParams<T>)
       "Content-Type": "application/json",
       Authorization: `Bearer ${cred.apiKey}`,
     },
-    body: JSON.stringify({
-      model,
-      temperature: params.temperature ?? 0.2,
-      response_format: responseFormat,
-      messages: [
-        { role: "system", content: params.systemPrompt },
-        { role: "user", content: params.userPrompt },
-      ],
-    }),
+    body: JSON.stringify(payload),
   });
   const latencyMs = performance.now() - startTime;
 
