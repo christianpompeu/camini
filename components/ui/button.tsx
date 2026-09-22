@@ -3,7 +3,7 @@
 import React, { forwardRef } from "react";
 
 export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: "energy" | "secondary" | "outline" | "ghost" | "effort" | "coral";
+  variant?: "energy" | "camini" | "secondary" | "outline" | "ghost" | "effort" | "coral";
   size?: "sm" | "md" | "lg" | "icon";
   fullWidth?: boolean;
 }
@@ -28,6 +28,8 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     const variantClasses = {
       energy:
         "bg-gradient-energy text-white font-semibold shadow-md hover:brightness-105 active:brightness-95",
+      camini:
+        "bg-gradient-camini text-white font-semibold shadow-md shadow-blue-500/25 hover:brightness-105 active:brightness-95",
       secondary:
         "bg-surface-elevated text-text-primary border border-outline hover:bg-surface-elevated/90 dark:hover:bg-surface-elevated/70",
       outline:
@@ -41,10 +43,10 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     };
 
     const sizeClasses = {
-      sm: "min-h-[44px] px-4 py-2 text-sm rounded-md gap-1.5",
-      md: "min-h-[48px] px-6 py-2.5 text-base rounded-md gap-2",
-      lg: "min-h-[56px] px-8 py-3 text-lg font-semibold rounded-lg gap-2.5",
-      icon: "min-h-[44px] min-w-[44px] p-2.5 rounded-pill",
+      sm: "min-h-[36px] px-3 py-1.5 text-sm rounded-md gap-1.5",
+      md: "min-h-[40px] px-5 py-2 text-sm font-medium rounded-md gap-2",
+      lg: "min-h-[48px] px-6 py-2.5 text-base font-semibold rounded-lg gap-2.5",
+      icon: "min-h-[40px] min-w-[40px] p-2 rounded-md",
     };
 
     const widthClass = fullWidth ? "w-full" : "";

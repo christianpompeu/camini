@@ -82,10 +82,28 @@ export default function TotvsRmChatPage() {
       }
 
       // Sessão inicial padrão caso não haja nenhuma
-      createNewSession();
+      const defaultSession: ChatSession = {
+        id: "session_" + Date.now(),
+        title: "Nova Consulta SQL",
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+        messages: [],
+        dialect: "sqlserver",
+      };
+      setSessions([defaultSession]);
+      setActiveSessionId(defaultSession.id);
     } catch (err) {
       console.error("Erro ao carregar dados do LocalStorage:", err);
-      createNewSession();
+      const fallbackSession: ChatSession = {
+        id: "session_" + Date.now(),
+        title: "Nova Consulta SQL",
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+        messages: [],
+        dialect: "sqlserver",
+      };
+      setSessions([fallbackSession]);
+      setActiveSessionId(fallbackSession.id);
     }
   }, []);
 

@@ -26,6 +26,7 @@ export function RestTimer({
         setTimeLeft((prev) => prev - 1);
       }, 1000);
     } else if (timeLeft === 0 && isActive) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setIsActive(false);
       if (onFinish) onFinish();
     }
