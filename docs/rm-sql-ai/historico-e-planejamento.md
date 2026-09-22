@@ -158,7 +158,15 @@ Para usar IA real: Configurações → provedor → colar chave (Gemini e/ou Gro
   (restam só os `require()` pré-existentes dos scripts `.cjs`).
 - Golden set **10/10 PASS** em servidor prod local (`npm start -- --port 3100`).
 
-## 5. Futuro (fora de escopo por enquanto)
+## 5. Fase E — Suporte a OpenAI e Desacoplamento (concluída em 22/09/2026)
+Esta fase preparou o terreno para roteamento complexo e abstrações mais limpas.
+- **OpenAI Nativa e Structured Outputs:** O provider da OpenAI foi implementado como provedor de primeira classe em `providers.ts`, utilizando os recursos oficiais da API de *Structured Outputs* (sem depender de `JSON.parse` instável) definindo contratos JSON Schema estritos (`RMRouterResult` e `LlmSqlJson`).
+- **Desacoplamento do NLP Router:** O `schema-engine.ts` não realiza mais chamadas LLM. O código de roteamento foi externalizado para `lib/totvs-rm/llm/router.ts`. 
+- **Desacoplamento de Prompts:** Prompts extensos foram movidos do motor de chat para a nova pasta `lib/totvs-rm/llm/prompts/` (`router.ts`, `generator.ts`, `repair.ts`), mantendo `route.ts` apenas focado na orquestração (Failover > Roteador > Contexto > Gerador > Validação > Fallback).
+- **Observabilidade de Tokens:** A API local `chatCompleteWithFailover` agora monitora e retorna metadados de `usage` dos providers, registrando os tokens de input/output via terminal para fins de auditoria de custo.
+- **Failover intacto:** Gemini e Groq continuam funcionando normalmente na cadeia, a abstração engloba a extração padronizada de outputs e fallback para parses via regex.
+
+## 6. Futuro (fora de escopo por enquanto)
 - Volta do Oracle: reverter a trava (`route.ts`, settings, tipos),
   recriar branches de dialeto + validador por dialeto.
 - Retry de reparo: realimentar o modelo com SQL + avisos do validador (1x).

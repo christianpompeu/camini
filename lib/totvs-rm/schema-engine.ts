@@ -66,109 +66,7 @@ export function getTableDetails(tableName: string): RMSemanticTableWithKey | nul
   return null;
 }
 
-/**
- * Chamada ultrarrápida e direta ao LLM para roteamento semântico de tabelas (NLP Router)
- */
-async function callRouterLlm(cred: ProviderCredential, userPrompt: string): Promise<string[]> {
-  const routerSystemPrompt = `Você é um classificador rápido do TOTVS RM. Retorne ESTRITAMENTE um array JSON válido com as tabelas do TOTVS RM necessárias para a consulta (ex: ["TMOV", "FCFO", "FLAN", "TMOVRELAC"]). Jamais retorne um array vazio se o usuário pedir dados de negócio. Se envolver faturamento e financeiro, lembre-se da tabela ponte FLANMOV. Se envolver relacionamento entre notas, lembre-se da TMOVRELAC.`;
-
-  let routerModel = cred.model;
-  if (cred.id === "gemini" && process.env.GEMINI_ROUTER_MODEL) {
-    routerModel = process.env.GEMINI_ROUTER_MODEL.trim();
-  } else if (cred.id === "groq" && process.env.GROQ_ROUTER_MODEL) {
-    routerModel = process.env.GROQ_ROUTER_MODEL.trim();
-  } else if (process.env.ROUTER_MODEL_NAME) {
-    routerModel = process.env.ROUTER_MODEL_NAME.trim();
-  }
-  console.log(`\x1b[32m[RAG ENGINE] [ROUTER] Acionando modelo: ${routerModel} via ${cred.id}\x1b[0m`);
-
-  if (cred.id === "gemini") {
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/${routerModel}:generateContent?key=${cred.apiKey}`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          contents: [
-            { role: "user", parts: [{ text: `${routerSystemPrompt}\n\nPERGUNTA:\n${userPrompt}` }] }
-          ],
-          generationConfig: {
-            temperature: 0.1,
-            responseMimeType: "application/json"
-          }
-        })
-      }
-    );
-
-    if (!response.ok) {
-      throw new Error(`Router Gemini HTTP ${response.status}`);
-    }
-
-    const data = await response.json();
-    const raw = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-    if (!raw) return [];
-    return parseTableArrayJson(raw);
-  }
-
-  // OpenAi-compatível (Groq / OpenRouter)
-  const baseUrl = cred.id === "groq" ? "https://api.groq.com/openai/v1" : "https://openrouter.ai/api/v1";
-  const response = await fetch(`${baseUrl}/chat/completions`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${cred.apiKey}`
-    },
-    body: JSON.stringify({
-      model: routerModel,
-      temperature: 0.1,
-      messages: [
-        { role: "system", content: routerSystemPrompt },
-        { role: "user", content: userPrompt }
-      ]
-    })
-  });
-
-  if (!response.ok) {
-    throw new Error(`Router ${cred.id} HTTP ${response.status}`);
-  }
-
-  const data = await response.json();
-  const raw = data?.choices?.[0]?.message?.content;
-  if (!raw) return [];
-  return parseTableArrayJson(raw);
-}
-
-/**
- * Helper para extrair e validar array JSON de nomes de tabelas retornado pela IA
- */
-function parseTableArrayJson(raw: string): string[] {
-  const cleaned = raw
-    .replace(/^```(?:json)?\s*/i, "")
-    .replace(/\s*```\s*$/, "")
-    .trim();
-
-  try {
-    const parsed = JSON.parse(cleaned);
-    if (Array.isArray(parsed)) {
-      return parsed.map((item) => String(item).toUpperCase().trim()).filter(Boolean);
-    }
-    if (parsed && typeof parsed === "object") {
-      // Se retornou objeto com chave tipo { "tabelas": [...] }
-      const possibleArray = Object.values(parsed).find(Array.isArray);
-      if (possibleArray) {
-        return (possibleArray as unknown[]).map((item) => String(item).toUpperCase().trim()).filter(Boolean);
-      }
-    }
-  } catch {
-    // Regex de fallback caso o JSON venha truncado ou imperfeito
-    const matches = cleaned.match(/"([A-Za-z0-9_#]+)"/g);
-    if (matches) {
-      return matches.map((m) => m.replace(/"/g, "").toUpperCase().trim());
-    }
-  }
-  return [];
-}
-
+import { callRouterLlm } from "./llm/router";
 /**
  * Roteador Semântico (NLP Router): Identifica tabelas utilizando IA em etapa prévia,
  * consulta o Dicionário Completo em memória e enriquece com o Grafo de relacionamentos.
@@ -182,23 +80,17 @@ export async function identifyRelevantTables(
 
   // 1. Tentar Roteador Semântico via LLM (Agentic Workflow)
   if (routerCredentials && routerCredentials.length > 0) {
-    for (const cred of routerCredentials) {
-      if (!cred.apiKey) continue;
-      try {
-        const tablesFromLlm = await callRouterLlm(cred, userPrompt);
-        if (tablesFromLlm.length > 0) {
-          for (const tbl of tablesFromLlm) {
-            if (dict[tbl]) {
-              identifiedNames.add(tbl);
-            }
-          }
-          if (identifiedNames.size > 0) {
-            break; // Identificação bem-sucedida pelo primeiro provider disponível
+    try {
+      const { tables } = await callRouterLlm(routerCredentials, userPrompt);
+      if (tables.length > 0) {
+        for (const tbl of tables) {
+          if (dict[tbl]) {
+            identifiedNames.add(tbl);
           }
         }
-      } catch (err) {
-        // Falha no provider atual do roteador; tenta o próximo da cadeia
       }
+    } catch (err) {
+      console.warn("[RAG ENGINE] Falha na cadeia do Router LLM, fallback para extração local:", err);
     }
   }
 

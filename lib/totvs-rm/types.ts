@@ -50,7 +50,7 @@ export interface ChatSession {
 }
 
 export interface UserSettings {
-  llmProvider: "gemini" | "groq" | "openrouter";
+  llmProvider: "gemini" | "groq" | "openrouter" | "openai";
   geminiApiKey?: string;
   geminiModel: string;
   groqApiKey?: string;

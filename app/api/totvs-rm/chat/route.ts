@@ -1,10 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { identifyRelevantTables, buildSchemaContextPrompt } from "@/lib/totvs-rm/schema-engine";
 import { generateSpecializedRMSql } from "@/lib/totvs-rm/fallback-sql";
-import { verifySql, buildRepairAddendum } from "@/lib/totvs-rm/sql-verify";
+import { verifySql } from "@/lib/totvs-rm/sql-verify";
+import { buildRepairAddendum } from "@/lib/totvs-rm/llm/prompts/repair";
+import { buildGeneratorSystemPrompt } from "@/lib/totvs-rm/llm/prompts/generator";
 import {
   chatCompleteWithFailover,
   LlmProviderId,
+  LlmSqlJson,
   ProviderCredential,
 } from "@/lib/totvs-rm/llm/providers";
 
@@ -53,6 +56,8 @@ export async function POST(req: NextRequest) {
           return body.userGroqModel.trim();
         }
         return "llama3-70b-8192";
+      } else if (id === "openai") {
+        return process.env.OPENAI_GENERATOR_MODEL?.trim() || "gpt-4o";
       } else {
         if (process.env.GEMINI_GENERATOR_MODEL?.trim()) return process.env.GEMINI_GENERATOR_MODEL.trim();
         if (process.env.GEMINI_MODEL_NAME?.trim()) return process.env.GEMINI_MODEL_NAME.trim();
@@ -63,17 +68,26 @@ export async function POST(req: NextRequest) {
       }
     };
 
-    const keyFor = (id: LlmProviderId) => (id === "groq" ? groqKey : geminiKey);
+    const keyFor = (id: LlmProviderId) => {
+      if (id === "openai") return process.env.OPENAI_API_KEY?.trim() || "";
+      return id === "groq" ? groqKey : geminiKey;
+    };
     
-    // Chain original usada pelo Roteador (que sobrescreve o modelo lá dentro se ROUTER_MODEL_NAME existir)
-    const chain: ProviderCredential[] = [selectedProvider, otherProvider].map((id) => ({
+    // Lista de providers a serem testados
+    const availableProviders: LlmProviderId[] = [selectedProvider, otherProvider];
+    if (process.env.OPENAI_API_KEY) {
+      availableProviders.push("openai");
+    }
+
+    // Chain original usada pelo Roteador
+    const chain: ProviderCredential[] = availableProviders.map((id) => ({
       id,
       apiKey: keyFor(id),
-      model: id === "groq" ? "llama3-70b-8192" : "gemini-1.5-pro-latest", // valores dummy para o roteador sobrescrever ou usar padrão
+      model: id === "groq" ? "llama3-70b-8192" : (id === "openai" ? "gpt-4o-mini" : "gemini-1.5-pro-latest"),
     }));
 
     // Chain estrita para o Gerador T-SQL
-    const generatorChain: ProviderCredential[] = [selectedProvider, otherProvider].map((id) => ({
+    const generatorChain: ProviderCredential[] = availableProviders.map((id) => ({
       id,
       apiKey: keyFor(id),
       model: resolveGeneratorModel(id),
@@ -85,45 +99,20 @@ export async function POST(req: NextRequest) {
     const tablesUsed = identifiedTables.map((t) => t.tabela);
 
     // 3. Montagem do prompt do sistema especializado em TOTVS RM
-    const systemPrompt = `Você é o maior especialista sênior em banco de dados e desenvolvimento de consultas SQL para o ERP TOTVS Corpore RM.
-Sua missão é gerar scripts SQL de alta performance, precisos e elegantes, rigorosamente alinhados com a arquitetura e dicionário de dados do RM.
+    const systemPrompt = buildGeneratorSystemPrompt(schemaContext);
 
-DIALETO OBRIGATÓRIO: Microsoft SQL Server T-SQL (padrão do RM). É PROIBIDO usar qualquer sintaxe Oracle (NVL, SYSDATE, FETCH FIRST, DEFINE, VARCHAR2, NUMBER, binds :VAR, operador || para concatenação, FROM DUAL).
-
-Responda sempre em português (PT-BR), de forma clara e amigável para um consultor funcional do RM.
-
-DIRETRIZES FUNDAMENTAIS DO TOTVS CORPORE RM:
-1. Multi-Coligada: O RM é um sistema multi-empresa. QUASE TODAS as tabelas possuem a coluna CODCOLIGADA. Sempre filtre por CODCOLIGADA ou declare um parâmetro (ex: @CODCOLIGADA = 1).
-2. Clientes e Fornecedores: A tabela FCFO relaciona-se com FLAN via (FLAN.CODCOLCFO = FCFO.CODCOLIGADA AND FLAN.CODCFO = FCFO.CODCFO) ou (FLAN.CODCOLIGADA = FCFO.CODCOLIGADA AND FLAN.CODCFO = FCFO.CODCFO).
-3. Movimentos (RM Nucleus): A tabela TMOV (cabeçalho) liga-se a TITMMOV (itens) por (TMOV.CODCOLIGADA = TITMMOV.CODCOLIGADA AND TMOV.IDMOV = TITMMOV.IDMOV). TITMMOV liga-se a TPRD (produtos) por (TITMMOV.CODCOLIGADA = TPRD.CODCOLIGADA AND TITMMOV.IDPRD = TPRD.IDPRD). Pagamentos da venda: TMOV liga-se a TMOVPAGTO por (TMOV.CODCOLIGADA = TMOVPAGTO.CODCOLIGADA AND TMOV.IDMOV = TMOVPAGTO.IDMOV); TMOVPAGTO liga-se a TPAGTO por (TMOVPAGTO.CODCOLIGADA = TPAGTO.CODCOLIGADA AND TMOVPAGTO.IDSEQPAGTO = TPAGTO.IDSEQPAGTO); TPAGTO liga-se a FLAN por (TPAGTO.CODCOLIGADA = FLAN.CODCOLIGADA AND TPAGTO.IDLAN = FLAN.IDLAN).
-4. Lançamentos Financeiros (RM Fluxus):
-   - PAGREC: 1 = A Receber, 2 = A Pagar
-   - STATUSLAN: 0 = Em Aberto, 1 = Baixado, 2 = Cancelado
-5. Funcionários (RM Labore):
-   - Chave primária: CODCOLIGADA, CHAPA.
-   - Situação: PFHSTSIT ou PFUNC.CODSITUACAO ('A' = Ativo, 'D' = Demitido, 'F' = Férias, etc).
-   - Seção / Centro de Custo RH: PSECAO (PFUNC.CODCOLIGADA = PSECAO.CODCOLIGADA AND PFUNC.CODSECAO = PSECAO.CODIGO).
-6. Diretiva Universal: Insira WITH (NOLOCK) após TODA tabela declarada no FROM e nos JOINs.
-7. Aliases Contextuais: É EXPRESSAMENTE PROIBIDO o uso de aliases monocaracteres (T, F, L, A). Utilize o próprio nome da tabela ou sufixos semânticos (ex: FLAN FLAN, TMOV TMOV_ORIGEM).
-8. Regra de Amarração Global: Todos os JOINs devem validar o CODCOLIGADA em conjunto com a chave primária.
-9. Relacionamento TMOV x FCFO: Sempre que relacionar TMOV com FCFO, utilize OBRIGATORIAMENTE as chaves de direcionamento: TMOV.CODCOLCFO = FCFO.CODCOLIGADA AND TMOV.CODCFO = FCFO.CODCFO. É proibido cruzar apenas por CODCOLIGADA.
-10. Rastreabilidade de Movimentos e Origens: Quando o usuário pedir a "origem" de um movimento (ex: pedido que gerou a nota, cotação que gerou o pedido), NUNCA utilize colunas textuais como NORDEM. Utilize ESTRITAMENTE a tabela TMOVRELAC, cruzando CODCOLIGADAORIGEM, IDMOVORIGEM com o movimento pai, e CODCOLIGADADESTINO, IDMOVDESTINO com o movimento filho. Da mesma forma, para vincular lançamentos financeiros pai/filho, utilize ESTRITAMENTE FLAN.IDLANMOVORIGEM = FLAN.IDLAN.
-11. Filtros de Data SARGables (Obrigatório): É ESTRITAMENTE PROIBIDO utilizar funções lógicas do lado da coluna em cláusulas WHERE (ex: YEAR(DATAEMISSAO) = ... ou MONTH(DATA) = ...). Para filtragem de datas correntes, declare variáveis no topo do script calculando o @INICIO_MES e @FIM_MES e utilize TMOV.DATAEMISSAO >= @INICIO_MES AND TMOV.DATAEMISSAO <= @FIM_MES.
-
-CONTEXTO DO ESQUEMA EXTRAÍDO DO DICIONÁRIO RM:
-${schemaContext}
-
-FORMATO DA SUA RESPOSTA:
-Você DEVE responder ESTRITAMENTE em formato JSON com a seguinte estrutura:
-{
-  "sqlCode": "-- Script SQL completo aqui formatado",
-  "sqlExplanation": "Explicação detalhada EM PORTUGUÊS (Markdown) explicando as tabelas utilizadas, as condições de junção (JOINs) e os filtros aplicados.",
-  "tablesUsed": ["TABELA1", "TABELA2"],
-  "tips": [
-    "Dica prática de performance ou regra de negócio RM relacionada a esta consulta",
-    "Outra dica útil (ex: parâmetros de coligada, índices recomendados)"
-  ]
-}`;
+    // Schema do Structured Output para o Gerador
+    const generatorJsonSchema = {
+      type: "object",
+      properties: {
+        sqlCode: { type: "string", description: "Script SQL completo aqui formatado" },
+        sqlExplanation: { type: "string", description: "Explicação detalhada EM PORTUGUÊS (Markdown) explicando as tabelas utilizadas, as condições de junção (JOINs) e os filtros aplicados." },
+        tablesUsed: { type: "array", items: { type: "string" }, description: "Lista de tabelas utilizadas" },
+        tips: { type: "array", items: { type: "string" }, description: "Dicas de performance ou regras de negócio RM relacionadas" }
+      },
+      required: ["sqlCode", "sqlExplanation", "tablesUsed", "tips"],
+      additionalProperties: false
+    };
 
     // 3. Providers LLM com failover (selecionado -> outro -> fallback local)
     // + verificação semântica do SQL (Fase D): tabelas/JOINs lastreados no
@@ -138,9 +127,18 @@ Você DEVE responder ESTRITAMENTE em formato JSON com a seguinte estrutura:
         requiredFilters: /CODCOLIGADA/i.test(sql) ? ["CODCOLIGADA"] : [],
       });
     try {
-      const { result, provider } = await chatCompleteWithFailover(generatorChain, { systemPrompt, userPrompt, stage: "generator" });
-      const usedModel = generatorChain.find((c) => c.id === provider)?.model || "desconhecido";
-      console.log(`\x1b[32m[RAG ENGINE] [GENERATOR] Provider utilizado com sucesso: ${provider} (Modelo: ${usedModel})\x1b[0m`);
+      const { result, provider, usage, model } = await chatCompleteWithFailover<LlmSqlJson>(generatorChain, { 
+        systemPrompt, 
+        userPrompt, 
+        stage: "generator",
+        jsonSchema: generatorJsonSchema,
+        schemaName: "LlmSqlJson",
+        schemaDescription: "Structured output for generated SQL"
+      });
+      console.log(`\x1b[32m[RAG ENGINE] [GENERATOR] Provider utilizado com sucesso: ${provider} (Modelo: ${model})\x1b[0m`);
+      if (usage) {
+        console.log(`[RAG ENGINE] [USAGE] In: ${usage.inputTokens} | Out: ${usage.outputTokens} | Total: ${usage.totalTokens}`);
+      }
       const normalized = validateAndNormalizeTSql(result.sqlCode || "");
       const firstCheck = checkSql(normalized.sql);
       if (firstCheck.ok) {
@@ -157,11 +155,17 @@ Você DEVE responder ESTRITAMENTE em formato JSON com a seguinte estrutura:
       console.warn("SQL rejeitado pelo verificador, tentando reparo:", firstCheck.problems.map((p) => p.message));
       try {
         const addendum = buildRepairAddendum(firstCheck.problems, normalized.sql, allowedTables);
-        const { result: repaired } = await chatCompleteWithFailover(generatorChain, {
+        const { result: repaired, usage: repairUsage } = await chatCompleteWithFailover<LlmSqlJson>(generatorChain, {
           systemPrompt: systemPrompt + addendum,
           userPrompt,
-          stage: "generator"
+          stage: "generator",
+          jsonSchema: generatorJsonSchema,
+          schemaName: "LlmSqlJson",
+          schemaDescription: "Structured output for generated SQL repair"
         });
+        if (repairUsage) {
+           console.log(`[RAG ENGINE] [REPAIR USAGE] In: ${repairUsage.inputTokens} | Out: ${repairUsage.outputTokens} | Total: ${repairUsage.totalTokens}`);
+        }
         const normalizedRepair = validateAndNormalizeTSql(repaired.sqlCode || "");
         const secondCheck = checkSql(normalizedRepair.sql);
         if (secondCheck.ok) {

@@ -17,7 +17,7 @@ export function SettingsModal({ isOpen, onClose, settings, onSave }: SettingsMod
 
   const [apiKey, setApiKey] = useState(settings.geminiApiKey || "");
   const [model, setModel] = useState(cleanGemini(settings.geminiModel));
-  const [provider, setProvider] = useState<"gemini" | "groq" | "openrouter">(settings.llmProvider || "gemini");
+  const [provider, setProvider] = useState<"gemini" | "groq" | "openrouter" | "openai">(settings.llmProvider || "gemini");
   const [groqKey, setGroqKey] = useState(settings.groqApiKey || "");
   const [groqModel, setGroqModel] = useState(cleanGroq(settings.groqModel));
   const [dialect, setDialect] = useState<"sqlserver" | "oracle">(settings.sqlDialect || "sqlserver");
