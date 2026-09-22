@@ -80,15 +80,37 @@ export async function POST(req: NextRequest) {
       availableProviders.push("openai");
     }
 
+    // Função auxiliar para reordenar a prioridade baseada na variável de ambiente
+    const getPrioritizedProviders = (envProvider?: string): LlmProviderId[] => {
+      const p = envProvider?.trim().toLowerCase();
+      if (p === "openai" && process.env.OPENAI_API_KEY) {
+        return ["openai", selectedProvider, otherProvider];
+      }
+      if (p === "groq") {
+        return ["groq", "gemini", ...(process.env.OPENAI_API_KEY ? ["openai" as LlmProviderId] : [])];
+      }
+      if (p === "gemini") {
+        return ["gemini", "groq", ...(process.env.OPENAI_API_KEY ? ["openai" as LlmProviderId] : [])];
+      }
+      return availableProviders;
+    };
+
+    const routerProviders = getPrioritizedProviders(process.env.RM_ROUTER_PROVIDER);
+    const generatorProviders = getPrioritizedProviders(process.env.RM_GENERATOR_PROVIDER);
+
     // Chain original usada pelo Roteador
-    const chain: ProviderCredential[] = availableProviders.map((id) => ({
+    const chain: ProviderCredential[] = routerProviders.map((id) => ({
       id,
       apiKey: keyFor(id),
-      model: id === "groq" ? "llama3-70b-8192" : (id === "openai" ? "gpt-4o-mini" : "gemini-1.5-pro-latest"),
+      model: id === "groq" 
+        ? (process.env.GROQ_ROUTER_MODEL?.trim() || "llama3-70b-8192") 
+        : (id === "openai" 
+            ? (process.env.OPENAI_ROUTER_MODEL?.trim() || "gpt-4o-mini") 
+            : (process.env.GEMINI_ROUTER_MODEL?.trim() || "gemini-1.5-pro-latest")),
     }));
 
     // Chain estrita para o Gerador T-SQL
-    const generatorChain: ProviderCredential[] = availableProviders.map((id) => ({
+    const generatorChain: ProviderCredential[] = generatorProviders.map((id) => ({
       id,
       apiKey: keyFor(id),
       model: resolveGeneratorModel(id),
