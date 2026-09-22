@@ -41,6 +41,10 @@ async function main() {
       for (const s of c.expectSnippets) {
         if (!upper.includes(s.toUpperCase())) problems.push(`trecho ausente no SQL: ${s}`);
       }
+      // Asserção semântica: trechos proibidos (ex.: filtros do cenário errado)
+      for (const s of c.expectAbsent || []) {
+        if (upper.includes(s.toUpperCase())) problems.push(`trecho proibido no SQL: ${s}`);
+      }
       for (const tok of ORACLE_TOKENS) {
         if (upper.includes(tok)) problems.push(`token Oracle no SQL: ${tok}`);
       }

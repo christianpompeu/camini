@@ -75,7 +75,8 @@
       "prompt": "Movimentos emitidos para a coligada 9 nos ultimos 30 dias da filial 3 com tpagto e lancamentos financeiros dessas vendas, tipos de movimento 2.2.58",
       "dialect": "sqlserver",
       "expectTables": ["TMOV", "TPAGTO"],
-      "expectSnippets": ["TMOVPAGTO", "CODTMV"]
+      "expectSnippets": ["TMOVPAGTO", "CODTMV"],
+      "expectAbsent": ["PAGREC =", "STATUSLAN = 0", "TITMMOV"]
     }
   ]
 }

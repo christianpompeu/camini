@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { identifyRelevantTables, buildSchemaContextPrompt, getTableDetails } from "@/lib/totvs-rm/schema-engine";
 import { connectSeedTables } from "@/lib/totvs-rm/join-graph";
 import { generateSpecializedRMSql } from "@/lib/totvs-rm/fallback-sql";
+import { verifySql, buildRepairAddendum } from "@/lib/totvs-rm/sql-verify";
 import {
   chatCompleteWithFailover,
   DEFAULT_GROQ_MODEL,
@@ -37,7 +38,7 @@ export async function POST(req: NextRequest) {
     // 1. Identificar tabelas e relacionamentos relevantes no dicionário do RM
     const identifiedTables = identifyRelevantTables(userPrompt, systemModule);
     // Tabelas-ponte descobertas pelo grafo de JOINs (ligam as tabelas-semente)
-    const { bridgeTables } = connectSeedTables(identifiedTables.map((t) => t.Tabela));
+    const { joins: guaranteedJoins, bridgeTables } = connectSeedTables(identifiedTables.map((t) => t.Tabela));
     for (const bridge of bridgeTables) {
       if (!identifiedTables.some((t) => t.Tabela.toUpperCase() === bridge)) {
         const details = getTableDetails(bridge);
@@ -102,16 +103,63 @@ Você DEVE responder ESTRITAMENTE em formato JSON com a seguinte estrutura:
 }`;
 
     // 3. Providers LLM com failover (selecionado -> outro -> fallback local)
+    // + verificação semântica do SQL (Fase D): tabelas/JOINs lastreados no
+    // dicionário; rejeitado => 1 tentativa de reparo com o diagnóstico.
+    const allowedTables = Array.from(
+      new Set([...identifiedTables.map((t) => t.Tabela), ...bridgeTables])
+    );
+    const checkSql = (sql: string) =>
+      verifySql({
+        sql,
+        allowedTables,
+        guaranteedJoins,
+        requiredFilters: /CODCOLIGADA/i.test(sql) ? ["CODCOLIGADA"] : [],
+      });
     try {
       const { result } = await chatCompleteWithFailover(chain, { systemPrompt, userPrompt });
       const normalized = validateAndNormalizeTSql(result.sqlCode || "");
-      return NextResponse.json({
-        content: result.sqlExplanation || "Consulta gerada com sucesso.",
-        sqlCode: normalized.sql,
-        sqlExplanation: result.sqlExplanation || "",
-        tablesUsed: result.tablesUsed?.length > 0 ? result.tablesUsed : tablesUsed,
-        tips: [...normalized.warnings, ...(result.tips || [])],
-      });
+      const firstCheck = checkSql(normalized.sql);
+      if (firstCheck.ok) {
+        return NextResponse.json({
+          content: result.sqlExplanation || "Consulta gerada com sucesso.",
+          sqlCode: normalized.sql,
+          sqlExplanation: result.sqlExplanation || "",
+          tablesUsed: result.tablesUsed?.length > 0 ? result.tablesUsed : tablesUsed,
+          tips: [...normalized.warnings, ...(result.tips || [])],
+          isFallback: false,
+          repaired: false,
+        });
+      }
+      console.warn("SQL rejeitado pelo verificador, tentando reparo:", firstCheck.problems.map((p) => p.message));
+      try {
+        const addendum = buildRepairAddendum(firstCheck.problems, normalized.sql, allowedTables);
+        const { result: repaired } = await chatCompleteWithFailover(chain, {
+          systemPrompt: systemPrompt + addendum,
+          userPrompt,
+        });
+        const normalizedRepair = validateAndNormalizeTSql(repaired.sqlCode || "");
+        const secondCheck = checkSql(normalizedRepair.sql);
+        if (secondCheck.ok) {
+          return NextResponse.json({
+            content: repaired.sqlExplanation || "Consulta gerada com sucesso.",
+            sqlCode: normalizedRepair.sql,
+            sqlExplanation: repaired.sqlExplanation || "",
+            tablesUsed: repaired.tablesUsed?.length > 0 ? repaired.tablesUsed : tablesUsed,
+            tips: [
+              "A primeira versão do SQL foi corrigida automaticamente pela verificação do dicionário.",
+              ...normalizedRepair.warnings,
+              ...(repaired.tips || []),
+            ],
+            isFallback: false,
+            repaired: true,
+          });
+        }
+        console.warn("Reparo rejeitado pelo verificador:", secondCheck.problems.map((p) => p.message));
+      } catch (repairErr: unknown) {
+        const repairMsg = repairErr instanceof Error ? repairErr.message : "Erro desconhecido";
+        console.warn("Falha no reparo, acionando fallback:", repairMsg);
+      }
+      // Cai no fallback inteligente abaixo
     } catch (llmErr: unknown) {
       const errMsg = llmErr instanceof Error ? llmErr.message : "Erro desconhecido";
       console.warn("Falha nos providers LLM, acionando gerador especializado RM:", errMsg);

@@ -4,7 +4,7 @@ Módulo `totvs-rm` do camini: chat estilo ChatGPT que gera consultas SQL
 para o ERP TOTVS Corpore RM a partir do dicionário de dados em
 `public/dicionario_rm/data`. Trava temporária: **somente SQL Server (T-SQL)**.
 
-Última atualização: 18/09/2026. Status: Fases 0–2 concluídas e verificadas + fallback determinístico corrigido.
+Última atualização: 18/09/2026. Status: Fases 0–2 concluídas + fallback corrigido + Fase D (verificador) concluída.
 
 ## 1. Arquitetura atual (como funciona)
 
@@ -16,7 +16,9 @@ pergunta do usuário
      column-docs.json + JOINS GARANTIDOS; teto 25/tabela, PK/FKs sempre preservadas)
   → cadeia LLM (selecionado → outro → fallback local)
   → validateAndNormalizeTSql()        (converte resíduos Oracle, gera avisos PT-BR)
-  → resposta JSON { sqlCode, sqlExplanation, tablesUsed, tips }
+  → verifySql()                       (AST: tabelas ⊆ permitidas, JOINs com lastro
+     no grafo, filtros obrigatórios; rejeitado → 1 reparo com diagnóstico)
+  → resposta JSON { sqlCode, sqlExplanation, tablesUsed, tips, isFallback, repaired }
 ```
 
 ## 2. Histórico de alterações
@@ -86,6 +88,24 @@ pergunta do usuário
   (localStorage, como a do Gemini), modelos Groq
   (`llama-3.3-70b-versatile` padrão); servidor aceita `GROQ_API_KEY` via env.
   Chip do provider ativo no topo do chat.
+
+### Fase D — Verificador semântico + reparo (concluída em 18/09/2026)
+Estratégia aprovada: LLM-first com verificação; dependências npm permitidas.
+- `lib/totvs-rm/sql-verify.ts` (novo, puro e testável offline): analisa o SQL
+  com AST real (`node-sql-parser`, dialeto `transactsql`, Apache-2.0) e rejeita
+  com diagnóstico em PT-BR (`PARSE_ERROR`, `UNKNOWN_TABLE`,
+  `JOIN_NOT_GROUNDED`, `MISSING_FILTER`). JOIN é aceito se tiver lastro em
+  **qualquer aresta do grafo** (`getAllEdges()` em `join-graph.ts`), não só nas
+  do plano sequencial; CTEs com nome próprio são permitidas.
+- `route.ts`: após o LLM, verifica; rejeitado → 1 tentativa de reparo
+  (system prompt + adendo com o diagnóstico e o SQL rejeitado); ainda falhou →
+  fallback. Resposta inclui `repaired: true/false` (além de `isFallback`).
+- Spike registrado: parser lida com `DECLARE+SELECT`, `WITH (NOLOCK)`,
+  `CORPORE.DBO.`, `@variáveis`, `IN`, `CASE`; `tableList/columnList` com
+  resolução de aliases; CTE vem como `{ name: { value } }`.
+- Golden: `check-golden.cjs` com `expectAbsent` (ex.: vendas não pode conter
+  `PAGREC =`, `STATUSLAN = 0`, `TITMMOV`); **11/11 PASS** com o verificador
+  ativo e nenhum falso-positivo nos casos antigos.
 
 ### Verificação executada
 - `npm run build` OK (TypeScript incluso); lint sem erros novos

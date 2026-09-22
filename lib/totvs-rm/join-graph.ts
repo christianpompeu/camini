@@ -28,6 +28,32 @@ export interface OrientedJoin {
 const INDEX_FILE = path.join(process.cwd(), "public", "dicionario_rm", "index", "join-graph.json");
 
 let cachedAdj: Map<string, Array<{ edge: JoinEdge; forward: boolean }>> | null = null;
+let cachedEdges: JoinEdge[] | null = null;
+
+function loadEdges(): JoinEdge[] {
+  if (cachedEdges) return cachedEdges;
+  try {
+    if (!fs.existsSync(INDEX_FILE)) {
+      cachedEdges = [];
+      return cachedEdges;
+    }
+    const parsed: JoinGraphFile = JSON.parse(fs.readFileSync(INDEX_FILE, "utf8"));
+    cachedEdges = parsed.edges || [];
+    return cachedEdges;
+  } catch (err) {
+    console.error("Erro ao carregar grafo de JOINs RM:", err);
+    cachedEdges = [];
+    return cachedEdges;
+  }
+}
+
+/**
+ * Todas as arestas do dicionário (para o verificador aceitar qualquer JOIN
+ * lastreado no grafo, não só os do plano sequencial).
+ */
+export function getAllEdges(): JoinEdge[] {
+  return loadEdges();
+}
 
 function loadAdjacency(): Map<string, Array<{ edge: JoinEdge; forward: boolean }>> {
   if (cachedAdj) return cachedAdj;
