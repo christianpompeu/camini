@@ -51,33 +51,50 @@ interface Equality {
   rCol: string;
 }
 
-function pairKey(t1: string, c1: string, t2: string, c2: string): string {
-  const a = `${t1.toUpperCase()}.${c1.toUpperCase()}`;
-  const b = `${t2.toUpperCase()}.${c2.toUpperCase()}`;
+let cachedGroundedJoins: Map<string, Set<string>> | null = null;
+
+function tablePairKey(t1: string, t2: string): string {
+  const a = t1.toUpperCase();
+  const b = t2.toUpperCase();
   return a < b ? `${a}=${b}` : `${b}=${a}`;
 }
 
-let cachedGroundedPairs: Set<string> | null = null;
+function joinSignature(t1: string, c1: string[], t2: string, c2: string[]): string {
+  const a = t1.toUpperCase();
+  const b = t2.toUpperCase();
+  const swap = a > b;
+  const aTable = swap ? b : a;
+  const bTable = swap ? a : b;
+  const aCols = swap ? c2 : c1;
+  const bCols = swap ? c1 : c2;
+  
+  const pairs = [];
+  const n = Math.min(aCols.length, bCols.length);
+  for (let i = 0; i < n; i++) {
+    pairs.push(`${aTable}.${aCols[i]}=${bTable}.${bCols[i]}`);
+  }
+  return pairs.sort().join(" AND ");
+}
 
-export function getGroundedJoinPairs(): Set<string> {
-  if (cachedGroundedPairs) return cachedGroundedPairs;
+export function getGroundedJoins(): Map<string, Set<string>> {
+  if (cachedGroundedJoins) return cachedGroundedJoins;
   const dict = loadSemanticDictionary();
-  const set = new Set<string>();
+  const map = new Map<string, Set<string>>();
   for (const [origem, dados] of Object.entries(dict)) {
     for (const rel of dados.relacionamentos_saida || []) {
       const parts = rel.chaves_ligacao.split("=");
       if (parts.length === 2) {
         const leftCols = parts[0].split(",").map((c) => c.trim().toUpperCase());
         const rightCols = parts[1].split(",").map((c) => c.trim().toUpperCase());
-        const n = Math.min(leftCols.length, rightCols.length);
-        for (let i = 0; i < n; i++) {
-          set.add(pairKey(origem, leftCols[i], rel.tabela_destino, rightCols[i]));
-        }
+        const key = tablePairKey(origem, rel.tabela_destino);
+        const sig = joinSignature(origem, leftCols, rel.tabela_destino, rightCols);
+        if (!map.has(key)) map.set(key, new Set());
+        map.get(key)!.add(sig);
       }
     }
   }
-  cachedGroundedPairs = set;
-  return cachedGroundedPairs;
+  cachedGroundedJoins = map;
+  return cachedGroundedJoins;
 }
 
 function isColumnRef(node: unknown): node is { type: string; table: string | null; column: string } {
@@ -203,23 +220,47 @@ export function verifySql(input: VerifyInput): VerifyResult {
   }
 
   // Pares de JOIN com lastro no dicionário (qualquer relacionamento)
-  const grounded = getGroundedJoinPairs();
+  const groundedJoins = getGroundedJoins();
 
   for (const stmt of stmts) {
     for (const f of stmt.from || []) {
       if (!f.join || !f.on) continue;
       const eqs: Equality[] = [];
       collectOnEqualities(f.on, eqs);
+      
+      const grouped = new Map<string, Equality[]>();
       for (const eq of eqs) {
         const lt = aliasToTable.get(eq.lTable.toUpperCase()) || eq.lTable.toUpperCase();
         const rt = aliasToTable.get(eq.rTable.toUpperCase()) || eq.rTable.toUpperCase();
         if (cteNames.has(lt) || cteNames.has(rt)) continue;
         if (lt === rt) continue; // Bypass para auto-relacionamento garantido
-        const key = pairKey(lt, eq.lCol, rt, eq.rCol);
-        if (!grounded.has(key)) {
+        
+        const key = tablePairKey(lt, rt);
+        if (!grouped.has(key)) grouped.set(key, []);
+        grouped.get(key)!.push(eq);
+      }
+
+      for (const [key, pairEqs] of grouped.entries()) {
+        const [t1, t2] = key.split("=");
+        const c1: string[] = [];
+        const c2: string[] = [];
+        for (const eq of pairEqs) {
+           const lt = aliasToTable.get(eq.lTable.toUpperCase()) || eq.lTable.toUpperCase();
+           if (lt === t1) {
+             c1.push(eq.lCol.toUpperCase());
+             c2.push(eq.rCol.toUpperCase());
+           } else {
+             c1.push(eq.rCol.toUpperCase());
+             c2.push(eq.lCol.toUpperCase());
+           }
+        }
+        const sig = joinSignature(t1, c1, t2, c2);
+        const allowedSigs = groundedJoins.get(key);
+        
+        if (!allowedSigs || !allowedSigs.has(sig)) {
           problems.push({
             code: "JOIN_NOT_GROUNDED",
-            message: `Junção \`${lt}.${eq.lCol} = ${rt}.${eq.rCol}\` sem lastro no dicionário. Use EXCLUSIVAMENTE as condições da seção JOINS GARANTIDOS.`,
+            message: `Junção entre \`${t1}\` e \`${t2}\` [${sig}] sem lastro no dicionário. Use EXCLUSIVAMENTE as condições da seção JOINS GARANTIDOS.`,
           });
         }
       }

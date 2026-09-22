@@ -126,6 +126,13 @@ export async function POST(req: NextRequest) {
         allowedTables,
         requiredFilters: /CODCOLIGADA/i.test(sql) ? ["CODCOLIGADA"] : [],
       });
+
+    let totalInput = 0;
+    let totalOutput = 0;
+    let totalTokens = 0;
+    let totalLatency = 0;
+    let wasRepaired = false;
+
     try {
       const { result, provider, usage, model } = await chatCompleteWithFailover<LlmSqlJson>(generatorChain, { 
         systemPrompt, 
@@ -135,13 +142,24 @@ export async function POST(req: NextRequest) {
         schemaName: "LlmSqlJson",
         schemaDescription: "Structured output for generated SQL"
       });
-      console.log(`\x1b[32m[RAG ENGINE] [GENERATOR] Provider utilizado com sucesso: ${provider} (Modelo: ${model})\x1b[0m`);
+      
       if (usage) {
-        console.log(`[RAG ENGINE] [USAGE] In: ${usage.inputTokens} | Out: ${usage.outputTokens} | Total: ${usage.totalTokens}`);
+        totalInput += usage.inputTokens || 0;
+        totalOutput += usage.outputTokens || 0;
+        totalTokens += usage.totalTokens || 0;
+        totalLatency += usage.latencyMs || 0;
+        
+        const lat = usage.latencyMs ? Math.round(usage.latencyMs) : "?";
+        console.log(`\x1b[36m[RAG ENGINE] [GENERATOR]\x1b[0m\nProvider: ${provider}\nModel: ${model}\nInput: ${usage.inputTokens}\nOutput: ${usage.outputTokens}\nTotal: ${usage.totalTokens}\nLatency: ${lat}ms\n`);
       }
+
       const normalized = validateAndNormalizeTSql(result.sqlCode || "");
       const firstCheck = checkSql(normalized.sql);
+      
+      console.log(`\x1b[36m[RAG ENGINE] [VERIFY]\x1b[0m\nFirstPass: ${firstCheck.ok ? "PASS" : "FAIL"}\nErrors: ${firstCheck.problems.length}\n`);
+
       if (firstCheck.ok) {
+        console.log(`\x1b[36m[RAG ENGINE] [RESULT]\x1b[0m\nRepair: false\nFallback: false\nFinalVerification: PASS\nTotalInputTokens: ${totalInput}\nTotalOutputTokens: ${totalOutput}\nTotalTokens: ${totalTokens}\nTotalLatency: ${Math.round(totalLatency)}ms\n`);
         return NextResponse.json({
           content: result.sqlExplanation || "Consulta gerada com sucesso.",
           sqlCode: normalized.sql,
@@ -152,10 +170,11 @@ export async function POST(req: NextRequest) {
           repaired: false,
         });
       }
+      
       console.warn("SQL rejeitado pelo verificador, tentando reparo:", firstCheck.problems.map((p) => p.message));
       try {
         const addendum = buildRepairAddendum(firstCheck.problems, normalized.sql, allowedTables);
-        const { result: repaired, usage: repairUsage } = await chatCompleteWithFailover<LlmSqlJson>(generatorChain, {
+        const { result: repaired, usage: repairUsage, provider: repProv, model: repMod } = await chatCompleteWithFailover<LlmSqlJson>(generatorChain, {
           systemPrompt: systemPrompt + addendum,
           userPrompt,
           stage: "generator",
@@ -163,12 +182,25 @@ export async function POST(req: NextRequest) {
           schemaName: "LlmSqlJson",
           schemaDescription: "Structured output for generated SQL repair"
         });
+        
         if (repairUsage) {
-           console.log(`[RAG ENGINE] [REPAIR USAGE] In: ${repairUsage.inputTokens} | Out: ${repairUsage.outputTokens} | Total: ${repairUsage.totalTokens}`);
+           totalInput += repairUsage.inputTokens || 0;
+           totalOutput += repairUsage.outputTokens || 0;
+           totalTokens += repairUsage.totalTokens || 0;
+           totalLatency += repairUsage.latencyMs || 0;
+           
+           const lat = repairUsage.latencyMs ? Math.round(repairUsage.latencyMs) : "?";
+           console.log(`\x1b[36m[RAG ENGINE] [REPAIR]\x1b[0m\nProvider: ${repProv}\nModel: ${repMod}\nInput: ${repairUsage.inputTokens}\nOutput: ${repairUsage.outputTokens}\nTotal: ${repairUsage.totalTokens}\nLatency: ${lat}ms\n`);
         }
+        
         const normalizedRepair = validateAndNormalizeTSql(repaired.sqlCode || "");
         const secondCheck = checkSql(normalizedRepair.sql);
+        
+        console.log(`\x1b[36m[RAG ENGINE] [VERIFY]\x1b[0m\nAfterRepair: ${secondCheck.ok ? "PASS" : "FAIL"}\n`);
+
         if (secondCheck.ok) {
+          wasRepaired = true;
+          console.log(`\x1b[36m[RAG ENGINE] [RESULT]\x1b[0m\nRepair: true\nFallback: false\nFinalVerification: PASS\nTotalInputTokens: ${totalInput}\nTotalOutputTokens: ${totalOutput}\nTotalTokens: ${totalTokens}\nTotalLatency: ${Math.round(totalLatency)}ms\n`);
           return NextResponse.json({
             content: repaired.sqlExplanation || "Consulta gerada com sucesso.",
             sqlCode: normalizedRepair.sql,
@@ -198,6 +230,8 @@ export async function POST(req: NextRequest) {
     // 4. Modo Fallback Inteligente Especializado (Gera SQL real com base no dicionário RM mesmo sem chave configurada)
     const fallbackResponse = generateSpecializedRMSql(userPrompt, identifiedTables);
     const normalizedFallback = validateAndNormalizeTSql(fallbackResponse.sqlCode);
+
+    console.log(`\x1b[36m[RAG ENGINE] [RESULT]\x1b[0m\nRepair: ${wasRepaired}\nFallback: true\nFinalVerification: PASS\nTotalInputTokens: ${totalInput}\nTotalOutputTokens: ${totalOutput}\nTotalTokens: ${totalTokens}\nTotalLatency: ${Math.round(totalLatency)}ms\n`);
 
     return NextResponse.json({
       content: fallbackResponse.sqlExplanation,

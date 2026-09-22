@@ -15,6 +15,7 @@ export interface LlmUsage {
   inputTokens?: number;
   outputTokens?: number;
   totalTokens?: number;
+  latencyMs?: number;
 }
 
 export interface LlmCallParams<T = any> {
@@ -70,6 +71,7 @@ async function callGemini<T>(cred: ProviderCredential, params: LlmCallParams<T>)
         : process.env.GEMINI_MODEL_NAME || "gemini-1.5-pro-latest";
   }
 
+  const startTime = performance.now();
   const response = await fetch(
     `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${cred.apiKey}`,
     {
@@ -86,6 +88,7 @@ async function callGemini<T>(cred: ProviderCredential, params: LlmCallParams<T>)
       }),
     }
   );
+  const latencyMs = performance.now() - startTime;
   if (!response.ok) {
     let detail = "";
     try {
@@ -104,6 +107,7 @@ async function callGemini<T>(cred: ProviderCredential, params: LlmCallParams<T>)
     inputTokens: data?.usageMetadata?.promptTokenCount,
     outputTokens: data?.usageMetadata?.candidatesTokenCount,
     totalTokens: data?.usageMetadata?.totalTokenCount,
+    latencyMs,
   };
 
   return { result: extractJson<T>(rawContent), usage, model };
@@ -130,6 +134,7 @@ async function callOpenAiCompatible<T>(
     }
   }
 
+  const startTime = performance.now();
   const response = await fetch(`${baseUrl}/chat/completions`, {
     method: "POST",
     headers: {
@@ -147,6 +152,7 @@ async function callOpenAiCompatible<T>(
       ],
     }),
   });
+  const latencyMs = performance.now() - startTime;
   if (!response.ok) {
     let detail = "";
     try {
@@ -165,6 +171,7 @@ async function callOpenAiCompatible<T>(
     inputTokens: data?.usage?.prompt_tokens,
     outputTokens: data?.usage?.completion_tokens,
     totalTokens: data?.usage?.total_tokens,
+    latencyMs,
   };
 
   return { result: extractJson<T>(rawContent), usage, model };
@@ -190,6 +197,7 @@ async function callOpenAi<T>(cred: ProviderCredential, params: LlmCallParams<T>)
     }
   } : { type: "json_object" };
 
+  const startTime = performance.now();
   const response = await fetch("https://api.openai.com/v1/chat/completions", {
     method: "POST",
     headers: {
@@ -206,6 +214,7 @@ async function callOpenAi<T>(cred: ProviderCredential, params: LlmCallParams<T>)
       ],
     }),
   });
+  const latencyMs = performance.now() - startTime;
 
   if (!response.ok) {
     let detail = "";
@@ -226,6 +235,7 @@ async function callOpenAi<T>(cred: ProviderCredential, params: LlmCallParams<T>)
     inputTokens: data?.usage?.prompt_tokens,
     outputTokens: data?.usage?.completion_tokens,
     totalTokens: data?.usage?.total_tokens,
+    latencyMs,
   };
 
   return { result: JSON.parse(rawContent) as T, usage, model };

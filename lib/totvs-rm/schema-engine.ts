@@ -94,26 +94,58 @@ export async function identifyRelevantTables(
     }
   }
 
-  // 2. Fallback de Segurança (Injeção Manual)
-  // Se, por alguma falha sistêmica, o Roteador devolver [], forçamos as tabelas básicas
-  if (identifiedNames.size === 0) {
-    const fallbackTables = ["TMOV", "FLAN", "FCFO", "SLAN"];
-    for (const tbl of fallbackTables) {
-      if (dict[tbl]) identifiedNames.add(tbl);
-    }
+  // 2. Fallback e Reforço Lexical Inteligente
+  // Mesmo se o Roteador retornar algo, reforçamos com tabelas básicas baseadas no texto
+  const text = userPrompt.toLowerCase();
+  
+  if (text.includes("movimento") || text.includes("venda") || text.includes("compra") || text.includes("pedido") || text.includes("nota")) {
+    identifiedNames.add("TMOV");
+    if (text.includes("item") || text.includes("produto")) identifiedNames.add("TITMMOV");
+  }
+  if (text.includes("financeiro") || text.includes("lançamento") || text.includes("lancamento") || text.includes("pagar") || text.includes("receber") || text.includes("fatura") || text.includes("vencimento")) {
+    identifiedNames.add("FLAN");
+  }
+  if (text.includes("cliente") || text.includes("fornecedor") || text.includes("clifor") || text.includes("cnpj") || text.includes("cpf")) {
+    identifiedNames.add("FCFO");
+  }
+  if (text.includes("funcionário") || text.includes("funcionario") || text.includes("colaborador") || text.includes("chapa") || text.includes("salarial") || text.includes("salário") || text.includes("salario") || text.includes("cargo")) {
+    identifiedNames.add("PFUNC");
+    identifiedNames.add("PSECAO");
+    if (text.includes("salarial") || text.includes("salário") || text.includes("salario")) identifiedNames.add("PFHSTSAL");
+  }
+  if (text.includes("produto") || text.includes("item") || text.includes("serviço") || text.includes("servico") || text.includes("estoque")) {
+    identifiedNames.add("TPRD");
+  }
+  if (text.includes("centro de custo")) {
+    identifiedNames.add("GCCUSTO");
+  }
+  if (text.includes("contabil") || text.includes("contábil") || text.includes("conta")) {
+    identifiedNames.add("CCONTA");
+    if (text.includes("partida")) identifiedNames.add("CPARTIDA");
   }
 
-  // 3. Expansão via Grafo em Memória: adiciona relacionamentos de saída diretos
+  // Se ainda vazio, insere pacote mínimo
+  if (identifiedNames.size === 0) {
+    ["TMOV", "FLAN", "FCFO"].forEach(t => identifiedNames.add(t));
+  }
+
+  // 3. Expansão via Grafo e Intenção: adiciona tabelas-ponte cruciais com base no contexto
+  const textContext = userPrompt.toLowerCase();
   const initialList = Array.from(identifiedNames);
-  for (const tableName of initialList) {
-    const tableData = dict[tableName];
-    if (tableData?.relacionamentos_saida) {
-      for (const rel of tableData.relacionamentos_saida) {
-        if (dict[rel.tabela_destino]) {
-          identifiedNames.add(rel.tabela_destino);
-        }
-      }
+  
+  if (initialList.includes("TMOV")) {
+    if (textContext.includes("pagamento") || textContext.includes("forma de") || textContext.includes("tpagto")) {
+      identifiedNames.add("TMOVPAGTO");
+      identifiedNames.add("TPAGTO");
     }
+    if (textContext.includes("origem") || textContext.includes("gerou") || textContext.includes("relaciona")) {
+      identifiedNames.add("TMOVRELAC");
+    }
+  }
+  
+  if (initialList.includes("FLAN") && initialList.includes("TMOV") && !textContext.includes("pagamento")) {
+    // Se precisa ligar LAN e MOV mas não é por TMOVPAGTO, usa FLANMOV ou SLAN (acordo no RM)
+    identifiedNames.add("FLANMOV");
   }
 
   // Monta o micro-contexto estruturado limitando a um teto seguro (ex: até 10 tabelas)
@@ -195,7 +227,19 @@ export function buildSchemaContextPrompt(tables: RMSemanticTableWithKey[], userP
       if (rels.length > 0) {
         text += "\nRelacionamentos de Saída (JOINs Garantidos):\n";
         for (const rel of rels) {
-          text += `- Junção com \`${rel.tabela_destino}\`: ON ${rel.chaves_ligacao}\n`;
+          const parts = rel.chaves_ligacao.split("=");
+          if (parts.length === 2) {
+            const left = parts[0].split(",").map((c) => c.trim());
+            const right = parts[1].split(",").map((c) => c.trim());
+            const n = Math.min(left.length, right.length);
+            const conditions = [];
+            for (let i = 0; i < n; i++) {
+              conditions.push(`${table.tabela}.${left[i]} = ${rel.tabela_destino}.${right[i]}`);
+            }
+            text += `- Junção com \`${rel.tabela_destino}\`: ON ${conditions.join(" AND ")}\n`;
+          } else {
+            text += `- Junção com \`${rel.tabela_destino}\`: ON ${rel.chaves_ligacao}\n`;
+          }
         }
       }
     }

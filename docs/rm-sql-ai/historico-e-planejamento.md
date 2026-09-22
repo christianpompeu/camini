@@ -161,9 +161,21 @@ Para usar IA real: Configurações → provedor → colar chave (Gemini e/ou Gro
 ## 5. Fase E — Suporte a OpenAI e Desacoplamento (concluída em 22/09/2026)
 Esta fase preparou o terreno para roteamento complexo e abstrações mais limpas.
 - **OpenAI Nativa e Structured Outputs:** O provider da OpenAI foi implementado como provedor de primeira classe em `providers.ts`, utilizando os recursos oficiais da API de *Structured Outputs* (sem depender de `JSON.parse` instável) definindo contratos JSON Schema estritos (`RMRouterResult` e `LlmSqlJson`).
+- **Validação, Correção e Fallback Lexical:** 
+  - Correção de Strict/Structured Outputs para OpenAI Router.
+  - Otimização de fallback do JSON parse.
+  - Refinamento da verificação AST contra joins não permitidos, reforçando a regra de `CODCOLCFO` e `IDPRD`.
+  - *Resultado dos testes (`npm run check:rm-golden`)*: **11/11 casos passando** após a implementação do **Fallback Lexical Cumulativo** no `schema-engine.ts` e refino no system prompt do `generator.ts` (forçando o uso de `ISNULL` para campos vazios e a restrição estrita sobre `CODCOLCFO` no join `FLAN`/`FCFO`). Latência adicionada aos logs.
 - **Desacoplamento do NLP Router:** O `schema-engine.ts` não realiza mais chamadas LLM. O código de roteamento foi externalizado para `lib/totvs-rm/llm/router.ts`. 
 - **Desacoplamento de Prompts:** Prompts extensos foram movidos do motor de chat para a nova pasta `lib/totvs-rm/llm/prompts/` (`router.ts`, `generator.ts`, `repair.ts`), mantendo `route.ts` apenas focado na orquestração (Failover > Roteador > Contexto > Gerador > Validação > Fallback).
 - **Observabilidade de Tokens:** A API local `chatCompleteWithFailover` agora monitora e retorna metadados de `usage` dos providers, registrando os tokens de input/output via terminal para fins de auditoria de custo.
+
+### E.2 - Grounding de JOINs Atômicos, Observabilidade e Proteção
+- **Proteção contra Gastos (`ALLOW_LLM_INTEGRATION_TESTS`):** Foi imposta uma trava nos scripts de integração (Golden Tests) para não realizar chamadas reais à LLM em modo CLI sem o Opt-in explícito.
+- **Formatação de Chaves Compostas (`schema-engine.ts`):** Relacionamentos múltiplos agora são enviados formatados perfeitamente em T-SQL para os geradores (ex: `A.X = B.X AND A.Y = B.Y`), eliminando alucinações onde o LLM tenta deduzir que `TMOV.CODCOLIGADA = FCFO.CODCOLIGADA` sozinho seja suficiente.
+- **Validação de JOINs Compostos Atômicos (`sql-verify.ts`):** O AST Parser agora coleta todas as condições do `ON` e só aprova a junção se **todas** as igualdades do dicionário para aquela relação dupla estiverem presentes na Query; evitando falsos positivos com aprovação parcial de chaves.
+- **Observabilidade Estruturada:** Console padronizado nos formatos `[RAG ENGINE] [STEP]` (`ROUTER`, `GENERATOR`, `VERIFY`, `REPAIR`, `RESULT`), rastreando ponta a ponta metadados essenciais de token e latência.
+  - *Validação Pendente:* As alterações foram comprovadas com TSX localmente validando a AST offline sem chamadas para IA. Os testes com a API (validação online/manual) estão **pendentes** aguardando a intervenção do proprietário.
 - **Failover intacto:** Gemini e Groq continuam funcionando normalmente na cadeia, a abstração engloba a extração padronizada de outputs e fallback para parses via regex.
 
 ## 6. Futuro (fora de escopo por enquanto)

@@ -8,6 +8,13 @@
 const fs = require("fs");
 const path = require("path");
 
+if (process.env.ALLOW_LLM_INTEGRATION_TESTS !== "true") {
+  console.error("ERRO: Testes de integração com LLM estão desativados por precaução de custo.");
+  console.error("Para executar o Golden Set real com provedores (OpenAI/Groq), rode o comando:");
+  console.error("  set ALLOW_LLM_INTEGRATION_TESTS=true && npm run check:rm-golden");
+  process.exit(1);
+}
+
 const BASE = process.argv[2] || "http://localhost:3100";
 const ORACLE_TOKENS = ["NVL(", "SYSDATE", "FETCH FIRST", "VARCHAR2", "FROM DUAL", "CONNECT BY", ".NEXTVAL", ":="];
 
