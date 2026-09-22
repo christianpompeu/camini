@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { Menu, Sparkles, Dumbbell, Home, Database } from "lucide-react";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
@@ -45,29 +46,29 @@ export function Navbar() {
 
   return (
     <>
-      <header className="sticky top-0 z-40 w-full glass-surface border-b border-outline px-4 sm:px-8 py-3.5 transition-colors">
+      <header className="sticky top-0 z-40 w-full glass-surface border-b border-outline px-4 sm:px-8 py-2 transition-colors">
         <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
           {/* LADO ESQUERDO: SEMPRE O LOGO E NOME 'camini' PADRONIZADO */}
           <Link
             href="/"
-            className="flex items-center gap-2.5 tap-effect group shrink-0"
+            className="flex items-center tap-effect group shrink-0"
             aria-label="camini Início"
           >
-            <div className="w-10 h-10 rounded-lg bg-gradient-energy flex items-center justify-center text-white font-black text-lg shadow-md shadow-energy-blue/20 group-hover:scale-105 transition-transform">
-              C
-            </div>
-            <div className="flex flex-col">
-              <div className="flex items-center gap-1.5">
-                <span className="font-black text-xl tracking-tight text-text-primary">
-                  camini
-                </span>
-                <span className="text-[9px] uppercase font-extrabold tracking-widest px-1.5 py-0.5 rounded-pill bg-surface-elevated border border-outline text-text-secondary">
-                  2026
-                </span>
-              </div>
-              <span className="text-[10px] font-medium text-text-secondary hidden sm:block">
-                Plataforma de Alta Performance
-              </span>
+            <div className="relative w-48 sm:w-60 h-12 sm:h-14 hover:opacity-85 transition-opacity">
+              <Image 
+                src="/logo_camini_light.png" 
+                alt="Camini Logo" 
+                fill 
+                className="object-contain object-left camini-logo-light dark:hidden" 
+                priority
+              />
+              <Image 
+                src="/logo_camini_dark.png" 
+                alt="Camini Logo Dark" 
+                fill 
+                className="object-contain object-left camini-logo-dark hidden dark:block" 
+                priority
+              />
             </div>
           </Link>
 

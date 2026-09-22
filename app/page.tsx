@@ -2,6 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
+import Image from "next/image";
 import {
   Sparkles,
   Dumbbell,
@@ -23,7 +24,7 @@ import { Chip } from "@/components/ui/chip";
 
 export default function CaminiHomePage() {
   return (
-    <div className="min-h-screen bg-surface text-text-primary flex flex-col selection:bg-energy-blue/20 selection:text-energy-blue">
+    <div className="min-h-screen text-text-primary flex flex-col selection:bg-energy-blue/20 selection:text-energy-blue">
       {/* Barra de Navegação Superior da Plataforma camini */}
       <Navbar />
 
@@ -34,6 +35,11 @@ export default function CaminiHomePage() {
         <section className="relative overflow-hidden pt-16 pb-20 sm:pt-24 sm:pb-28 px-4 sm:px-8 text-center">
           {/* Efeitos de profundidade e iluminação ambiente */}
           <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[650px] h-[350px] bg-gradient-energy opacity-15 rounded-full blur-[120px] pointer-events-none" />
+
+          {/* Doodles Discretos de Fundo */}
+          <div className="absolute inset-0 z-0 opacity-[0.03] dark:opacity-[0.07] pointer-events-none mix-blend-overlay dark:mix-blend-screen">
+            <Image src="/doodle_camini_2.png" alt="Background Doodle" fill className="object-cover object-center" priority />
+          </div>
 
           <div className="max-w-4xl mx-auto space-y-6 relative z-10">
             <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-pill bg-surface-elevated border border-outline shadow-sm animate-in fade-in duration-300">
@@ -316,8 +322,13 @@ export default function CaminiHomePage() {
         {/* ========================================================
             SEÇÃO DE PILARES DO CAMINI
            ======================================================== */}
-        <section className="py-16 px-4 sm:px-8">
-          <div className="max-w-6xl mx-auto space-y-12">
+        <section className="relative overflow-hidden py-16 px-4 sm:px-8">
+          {/* Doodles Discretos de Fundo (Intercalado) */}
+          <div className="absolute inset-0 z-0 opacity-[0.02] dark:opacity-[0.05] pointer-events-none">
+            <Image src="/doodle_camini_3.png" alt="Background Doodle" fill className="object-cover object-center" />
+          </div>
+
+          <div className="max-w-6xl mx-auto space-y-12 relative z-10">
             <div className="text-center max-w-2xl mx-auto space-y-3">
               <span className="text-xs font-bold uppercase tracking-wider text-energy-green">
                 Arquitetura de Qualidade

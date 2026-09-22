@@ -1,5 +1,23 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* Regras garantidas de troca de logo no tema claro/escuro */
+.camini-logo-dark {
+  display: none !important;
+}
+.camini-logo-light {
+  display: block !important;
+}
+html.dark .camini-logo-dark,
+.dark .camini-logo-dark {
+  display: block !important;
+}
+html.dark .camini-logo-light,
+.dark .camini-logo-light {
+  display: none !important;
+}
+
 :root {
   /* Neutros - Light Mode */
   --surface: #F8F9FC;
@@ -8,6 +26,18 @@
   --text-primary: #171A21;
   --text-secondary: #626A78;
   --outline: rgba(23, 26, 33, 0.10);
+
+  /* Camini Brand Colors */
+  --camini-navy: #0D1540;
+  --camini-indigo: #1737FF;
+  --camini-cobalt: #215FFF;
+  --camini-cyan: #1AB8FF;
+  --camini-aqua: #24E4D0;
+  --camini-graphite: #1F2937;
+  --camini-softgray: #E9EEF5;
+
+  /* Camini Gradient */
+  --gradient-camini: linear-gradient(135deg, var(--camini-indigo) 0%, var(--camini-cobalt) 40%, var(--camini-cyan) 100%);
 
   /* Cores expressivas */
   --energy-blue: #5B7CFA;
@@ -78,11 +108,20 @@
   --color-energy-amber: #F4B84A;
   --color-energy-green: #52B788;
 
+  /* Camini Semantic Colors */
+  --color-camini-navy: var(--camini-navy);
+  --color-camini-indigo: var(--camini-indigo);
+  --color-camini-cobalt: var(--camini-cobalt);
+  --color-camini-cyan: var(--camini-cyan);
+  --color-camini-aqua: var(--camini-aqua);
+  --color-camini-graphite: var(--camini-graphite);
+  --color-camini-softgray: var(--camini-softgray);
+
   /* Border Radius */
-  --radius-sm: 12px;
-  --radius-md: 18px;
-  --radius-lg: 26px;
-  --radius-xl: 34px;
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 10px;
+  --radius-xl: 14px;
   --radius-pill: 999px;
 }
 
@@ -93,6 +132,11 @@ body {
   font-family: var(--font-geist-sans), system-ui, sans-serif;
   transition: background-color 0.25s cubic-bezier(0.2, 0, 0, 1), color 0.25s cubic-bezier(0.2, 0, 0, 1);
   -webkit-font-smoothing: antialiased;
+}
+
+.dark body {
+  background: linear-gradient(145deg, #0D1540 0%, #0A0E24 40%, #04050A 100%);
+  background-attachment: fixed;
 }
 
 /* Utilitários Expressivos FORÇA */
@@ -108,6 +152,16 @@ body {
 
 .border-gradient-energy {
   border-image: var(--gradient-energy) 1;
+}
+
+.bg-gradient-camini {
+  background-image: var(--gradient-camini);
+}
+
+.text-gradient-camini {
+  background-image: var(--gradient-camini);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
 .bg-gradient-progress {
