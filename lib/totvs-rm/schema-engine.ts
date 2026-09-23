@@ -66,9 +66,10 @@ export function getTableDetails(tableName: string): RMSemanticTableWithKey | nul
   return null;
 }
 
-import { callRouterLlm } from "./llm/router";
+import { callSemanticPlannerLlm } from "./llm/planner";
+import { SemanticPlan } from "./types";
 /**
- * Roteador Semântico (NLP Router): Identifica tabelas utilizando IA em etapa prévia,
+ * Roteador Semântico (NLP Router / Semantic Planner): Identifica tabelas utilizando IA em etapa prévia,
  * consulta o Dicionário Completo em memória e enriquece com o Grafo de relacionamentos.
  */
 export interface RAGContextMetadata {
@@ -86,17 +87,19 @@ export interface RAGContextMetadata {
 export async function identifyRelevantTables(
   userPrompt: string,
   routerCredentials?: ProviderCredential[]
-): Promise<{ tables: RMSemanticTableWithKey[]; contextMetadata: RAGContextMetadata }> {
+): Promise<{ tables: RMSemanticTableWithKey[]; contextMetadata: RAGContextMetadata; semanticPlan?: SemanticPlan }> {
   const dict = loadSemanticDictionary();
   const identifiedNames = new Set<string>();
 
   let routerTables: string[] = [];
   let routerMetadata: RAGContextMetadata["routerMetadata"];
 
-  // 1. Tentar Roteador Semântico via LLM (Agentic Workflow)
+  // 1. Tentar Roteador Semântico via LLM (Semantic Planner)
+  let semanticPlan: SemanticPlan | undefined;
   if (routerCredentials && routerCredentials.length > 0) {
     try {
-      const { tables, metadata } = await callRouterLlm(routerCredentials, userPrompt);
+      const { result, tables, metadata } = await callSemanticPlannerLlm(routerCredentials, userPrompt);
+      semanticPlan = result;
       if (tables.length > 0) {
         routerTables = [...tables];
         routerMetadata = metadata;
@@ -192,7 +195,8 @@ export async function identifyRelevantTables(
       expandedTables,
       finalAllowedTables,
       routerMetadata
-    }
+    },
+    semanticPlan
   };
 }
 

@@ -181,7 +181,23 @@ Esta fase preparou o terreno para roteamento complexo e abstrações mais limpas
 - **Disciplina de Sugestões Estruturais:** Foi adicionada uma barreira explícita de prompt ao `generator.ts` vetando a recomendação "livre" de índices, particionamentos ou constraints que não sejam puramente dedutíveis ou expressamente validados pelo `schemaContext` fornecido.
 - **Proteção Financeira Permanente:** A trava `ALLOW_LLM_INTEGRATION_TESTS` continua vigente. Todo esse refinamento da Fase E.3 foi implementado estritamente por análise estática (`npm run build`) e inferência arquitetural, sem queimar um único token pago de APIs (0 chamadas reais executadas).
 
-## 6. Futuro (fora de escopo por enquanto)
+## 6. Fase F — Semantic Planner e Roteamento Inteligente (setembro/2026)
+Esta fase evolui significativamente o mecanismo de roteamento e introduz resiliência analítica à arquitetura.
+
+- **Semantic Planner**: O antigo NLP Router foi evoluído de forma controlada para um "Semantic Planner" (`planner.ts`). Ao invés de apenas devolver tabelas, ele extrai uma estrutura rica contendo a intenção, domínios, entidades, filtros detalhados (com operadores estritos), campos solicitados, operações, requisitos temporais e sugestões de tabelas (`candidateTables`). O `router.ts` legado foi preservado temporariamente durante a transição para garantir rollback.
+- **Diferenciação de Responsabilidades**: Foi estabelecida formalmente a invariável: o Planner gera _candidateTables_ (sementes), mas o _Dictionary / Graph_ produz o _grounded context_ e as _allowedTables_. Em caso de conflito, o dicionário vence a suposição do LLM.
+- **Classificação Determinística de Complexidade**: Introduzida a função `classifyQueryComplexity` em `complexity.ts`. Ela não depende apenas de chamadas caras de LLM nem foca primariamente na quantidade de tabelas. Ela avalia sinais determinísticos combinados: domínios múltiplos, agregações, requisitos temporais, junções indiretas (expandidas pelo grafo) e subqueries.
+- **Routing Policy Configurável**: A decisão de roteamento agora vive de forma independente em `routing-policy.ts`. 
+  - `RM_ROUTING_MODE=static`: Mantém a compatibilidade retroativa com a Fase E, priorizando provedores baseados na configuração fixa.
+  - `RM_ROUTING_MODE=complexity`: Aciona a inteligência que roteia consultas complexas para modelos de maior capacidade (ex: GPT-4o) e consultas simples para modelos de menor latência (ex: Llama 3 70B ou Gemini 1.5 Pro).
+- **Escalation vs Failover**: 
+  - _Failover_ permanece responsável por falhas operacionais (500, 429, timeout), tratado de forma transparente pela cadeia de provedores.
+  - _Escalation_ introduz a capacidade de alterar a estratégia de modelo (ex: pular para OpenAI) caso a validação estrutural do SQL falhe após tentativa(s) de Reparo. O Escalation evita loops executando next-routes distintas.
+- **Repair Policy Inteligente**: Implementado `isRepairEligible` para vetar loops de reparo inúteis (ex: contexto insuficiente) e aprovar falhas consertáveis (PARSE_ERROR, JOIN_NOT_GROUNDED).
+- **Observabilidade Enriquecida**: Novos blocos de log foram adicionados no orquestrador `route.ts`: `[RAG ENGINE] [PLAN]`, `[RAG ENGINE] [COMPLEXITY]`, `[RAG ENGINE] [ROUTING]` e `[RAG ENGINE] [ESCALATION]`. As tags de tokenização (`PlannerTokens`, `EscalationTokens`) foram integradas ao log final de resultados.
+- **Disciplina Extrema de Testes Offline**: Toda a lógica de roteamento, validação estrutural simulada e regras de complexidade foram testadas (`test-phase-f.ts`) de forma offline com abstrações de `SemanticPlan` sem gerar absolutamente *nenhuma* chamada real de LLM, com 100% dos testes unitários passando.
+
+## 7. Futuro (fora de escopo por enquanto)
 - Volta do Oracle: reverter a trava (`route.ts`, settings, tipos),
   recriar branches de dialeto + validador por dialeto.
 - Retry de reparo: realimentar o modelo com SQL + avisos do validador (1x).

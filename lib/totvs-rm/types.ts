@@ -59,3 +59,45 @@ export interface UserSettings {
   includeComments: boolean;
   defaultColigadaFilter: boolean;
 }
+
+// --- FASE F: Semantic Planner & Routing Types ---
+
+export type SemanticOperator = "=" | "!=" | ">" | "<" | ">=" | "<=" | "IN" | "NOT_IN" | "LIKE" | "BETWEEN" | "IS_NULL" | "IS_NOT_NULL";
+
+export interface SemanticFilter {
+  concept: string;
+  operator: SemanticOperator;
+  value?: string;
+  values?: string[];
+}
+
+export interface SemanticPlan {
+  intent: string;
+  domains: string[];
+  entities: string[];
+  filters: SemanticFilter[];
+  requestedFields: string[];
+  operations: string[];
+  aggregations: string[];
+  ordering: string[];
+  grouping: string[];
+  temporalRequirements: string[];
+  candidateTables: string[];
+}
+
+export type ComplexityLevel = "simple" | "moderate" | "complex";
+
+export interface ComplexityResult {
+  level: ComplexityLevel;
+  reasons: string[];
+}
+
+export type RoutingMode = "static" | "complexity";
+
+export interface RoutingDecision {
+  strategy: RoutingMode;
+  preferredProvider: string;
+  preferredModel: string;
+  allowRepair: boolean;
+  allowEscalation: boolean;
+}
