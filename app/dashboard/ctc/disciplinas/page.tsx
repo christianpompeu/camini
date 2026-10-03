@@ -29,6 +29,7 @@ export default async function DisciplinasPage() {
               <p className="text-gray-500 dark:text-gray-400 text-sm">Grade curricular do CTC</p>
             </div>
           </div>
+        </div>
       </div>
 
       {/* Formulário de Cadastro */}

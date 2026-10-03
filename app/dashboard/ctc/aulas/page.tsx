@@ -31,6 +31,7 @@ export default async function AulasPage() {
               <p className="text-gray-500 dark:text-gray-400 text-sm">Programação de aulas e alocação de professores</p>
             </div>
           </div>
+        </div>
       </div>
 
       {/* Formulário de Cadastro */}

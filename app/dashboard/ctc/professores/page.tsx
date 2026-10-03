@@ -29,6 +29,7 @@ export default async function ProfessoresPage() {
               <p className="text-gray-500 dark:text-gray-400 text-sm">Gerencie os professores do CTC</p>
             </div>
           </div>
+        </div>
       </div>
 
       {/* Formulário de Cadastro */}
