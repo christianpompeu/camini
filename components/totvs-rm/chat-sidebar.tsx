@@ -76,7 +76,7 @@ export function ChatSidebar({
         <button
           onClick={onToggleOpen}
           aria-label="Abrir histórico de conversas"
-          className="fixed left-3 top-20 z-30 p-2.5 rounded-xl bg-surface-elevated border border-outline text-text-primary shadow-lg hover:border-energy-blue transition-all"
+          className="fixed left-3 top-20 z-30 p-2.5 rounded-xl bg-surface-elevated border border-outline text-text-primary shadow-lg hover:border-camini-cyan transition-all"
         >
           <ChevronRight className="w-4 h-4" />
         </button>
@@ -91,7 +91,7 @@ export function ChatSidebar({
         {/* Cabeçalho da Sidebar */}
         <div className="p-4 border-b border-outline/60 flex items-center justify-between shrink-0">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-gradient-energy flex items-center justify-center text-white font-bold shadow-md shadow-energy-blue/20">
+            <div className="w-8 h-8 rounded-lg bg-gradient-camini flex items-center justify-center text-white font-bold shadow-md shadow-blue-500/20">
               <Bot className="w-4 h-4" />
             </div>
             <div>
@@ -115,7 +115,7 @@ export function ChatSidebar({
         <div className="p-3 border-b border-outline/60 shrink-0">
           <button
             onClick={onNewSession}
-            className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-gradient-energy text-white text-xs font-bold shadow-md shadow-energy-blue/20 hover:brightness-105 transition-all tap-effect"
+            className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-gradient-camini text-white text-xs font-bold shadow-md shadow-blue-500/20 hover:brightness-105 transition-all tap-effect"
           >
             <Plus className="w-4 h-4" />
             <span>Nova Consulta SQL</span>
@@ -130,7 +130,7 @@ export function ChatSidebar({
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 placeholder="Buscar conversas..."
-                className="w-full pl-8 pr-3 py-1.5 rounded-lg border border-outline bg-surface text-text-primary text-[11px] focus:outline-none focus:ring-1 focus:ring-energy-blue"
+                className="w-full pl-8 pr-3 py-1.5 rounded-lg border border-outline bg-surface text-text-primary text-[11px] focus:outline-none focus:ring-1 focus:ring-camini-cobalt"
               />
             </div>
           )}
@@ -159,12 +159,12 @@ export function ChatSidebar({
                   onClick={() => onSelectSession(session.id)}
                   className={`group relative flex items-center justify-between p-2.5 rounded-xl border text-xs cursor-pointer transition-all ${
                     isActive
-                      ? "border-energy-blue/50 bg-surface-elevated text-text-primary font-semibold shadow-sm"
+                      ? "border-camini-cobalt/50 bg-surface-elevated text-text-primary font-semibold shadow-sm"
                       : "border-transparent text-text-secondary hover:text-text-primary hover:bg-surface/80"
                   }`}
                 >
                   <div className="flex items-center gap-2 min-w-0 flex-1">
-                    <MessageSquare className={`w-3.5 h-3.5 shrink-0 ${isActive ? "text-energy-blue" : "opacity-60"}`} />
+                    <MessageSquare className={`w-3.5 h-3.5 shrink-0 ${isActive ? "text-camini-cobalt" : "opacity-60"}`} />
                     
                     {isEditing ? (
                       <input
@@ -173,7 +173,7 @@ export function ChatSidebar({
                         onChange={(e) => setEditTitle(e.target.value)}
                         onClick={(e) => e.stopPropagation()}
                         autoFocus
-                        className="w-full px-2 py-0.5 rounded border border-energy-blue bg-surface text-xs focus:outline-none"
+                        className="w-full px-2 py-0.5 rounded border border-camini-cobalt bg-surface text-xs focus:outline-none"
                       />
                     ) : (
                       <span className="truncate block text-xs">{session.title}</span>
@@ -186,7 +186,7 @@ export function ChatSidebar({
                       <>
                         <button
                           onClick={(e) => saveRename(session.id, e)}
-                          className="p-1 text-energy-green hover:bg-surface rounded"
+                          className="p-1 text-camini-aqua hover:bg-surface rounded"
                           title="Salvar título"
                         >
                           <Check className="w-3.5 h-3.5" />
@@ -213,7 +213,7 @@ export function ChatSidebar({
                             e.stopPropagation();
                             onDeleteSession(session.id);
                           }}
-                          className="p-1 text-text-secondary hover:text-energy-coral hover:bg-surface rounded"
+                          className="p-1 text-text-secondary hover:text-red-500 hover:bg-surface rounded"
                           title="Excluir conversa"
                         >
                           <Trash2 className="w-3 h-3" />
@@ -233,7 +233,7 @@ export function ChatSidebar({
             onClick={onOpenInspector}
             className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-text-secondary hover:text-text-primary hover:bg-surface-elevated transition-colors border border-transparent hover:border-outline"
           >
-            <Database className="w-4 h-4 text-energy-blue" />
+            <Database className="w-4 h-4 text-camini-cobalt" />
             <span>Explorar Dicionário RM</span>
           </button>
 
@@ -241,7 +241,7 @@ export function ChatSidebar({
             onClick={onOpenSettings}
             className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-text-secondary hover:text-text-primary hover:bg-surface-elevated transition-colors border border-transparent hover:border-outline"
           >
-            <Settings className="w-4 h-4 text-energy-violet" />
+            <Settings className="w-4 h-4 text-camini-indigo" />
             <span>Configurações de IA & Banco</span>
           </button>
         </div>

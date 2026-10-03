@@ -51,7 +51,7 @@ export function BottomNavigation({
                 aria-current={isActive ? "page" : undefined}
                 className={`relative flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 w-full min-h-[48px] py-1.5 px-3 rounded-pill text-xs font-semibold transition-all duration-200 tap-effect ${
                   isActive
-                    ? "bg-gradient-energy text-white shadow-md shadow-energy-blue/20"
+                    ? "bg-gradient-camini text-white shadow-md shadow-blue-500/20"
                     : "text-text-secondary hover:text-text-primary hover:bg-surface-elevated/40"
                 }`}
               >

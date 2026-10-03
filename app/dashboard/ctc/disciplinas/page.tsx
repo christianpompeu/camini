@@ -3,7 +3,8 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Plus, Trash2, ArrowLeft, BookOpen, BookPlus } from "lucide-react";
-import { getDisciplinas, createDisciplina, deleteDisciplina } from "../actions";
+import { getDisciplinas } from "../actions";
+import { DisciplinaForm, DeleteDisciplinaButton } from "./client-components";
 
 export default async function DisciplinasPage() {
   const disciplinas = await getDisciplinas();
@@ -40,24 +41,7 @@ export default async function DisciplinasPage() {
           </div>
           <h2 className="text-base sm:text-lg font-semibold text-gray-800 dark:text-gray-100">Adicionar Disciplina</h2>
         </div>
-        <form action={async (formData) => { "use server"; await createDisciplina(formData); }} className="flex gap-4 items-end flex-wrap">
-          <div className="space-y-1 flex-1 min-w-[200px]">
-            <label className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase ml-1">Nome</label>
-            <Input name="nome" placeholder="Nome da Disciplina" required />
-          </div>
-          <div className="space-y-1 flex-1 min-w-[250px]">
-            <label className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase ml-1">Descrição</label>
-            <Input name="descricao" placeholder="Breve descrição" />
-          </div>
-          <div className="space-y-1 w-32">
-            <label className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase ml-1">Carga (h)</label>
-            <Input name="carga_horaria" type="number" placeholder="40" min="1" />
-          </div>
-          <Button variant="camini" type="submit" className="h-10 px-6">
-            <Plus className="w-4 h-4 mr-2" />
-            Adicionar
-          </Button>
-        </form>
+        <DisciplinaForm />
       </div>
 
       <div className="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-gray-100 dark:border-slate-800 overflow-hidden">
@@ -93,14 +77,9 @@ export default async function DisciplinasPage() {
                     <td className="px-4 py-2.5 text-gray-500 dark:text-gray-400">{disc.descricao || "-"}</td>
                     <td className="px-4 py-2.5 text-gray-500 dark:text-gray-400">{disc.carga_horaria ? `${disc.carga_horaria}h` : "-"}</td>
                     <td className="px-4 py-2.5 text-right">
-                      <form action={async () => {
-                        "use server";
-                        await deleteDisciplina(disc.id);
-                      }}>
-                        <Button variant="ghost" size="sm" type="submit" className="text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/30 h-8 w-8 p-0">
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      </form>
+                      <div className="relative">
+                        <DeleteDisciplinaButton id={disc.id} nome={disc.nome} />
+                      </div>
                     </td>
                   </tr>
                 ))}

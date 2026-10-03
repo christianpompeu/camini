@@ -36,25 +36,25 @@ export function ChatMessages({
       {
         modulo: "RM Fluxus (Financeiro)",
         icon: Coins,
-        color: "text-energy-amber",
+        color: "text-amber-500",
         prompt: "Lançamentos financeiros a pagar em aberto com fornecedor e vencimento",
       },
       {
         modulo: "RM Nucleus (Compras & Estoque)",
         icon: Package,
-        color: "text-energy-blue",
+        color: "text-camini-cobalt",
         prompt: "Movimentos de compras com itens, produtos, quantidade e fornecedor",
       },
       {
         modulo: "RM Labore (Folha / RH)",
         icon: Users,
-        color: "text-energy-green",
+        color: "text-camini-aqua",
         prompt: "Funcionários ativos admitidos nos últimos 12 meses com cargo e salário",
       },
       {
         modulo: "RM Saldus (Contábil)",
         icon: Calculator,
-        color: "text-energy-violet",
+        color: "text-camini-indigo",
         prompt: "Partidas contábeis do exercício com conta a débito e a crédito",
       },
     ];
@@ -62,13 +62,13 @@ export function ChatMessages({
     return (
       <div className="flex-1 min-h-0 overflow-y-auto p-4 sm:p-6 flex flex-col justify-center items-center scrollbar-thin">
         <div className="w-full max-w-2xl my-auto space-y-4 py-2 text-center">
-          <div className="w-12 h-12 mx-auto rounded-xl bg-gradient-energy flex items-center justify-center text-white shadow-lg shadow-energy-blue/20 animate-in zoom-in duration-300">
+          <div className="w-12 h-12 mx-auto rounded-xl bg-gradient-camini flex items-center justify-center text-white shadow-lg shadow-blue-500/20 animate-in zoom-in duration-300">
             <Database className="w-6 h-6" />
           </div>
 
           <div className="space-y-1">
             <h2 className="text-xl sm:text-2xl font-black text-text-primary tracking-tight">
-              Escreva consultas SQL para o <span className="text-gradient-energy">TOTVS RM</span>
+              Escreva consultas SQL para o <span className="text-transparent bg-clip-text bg-gradient-camini font-black">TOTVS RM</span>
             </h2>
             <p className="text-xs text-text-secondary max-w-md mx-auto leading-relaxed">
               Catálogo de mais de 9.400 tabelas, colunas, chaves estrangeiras e relacionamentos.
@@ -83,14 +83,14 @@ export function ChatMessages({
                 <button
                   key={idx}
                   onClick={() => onSelectPromptSuggestion(item.prompt)}
-                  className="group p-3 rounded-xl border border-outline bg-surface-elevated hover:border-energy-blue/50 hover:shadow-md transition-all text-xs flex flex-col justify-between gap-2"
+                  className="group p-3 rounded-xl border border-gray-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-camini-cyan/50 hover:shadow-md transition-all text-xs flex flex-col justify-between gap-2"
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-1.5">
                       <Icon className={`w-3.5 h-3.5 ${item.color}`} />
                       <span className="font-bold text-[11px] text-text-primary">{item.modulo}</span>
                     </div>
-                    <ArrowUpRight className="w-3 h-3 text-text-secondary group-hover:text-energy-blue group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+                    <ArrowUpRight className="w-3 h-3 text-gray-400 group-hover:text-camini-cyan group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
                   </div>
                   <p className="text-text-secondary leading-snug line-clamp-2 text-[11px]">
                     &ldquo;{item.prompt}&rdquo;
@@ -118,7 +118,7 @@ export function ChatMessages({
           >
             {/* Ícone de Avatar Assistente */}
             {!isUser && (
-              <div className="w-8 h-8 rounded-lg bg-gradient-energy flex items-center justify-center text-white shrink-0 shadow-md shadow-energy-blue/20 mt-1">
+              <div className="w-8 h-8 rounded-lg bg-gradient-camini flex items-center justify-center text-white shrink-0 shadow-md shadow-blue-500/20 mt-1">
                 <Bot className="w-4 h-4" />
               </div>
             )}
@@ -127,22 +127,22 @@ export function ChatMessages({
             <div
               className={`space-y-3 rounded-2xl p-4 sm:p-5 text-xs sm:text-sm ${
                 isUser
-                  ? "bg-gradient-energy text-white font-medium shadow-md shadow-energy-blue/15 max-w-[85%] sm:max-w-xl rounded-tr-none"
-                  : "bg-surface-elevated border border-outline text-text-primary shadow-sm w-full rounded-tl-none"
+                  ? "bg-gradient-camini text-white font-medium shadow-md shadow-blue-500/15 max-w-[85%] sm:max-w-xl rounded-tr-none"
+                  : "bg-white dark:bg-slate-900 border border-gray-100 dark:border-slate-800 text-gray-900 dark:text-white shadow-sm w-full rounded-tl-none"
               }`}
             >
               {/* Badges de Tabelas RM Usadas */}
               {!isUser && msg.tablesUsed && msg.tablesUsed.length > 0 && (
                 <div className="flex flex-wrap items-center gap-1.5 pb-2 border-b border-outline/50">
                   <span className="text-[10px] font-bold text-text-secondary uppercase tracking-wider flex items-center gap-1 mr-1">
-                    <TableIcon className="w-3 h-3 text-energy-blue" />
+                    <TableIcon className="w-3 h-3 text-camini-cyan" />
                     Tabelas RM:
                   </span>
                   {msg.tablesUsed.map((tbl) => (
                     <button
                       key={tbl}
                       onClick={() => onInspectTable(tbl)}
-                      className="px-2 py-0.5 rounded-pill bg-energy-blue/15 hover:bg-energy-blue/25 text-energy-blue font-mono font-bold text-[11px] transition-colors border border-energy-blue/20"
+                      className="px-2 py-0.5 rounded-pill bg-camini-cyan/15 hover:bg-camini-cyan/25 text-camini-cobalt dark:text-camini-cyan font-mono font-bold text-[11px] transition-colors border border-camini-cyan/20"
                       title={`Ver campos e regras da tabela ${tbl}`}
                     >
                       {tbl}
@@ -171,8 +171,8 @@ export function ChatMessages({
 
               {/* Dicas e Boas Práticas do TOTVS RM */}
               {!isUser && msg.tips && msg.tips.length > 0 && (
-                <div className="p-3.5 rounded-xl bg-energy-amber/10 border border-energy-amber/30 text-text-primary space-y-1.5 text-xs">
-                  <div className="flex items-center gap-1.5 font-bold text-energy-amber text-[11px]">
+                <div className="p-3.5 rounded-xl bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/50 text-gray-800 dark:text-gray-200 space-y-1.5 text-xs">
+                  <div className="flex items-center gap-1.5 font-bold text-amber-600 dark:text-amber-500 text-[11px]">
                     <Lightbulb className="w-3.5 h-3.5 shrink-0" />
                     <span>Boas Práticas & Regras TOTVS RM</span>
                   </div>
@@ -189,7 +189,7 @@ export function ChatMessages({
 
             {/* Ícone de Avatar Usuário */}
             {isUser && (
-              <div className="w-8 h-8 rounded-lg bg-surface-elevated border border-outline flex items-center justify-center text-text-primary shrink-0 shadow-sm mt-1">
+              <div className="w-8 h-8 rounded-lg bg-gray-100 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 flex items-center justify-center text-gray-500 dark:text-gray-400 shrink-0 shadow-sm mt-1">
                 <User className="w-4 h-4" />
               </div>
             )}
@@ -200,11 +200,11 @@ export function ChatMessages({
       {/* Indicador de Carregamento */}
       {isLoading && (
         <div className="flex gap-3 sm:gap-4 mr-auto max-w-2xl animate-pulse">
-          <div className="w-8 h-8 rounded-lg bg-gradient-energy flex items-center justify-center text-white shrink-0 shadow-md">
+          <div className="w-8 h-8 rounded-lg bg-gradient-camini flex items-center justify-center text-white shrink-0 shadow-md">
             <Bot className="w-4 h-4" />
           </div>
-          <div className="p-4 rounded-2xl rounded-tl-none bg-surface-elevated border border-outline text-xs text-text-secondary flex items-center gap-2">
-            <Sparkles className="w-3.5 h-3.5 text-energy-blue animate-spin" />
+          <div className="p-4 rounded-2xl rounded-tl-none bg-white dark:bg-slate-900 border border-gray-100 dark:border-slate-800 text-xs text-gray-500 dark:text-gray-400 flex items-center gap-2">
+            <Sparkles className="w-3.5 h-3.5 text-camini-cyan animate-spin" />
             <span>Consultando dicionário de dados RM e gerando consulta SQL...</span>
           </div>
         </div>

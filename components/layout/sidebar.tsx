@@ -195,7 +195,8 @@ function NavItem({
   disabled, 
   badge, 
   rightIcon,
-  onClick
+  onClick,
+  onRightIconClick
 }: { 
   href: string; 
   icon: React.ReactNode; 

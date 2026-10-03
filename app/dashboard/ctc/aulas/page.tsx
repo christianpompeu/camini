@@ -3,7 +3,8 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Plus, Trash2, ArrowLeft, CalendarDays, CalendarPlus } from "lucide-react";
-import { getAulas, getDisciplinas, getProfessores, createAula, deleteAula } from "../actions";
+import { getAulas, getDisciplinas, getProfessores } from "../actions";
+import { AulaForm, DeleteAulaButton } from "./client-components";
 
 export default async function AulasPage() {
   const aulas = await getAulas();
@@ -42,38 +43,7 @@ export default async function AulasPage() {
           </div>
           <h2 className="text-base sm:text-lg font-semibold text-gray-800 dark:text-gray-100">Agendar Aula</h2>
         </div>
-        <form action={async (formData) => { "use server"; await createAula(formData); }} className="flex gap-4 items-end flex-wrap">
-          <div className="space-y-1 flex-1 min-w-[200px]">
-            <label className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase ml-1">Disciplina</label>
-            <select name="disciplina_id" required className="flex h-10 w-full rounded-md border border-outline bg-surface px-3 py-2 text-sm text-text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-energy-blue">
-              <option value="">Selecione...</option>
-              {disciplinas.map(d => (
-                <option key={d.id} value={d.id}>{d.nome}</option>
-              ))}
-            </select>
-          </div>
-          <div className="space-y-1 flex-1 min-w-[200px]">
-            <label className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase ml-1">Professor</label>
-            <select name="professor_id" required className="flex h-10 w-full rounded-md border border-outline bg-surface px-3 py-2 text-sm text-text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-energy-blue">
-              <option value="">Selecione...</option>
-              {professores.map(p => (
-                <option key={p.id} value={p.id}>{p.nome}</option>
-              ))}
-            </select>
-          </div>
-          <div className="space-y-1 flex-1 min-w-[180px]">
-            <label className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase ml-1">Data e Hora</label>
-            <Input name="data_hora" type="datetime-local" required />
-          </div>
-          <div className="space-y-1 w-28">
-            <label className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase ml-1">Duração (m)</label>
-            <Input name="duracao_minutos" type="number" defaultValue="60" min="1" />
-          </div>
-          <Button variant="camini" type="submit" className="h-10 px-6">
-            <Plus className="w-4 h-4 mr-2" />
-            Agendar
-          </Button>
-        </form>
+        <AulaForm disciplinas={disciplinas} professores={professores} />
       </div>
 
       <div className="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-gray-100 dark:border-slate-800 overflow-hidden">
@@ -104,26 +74,27 @@ export default async function AulasPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100 dark:divide-slate-800">
-                {aulas.map((aula) => (
+                {aulas.map((aula) => {
+                  const data = new Date(aula.data_hora);
+                  const fim = new Date(data.getTime() + aula.duracao_minutos * 60000);
+                  const formatterDate = new Intl.DateTimeFormat('pt-BR', { dateStyle: 'short' });
+                  const formatterTime = new Intl.DateTimeFormat('pt-BR', { timeStyle: 'short' });
+                  
+                  return (
                   <tr key={aula.id} className="hover:bg-gray-50/50 dark:hover:bg-slate-800/40">
                     <td className="px-4 py-2.5 font-medium text-gray-900 dark:text-gray-100">
-                      {new Date(aula.data_hora).toLocaleString("pt-BR")}
+                      {formatterDate.format(data)} <span className="text-gray-400 font-normal ml-1">• {formatterTime.format(data)} às {formatterTime.format(fim)}</span>
                     </td>
                     <td className="px-4 py-2.5 font-medium text-gray-900 dark:text-gray-100">{aula.disciplina?.nome || "-"}</td>
                     <td className="px-4 py-2.5 text-gray-500 dark:text-gray-400">{aula.professor?.nome || "-"}</td>
                     <td className="px-4 py-2.5 text-gray-500 dark:text-gray-400">{aula.duracao_minutos} min</td>
                     <td className="px-4 py-2.5 text-right">
-                      <form action={async () => {
-                        "use server";
-                        await deleteAula(aula.id);
-                      }}>
-                        <Button variant="ghost" size="sm" type="submit" className="text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/30 h-8 w-8 p-0">
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      </form>
+                      <div className="relative">
+                        <DeleteAulaButton id={aula.id} />
+                      </div>
                     </td>
                   </tr>
-                ))}
+                )})}
               </tbody>
             </table>
           </div>

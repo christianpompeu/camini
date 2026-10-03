@@ -64,7 +64,7 @@ export function SettingsModal({ isOpen, onClose, settings, onSave }: SettingsMod
         {/* Cabeçalho */}
         <div className="flex items-center justify-between border-b border-outline/60 pb-4">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-energy-blue/15 text-energy-blue flex items-center justify-center">
+            <div className="w-8 h-8 rounded-lg bg-camini-cobalt/15 text-camini-cobalt flex items-center justify-center">
               <Cpu className="w-4 h-4" />
             </div>
             <div>
@@ -85,7 +85,7 @@ export function SettingsModal({ isOpen, onClose, settings, onSave }: SettingsMod
           {/* Provedor de IA */}
           <div className="space-y-1.5">
             <label className="text-xs font-semibold flex items-center gap-1.5">
-              <Cpu className="w-3.5 h-3.5 text-energy-violet" />
+              <Cpu className="w-3.5 h-3.5 text-camini-indigo" />
               Provedor de IA
             </label>
             <div className="grid grid-cols-3 gap-2">
@@ -94,7 +94,7 @@ export function SettingsModal({ isOpen, onClose, settings, onSave }: SettingsMod
                 onClick={() => setProvider("gemini")}
                 className={`flex items-center justify-center gap-1.5 p-2.5 rounded-xl border text-xs font-bold transition-all ${
                   provider === "gemini"
-                    ? "border-energy-blue bg-energy-blue/15 text-energy-blue shadow-sm"
+                    ? "border-camini-cobalt bg-camini-cobalt/15 text-camini-cobalt shadow-sm"
                     : "border-outline bg-surface text-text-secondary hover:text-text-primary"
                 }`}
               >
@@ -107,7 +107,7 @@ export function SettingsModal({ isOpen, onClose, settings, onSave }: SettingsMod
                 onClick={() => setProvider("groq")}
                 className={`flex items-center justify-center gap-1.5 p-2.5 rounded-xl border text-xs font-bold transition-all ${
                   provider === "groq"
-                    ? "border-energy-blue bg-energy-blue/15 text-energy-blue shadow-sm"
+                    ? "border-camini-cobalt bg-camini-cobalt/15 text-camini-cobalt shadow-sm"
                     : "border-outline bg-surface text-text-secondary hover:text-text-primary"
                 }`}
               >
@@ -138,14 +138,14 @@ export function SettingsModal({ isOpen, onClose, settings, onSave }: SettingsMod
               <div className="space-y-1.5">
                 <label className="text-xs font-semibold flex items-center justify-between">
                   <span className="flex items-center gap-1.5">
-                    <Key className="w-3.5 h-3.5 text-energy-blue" />
+                    <Key className="w-3.5 h-3.5 text-camini-cobalt" />
                     Chave de API Groq
                   </span>
                   <a
                     href="https://console.groq.com/keys"
                     target="_blank"
                     rel="noreferrer"
-                    className="text-[11px] text-energy-blue hover:underline inline-flex items-center gap-1"
+                    className="text-[11px] text-camini-cobalt hover:underline inline-flex items-center gap-1"
                   >
                     <span>Obter chave grátis</span>
                     <ExternalLink className="w-3 h-3" />
@@ -156,10 +156,10 @@ export function SettingsModal({ isOpen, onClose, settings, onSave }: SettingsMod
                   value={groqKey}
                   onChange={(e) => setGroqKey(e.target.value)}
                   placeholder="Cole sua chave gsk_..."
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-outline bg-surface text-text-primary text-xs focus:outline-none focus:ring-2 focus:ring-energy-blue font-mono"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-outline bg-surface text-text-primary text-xs focus:outline-none focus:ring-2 focus:ring-camini-cobalt font-mono"
                 />
                 <p className="text-[11px] text-text-secondary flex items-center gap-1 pt-0.5">
-                  <ShieldCheck className="w-3.5 h-3.5 text-energy-green shrink-0" />
+                  <ShieldCheck className="w-3.5 h-3.5 text-camini-aqua shrink-0" />
                   Sua chave é salva apenas no seu navegador (localStorage) e nunca é exposta publicamente.
                 </p>
               </div>
@@ -167,13 +167,13 @@ export function SettingsModal({ isOpen, onClose, settings, onSave }: SettingsMod
               {/* Seleção do Modelo Groq */}
               <div className="space-y-1.5">
                 <label className="text-xs font-semibold flex items-center gap-1.5">
-                  <Cpu className="w-3.5 h-3.5 text-energy-violet" />
+                  <Cpu className="w-3.5 h-3.5 text-camini-indigo" />
                   Modelo de Linguagem (Groq)
                 </label>
                 <select
                   value={groqModel}
                   onChange={(e) => setGroqModel(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-outline bg-surface text-text-primary text-xs focus:outline-none focus:ring-2 focus:ring-energy-blue"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-outline bg-surface text-text-primary text-xs focus:outline-none focus:ring-2 focus:ring-camini-cobalt"
                 >
                   <option value="llama3-70b-8192">Llama 3 70B (llama3-70b-8192 - Recomendado)</option>
                   <option value="llama-3.1-70b-versatile">Llama 3.1 70B (Versatile)</option>
@@ -189,14 +189,14 @@ export function SettingsModal({ isOpen, onClose, settings, onSave }: SettingsMod
               <div className="space-y-1.5">
                 <label className="text-xs font-semibold flex items-center justify-between">
                   <span className="flex items-center gap-1.5">
-                    <Key className="w-3.5 h-3.5 text-energy-blue" />
+                    <Key className="w-3.5 h-3.5 text-camini-cobalt" />
                     Chave de API Gemini (Google AI Studio)
                   </span>
                   <a
                     href="https://aistudio.google.com/app/apikey"
                     target="_blank"
                     rel="noreferrer"
-                    className="text-[11px] text-energy-blue hover:underline inline-flex items-center gap-1"
+                    className="text-[11px] text-camini-cobalt hover:underline inline-flex items-center gap-1"
                   >
                     <span>Obter chave grátis</span>
                     <ExternalLink className="w-3 h-3" />
@@ -207,10 +207,10 @@ export function SettingsModal({ isOpen, onClose, settings, onSave }: SettingsMod
                   value={apiKey}
                   onChange={(e) => setApiKey(e.target.value)}
                   placeholder="Cole sua chave AIzaSy..."
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-outline bg-surface text-text-primary text-xs focus:outline-none focus:ring-2 focus:ring-energy-blue font-mono"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-outline bg-surface text-text-primary text-xs focus:outline-none focus:ring-2 focus:ring-camini-cobalt font-mono"
                 />
                 <p className="text-[11px] text-text-secondary flex items-center gap-1 pt-0.5">
-                  <ShieldCheck className="w-3.5 h-3.5 text-energy-green shrink-0" />
+                  <ShieldCheck className="w-3.5 h-3.5 text-camini-aqua shrink-0" />
                   Sua chave é salva apenas no seu navegador (localStorage) e nunca é exposta publicamente.
                 </p>
               </div>
@@ -218,13 +218,13 @@ export function SettingsModal({ isOpen, onClose, settings, onSave }: SettingsMod
               {/* Seleção do Modelo Gemini */}
               <div className="space-y-1.5">
                 <label className="text-xs font-semibold flex items-center gap-1.5">
-                  <Cpu className="w-3.5 h-3.5 text-energy-violet" />
+                  <Cpu className="w-3.5 h-3.5 text-camini-indigo" />
                   Modelo de Linguagem (Gemini)
                 </label>
                 <select
                   value={model}
                   onChange={(e) => setModel(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-outline bg-surface text-text-primary text-xs focus:outline-none focus:ring-2 focus:ring-energy-blue"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-outline bg-surface text-text-primary text-xs focus:outline-none focus:ring-2 focus:ring-camini-cobalt"
                 >
                   <option value="gemini-1.5-pro-latest">Gemini 1.5 Pro Latest (Recomendado)</option>
                   <option value="gemini-1.5-pro">Gemini 1.5 Pro (Estável)</option>
@@ -236,7 +236,7 @@ export function SettingsModal({ isOpen, onClose, settings, onSave }: SettingsMod
           {/* Dialeto SQL Padrão */}
           <div className="space-y-1.5">
             <label className="text-xs font-semibold flex items-center gap-1.5">
-              <Database className="w-3.5 h-3.5 text-energy-amber" />
+              <Database className="w-3.5 h-3.5 text-amber-500" />
               Banco de Dados do TOTVS Corpore RM
             </label>
             <div className="grid grid-cols-2 gap-3">
@@ -245,7 +245,7 @@ export function SettingsModal({ isOpen, onClose, settings, onSave }: SettingsMod
                 onClick={() => setDialect("sqlserver")}
                 className={`flex items-center justify-center gap-2 p-3 rounded-xl border text-xs font-bold transition-all ${
                   dialect === "sqlserver"
-                    ? "border-energy-blue bg-energy-blue/15 text-energy-blue shadow-sm"
+                    ? "border-camini-cobalt bg-camini-cobalt/15 text-camini-cobalt shadow-sm"
                     : "border-outline bg-surface text-text-secondary hover:text-text-primary"
                 }`}
               >
@@ -278,7 +278,7 @@ export function SettingsModal({ isOpen, onClose, settings, onSave }: SettingsMod
             </button>
             <button
               type="submit"
-              className="flex items-center gap-1.5 px-5 py-2.5 rounded-xl bg-gradient-energy text-white text-xs font-bold shadow-md shadow-energy-blue/20 hover:brightness-105 transition-all"
+              className="flex items-center gap-1.5 px-5 py-2.5 rounded-xl bg-gradient-camini text-white text-xs font-bold shadow-md shadow-blue-500/20 hover:brightness-105 transition-all"
             >
               {savedNotice ? (
                 <>

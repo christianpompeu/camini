@@ -25,22 +25,22 @@ export function Chip({
   };
 
   const interactiveClasses = interactive
-    ? "tap-effect cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-energy-blue"
+    ? "tap-effect cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-camini-cobalt"
     : "";
 
   const variantClasses = {
     default:
       "bg-surface-elevated text-text-secondary border border-outline",
     active:
-      "bg-energy-blue text-white font-semibold shadow-sm",
+      "bg-camini-cobalt text-white font-semibold shadow-sm",
     energy:
-      "bg-gradient-energy text-white font-semibold shadow-sm",
+      "bg-gradient-camini text-white font-semibold shadow-sm",
     success:
-      "bg-energy-green/15 text-energy-green border border-energy-green/30 font-semibold",
+      "bg-camini-aqua/15 text-camini-aqua border border-energy-green/30 font-semibold",
     warning:
-      "bg-energy-amber/15 text-energy-amber border border-energy-amber/30 font-semibold",
+      "bg-energy-amber/15 text-amber-500 border border-energy-amber/30 font-semibold",
     outline:
-      "border border-outline text-text-secondary hover:border-energy-blue/50 hover:text-text-primary",
+      "border border-outline text-text-secondary hover:border-camini-cobalt/50 hover:text-text-primary",
   };
 
   return (

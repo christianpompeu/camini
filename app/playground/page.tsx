@@ -56,12 +56,12 @@ export default function DesignSystemPlaygroundPage() {
   const [lastWorkoutLog, setLastWorkoutLog] = useState<string | null>(null);
 
   const expressiveColors = [
-    { name: "Energy Blue", var: "--energy-blue", hex: "#5B7CFA", role: "Ação primária, foco, cronômetro", bgClass: "bg-energy-blue" },
-    { name: "Energy Cyan", var: "--energy-cyan", hex: "#41C7D9", role: "Movimento, fluxo, oxigenação", bgClass: "bg-energy-cyan" },
-    { name: "Energy Violet", var: "--energy-violet", hex: "#9A6CFF", role: "Intensidade neural, precisão", bgClass: "bg-energy-violet" },
-    { name: "Energy Coral", var: "--energy-coral", hex: "#FF706A", role: "Alerta, esgotamento, carga limite", bgClass: "bg-energy-coral" },
-    { name: "Energy Amber", var: "--energy-amber", hex: "#F4B84A", role: "Atenção, descanso ativo, calor", bgClass: "bg-energy-amber" },
-    { name: "Energy Green", var: "--energy-green", hex: "#52B788", role: "Conclusão, meta atingida, PR", bgClass: "bg-energy-green" },
+    { name: "Camini Cobalt", var: "--camini-cobalt", hex: "#5B7CFA", role: "Ação primária, foco, cronômetro", bgClass: "bg-camini-cobalt" },
+    { name: "Camini Cyan", var: "--camini-cyan", hex: "#41C7D9", role: "Movimento, fluxo, oxigenação", bgClass: "bg-camini-cyan" },
+    { name: "Camini Indigo", var: "--camini-indigo", hex: "#9A6CFF", role: "Intensidade neural, precisão", bgClass: "bg-camini-indigo" },
+    { name: "Camini Red", var: "--camini-red", hex: "#FF706A", role: "Alerta, esgotamento, carga limite", bgClass: "bg-camini-red" },
+    { name: "Camini Amber", var: "--amber-500", hex: "#F4B84A", role: "Atenção, descanso ativo, calor", bgClass: "bg-amber-500" },
+    { name: "Camini Aqua", var: "--camini-aqua", hex: "#52B788", role: "Conclusão, meta atingida, PR", bgClass: "bg-camini-aqua" },
   ];
 
   const neutralsLight = [
@@ -94,7 +94,7 @@ export default function DesignSystemPlaygroundPage() {
               <span>camini Hub</span>
             </Link>
             <span>/</span>
-            <span className="font-bold text-energy-violet">Design System Playground</span>
+            <span className="font-bold text-camini-indigo">Design System Playground</span>
           </div>
 
           {/* Abas de Navegação de Tokens / Seções */}
@@ -105,7 +105,7 @@ export default function DesignSystemPlaygroundPage() {
                 onClick={() => setActiveTab(tab)}
                 className={`px-3 py-1 rounded-pill text-xs font-semibold capitalize transition-all tap-effect ${
                   activeTab === tab
-                    ? "bg-gradient-energy text-white shadow-sm font-bold"
+                    ? "bg-gradient-camini text-white shadow-sm font-bold"
                     : "text-text-secondary hover:text-text-primary"
                 }`}
               >
@@ -119,14 +119,14 @@ export default function DesignSystemPlaygroundPage() {
       {/* Hero do Playground */}
       <section className="px-4 sm:px-8 max-w-6xl mx-auto pt-8 pb-6">
         <div className="relative overflow-hidden rounded-xl border border-outline bg-surface-elevated p-6 sm:p-10 card-elevation">
-          <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-energy opacity-10 rounded-full blur-3xl pointer-events-none -mr-20 -mt-20" />
+          <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-camini opacity-10 rounded-full blur-3xl pointer-events-none -mr-20 -mt-20" />
 
           <div className="relative z-10 max-w-2xl">
-            <Chip variant="energy" size="sm" className="mb-3">
+            <Chip variant="camini" size="sm" className="mb-3">
               Identidade Visual Contemporânea
             </Chip>
             <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-text-primary leading-tight">
-              Design System <span className="text-gradient-energy">FORÇA</span>
+              Design System <span className="text-transparent bg-clip-text bg-gradient-camini">FORÇA</span>
             </h1>
             <p className="mt-4 text-base sm:text-lg text-text-secondary leading-relaxed">
               Linguagem visual inspirada nos princípios modernos de <strong>Material 3 Expressive</strong>:
@@ -155,7 +155,7 @@ export default function DesignSystemPlaygroundPage() {
               onClick={() => setActiveTab(tab)}
               className={`flex-1 min-w-[70px] py-2 px-2 rounded-pill text-xs font-semibold capitalize text-center transition-all tap-effect ${
                 activeTab === tab
-                  ? "bg-gradient-energy text-white shadow-sm"
+                  ? "bg-gradient-camini text-white shadow-sm"
                   : "text-text-secondary"
               }`}
             >
@@ -173,7 +173,7 @@ export default function DesignSystemPlaygroundPage() {
           <section className="space-y-8 animate-in fade-in duration-300">
             <div>
               <div className="flex items-center gap-2">
-                <Palette className="w-5 h-5 text-energy-blue" />
+                <Palette className="w-5 h-5 text-camini-cobalt" />
                 <h2 className="text-2xl font-bold tracking-tight text-text-primary">
                   1. Paleta de Cores e Tokens Semânticos
                 </h2>
@@ -221,7 +221,7 @@ export default function DesignSystemPlaygroundPage() {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {/* Energy */}
                 <div className="p-5 rounded-lg bg-surface-elevated border border-outline card-elevation space-y-3">
-                  <div className="h-16 rounded-md bg-gradient-energy flex items-center justify-center text-white font-bold text-sm shadow-md">
+                  <div className="h-16 rounded-md bg-gradient-camini flex items-center justify-center text-white font-bold text-sm shadow-md">
                     --gradient-energy
                   </div>
                   <div>
@@ -272,9 +272,9 @@ export default function DesignSystemPlaygroundPage() {
                 Superfícies Glassmorphism & Profundidade
               </h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="relative p-6 rounded-xl overflow-hidden border border-outline bg-gradient-to-r from-energy-blue/10 via-energy-violet/10 to-energy-coral/10">
+                <div className="relative p-6 rounded-xl overflow-hidden border border-outline bg-gradient-to-r from-camini-cobalt/10 via-camini-indigo/10 to-camini-red/10">
                   <div className="glass-surface p-5 rounded-lg space-y-2">
-                    <span className="text-[11px] font-bold uppercase tracking-wider text-energy-blue">
+                    <span className="text-[11px] font-bold uppercase tracking-wider text-camini-cobalt">
                       Glass Surface Moderada
                     </span>
                     <p className="text-sm font-semibold text-text-primary">
@@ -287,7 +287,7 @@ export default function DesignSystemPlaygroundPage() {
                 </div>
 
                 <div className="p-6 rounded-xl border border-outline bg-surface-elevated card-elevation flex flex-col justify-center space-y-2">
-                  <span className="text-[11px] font-bold uppercase tracking-wider text-energy-green">
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-camini-aqua">
                     Card Elevation Sólida
                   </span>
                   <p className="text-sm font-semibold text-text-primary">
@@ -311,7 +311,7 @@ export default function DesignSystemPlaygroundPage() {
                     key={r.name}
                     className="p-3 rounded-md bg-surface-elevated border border-outline flex flex-col items-center text-center justify-center gap-1"
                   >
-                    <span className="font-mono text-xs font-bold text-energy-blue">
+                    <span className="font-mono text-xs font-bold text-camini-cobalt">
                       {r.name}
                     </span>
                     <span className="text-sm font-extrabold text-text-primary">
@@ -334,7 +334,7 @@ export default function DesignSystemPlaygroundPage() {
           <section className="space-y-6 animate-in fade-in duration-300">
             <div>
               <div className="flex items-center gap-2">
-                <Type className="w-5 h-5 text-energy-cyan" />
+                <Type className="w-5 h-5 text-camini-cyan" />
                 <h2 className="text-2xl font-bold tracking-tight text-text-primary">
                   2. Tipografia e Escala de Leitura (Geist)
                 </h2>
@@ -347,7 +347,7 @@ export default function DesignSystemPlaygroundPage() {
             <div className="p-6 rounded-xl bg-surface-elevated border border-outline card-elevation space-y-6">
               {/* Display */}
               <div className="border-b border-outline/50 pb-4">
-                <span className="text-xs font-bold uppercase tracking-wider text-energy-blue">
+                <span className="text-xs font-bold uppercase tracking-wider text-camini-cobalt">
                   Display (44–56 px)
                 </span>
                 <p className="text-4xl sm:text-5xl font-black text-text-primary tracking-tight mt-1">
@@ -357,7 +357,7 @@ export default function DesignSystemPlaygroundPage() {
 
               {/* H1 */}
               <div className="border-b border-outline/50 pb-4">
-                <span className="text-xs font-bold uppercase tracking-wider text-energy-cyan">
+                <span className="text-xs font-bold uppercase tracking-wider text-camini-cyan">
                   H1 (32–40 px)
                 </span>
                 <h1 className="text-3xl sm:text-4xl font-extrabold text-text-primary tracking-tight mt-1">
@@ -367,7 +367,7 @@ export default function DesignSystemPlaygroundPage() {
 
               {/* H2 */}
               <div className="border-b border-outline/50 pb-4">
-                <span className="text-xs font-bold uppercase tracking-wider text-energy-violet">
+                <span className="text-xs font-bold uppercase tracking-wider text-camini-indigo">
                   H2 (24–30 px)
                 </span>
                 <h2 className="text-2xl font-bold text-text-primary tracking-tight mt-1">
@@ -394,7 +394,7 @@ export default function DesignSystemPlaygroundPage() {
                   <span className="text-sm font-semibold text-text-secondary">
                     TEMPO DE DESCANSO: 90 SEG
                   </span>
-                  <span className="text-sm font-bold text-energy-green">
+                  <span className="text-sm font-bold text-camini-aqua">
                     +4.5% EM RELAÇÃO À ÚLTIMA SEMANA
                   </span>
                 </div>
@@ -410,7 +410,7 @@ export default function DesignSystemPlaygroundPage() {
           <section className="space-y-8 animate-in fade-in duration-300">
             <div>
               <div className="flex items-center gap-2">
-                <Layers className="w-5 h-5 text-energy-violet" />
+                <Layers className="w-5 h-5 text-camini-indigo" />
                 <h2 className="text-2xl font-bold tracking-tight text-text-primary">
                   3. Componentes Fundamentais
                 </h2>
@@ -426,7 +426,7 @@ export default function DesignSystemPlaygroundPage() {
                 Botões e Ações
               </h3>
               <div className="flex flex-wrap items-center gap-3">
-                <Button variant="energy" size="md">
+                <Button variant="camini" size="md">
                   <Zap className="w-4 h-4" />
                   Botão Energia (CTA)
                 </Button>
@@ -454,7 +454,7 @@ export default function DesignSystemPlaygroundPage() {
               </div>
 
               <div className="pt-2 text-xs text-text-secondary flex items-center gap-2">
-                <Sparkles className="w-3.5 h-3.5 text-energy-amber" />
+                <Sparkles className="w-3.5 h-3.5 text-amber-500" />
                 <span>Pressione os botões para testar a resposta tátil de escala física (`tap-effect`).</span>
               </div>
             </div>
@@ -467,7 +467,7 @@ export default function DesignSystemPlaygroundPage() {
               <div className="flex flex-wrap items-center gap-2">
                 <Chip variant="default" interactive>Padrão</Chip>
                 <Chip variant="active" interactive>Ativo</Chip>
-                <Chip variant="energy" interactive>Energia M3</Chip>
+                <Chip variant="camini" interactive>Energia M3</Chip>
                 <Chip variant="success" interactive>Sucesso / Concluído</Chip>
                 <Chip variant="warning" interactive>Atenção / Limite</Chip>
                 <Chip variant="outline" interactive>Outline Interativo</Chip>
@@ -606,7 +606,7 @@ export default function DesignSystemPlaygroundPage() {
           <section className="space-y-8 animate-in fade-in duration-300">
             <div>
               <div className="flex items-center gap-2">
-                <Activity className="w-5 h-5 text-energy-green" />
+                <Activity className="w-5 h-5 text-camini-aqua" />
                 <h2 className="text-2xl font-bold tracking-tight text-text-primary">
                   4. Experiência de Treino & Domínio FORÇA
                 </h2>
@@ -636,7 +636,7 @@ export default function DesignSystemPlaygroundPage() {
 
               {/* Active Set Card */}
               <div className="space-y-2">
-                <span className="text-xs font-bold uppercase tracking-wider text-energy-blue block">
+                <span className="text-xs font-bold uppercase tracking-wider text-camini-cobalt block">
                   Active Set Card (Elemento Dominante em Execução)
                 </span>
                 <ActiveSetCard
@@ -654,7 +654,7 @@ export default function DesignSystemPlaygroundPage() {
                   }}
                 />
                 {lastWorkoutLog && (
-                  <div className="p-3 rounded-md bg-energy-green/10 border border-energy-green/30 text-energy-green text-xs font-bold flex items-center gap-2">
+                  <div className="p-3 rounded-md bg-camini-aqua/10 border border-camini-aqua/30 text-camini-aqua text-xs font-bold flex items-center gap-2">
                     <CheckCircle2 className="w-4 h-4" />
                     <span>{lastWorkoutLog}</span>
                   </div>

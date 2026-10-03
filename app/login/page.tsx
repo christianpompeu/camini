@@ -12,7 +12,7 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = React.useState(false);
 
   return (
-    <div className="min-h-screen w-full flex bg-camini-softgray">
+    <div className="min-h-screen w-full flex bg-camini-softgray dark:bg-[#0c1017]">
       {/* Left side - Illustration */}
       <div className="hidden lg:flex lg:w-1/2 relative bg-camini-navy overflow-hidden items-center justify-center">
         <div className="absolute inset-0 z-0">
@@ -28,7 +28,7 @@ export default function LoginPage() {
 
       {/* Right side - Login Form */}
       <div className="w-full lg:w-1/2 flex flex-col items-center justify-center p-6 sm:p-12">
-        <div className="w-full max-w-md bg-white rounded-3xl shadow-xl p-8 sm:p-10 border border-gray-100 flex flex-col relative overflow-hidden">
+        <div className="w-full max-w-md bg-white dark:bg-slate-900 rounded-3xl shadow-xl p-8 sm:p-10 border border-gray-100 dark:border-slate-800 flex flex-col relative overflow-hidden">
           
           {/* Top Decorative gradient bar */}
           <div className="absolute top-0 left-0 w-full h-2 bg-gradient-camini"></div>
@@ -44,25 +44,26 @@ export default function LoginPage() {
                 priority
               />
             </div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-camini-navy tracking-tight">Acesse o Hub Integrado</h1>
-            <p className="text-sm text-camini-graphite/70 mt-2">Gerencie sua instituição em um só lugar</p>
+            <h1 className="text-2xl sm:text-3xl font-bold text-camini-navy dark:text-white tracking-tight">Acesse o Hub Integrado</h1>
+            <p className="text-sm text-camini-graphite/70 dark:text-gray-400 mt-2">Gerencie sua instituição em um só lugar</p>
           </div>
 
           <form action={formAction} className="flex flex-col gap-5">
             <div className="space-y-1">
-              <label htmlFor="email" className="text-xs font-bold text-camini-graphite uppercase tracking-wider ml-1">Usuário / Email</label>
+              <label htmlFor="email" className="text-xs font-bold text-camini-graphite dark:text-gray-400 uppercase tracking-wider ml-1">Usuário / Email</label>
               <Input
                 id="email"
                 name="email"
                 type="email"
                 placeholder="nome@email.com"
                 required
-                className="bg-camini-softgray/40 border-gray-200 focus:border-camini-indigo rounded-xl h-12 px-4 shadow-sm"
+                autoComplete="email"
+                className="bg-camini-softgray/40 dark:bg-slate-800 border-gray-200 dark:border-slate-700 dark:text-white focus:border-camini-indigo rounded-xl h-12 px-4 shadow-sm"
               />
             </div>
 
             <div className="space-y-1 relative">
-              <label htmlFor="password" className="text-xs font-bold text-camini-graphite uppercase tracking-wider ml-1">Senha</label>
+              <label htmlFor="password" className="text-xs font-bold text-camini-graphite dark:text-gray-400 uppercase tracking-wider ml-1">Senha</label>
               <div className="relative">
                 <Input
                   id="password"
@@ -70,7 +71,8 @@ export default function LoginPage() {
                   type={showPassword ? "text" : "password"}
                   placeholder="••••••••••••"
                   required
-                  className="bg-camini-softgray/40 border-gray-200 focus:border-camini-indigo rounded-xl h-12 px-4 pr-12 shadow-sm"
+                  autoComplete="current-password"
+                  className="bg-camini-softgray/40 dark:bg-slate-800 border-gray-200 dark:border-slate-700 dark:text-white focus:border-camini-indigo rounded-xl h-12 px-4 pr-12 shadow-sm"
                 />
                 <button
                   type="button"

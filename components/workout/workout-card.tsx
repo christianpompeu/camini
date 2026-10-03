@@ -28,17 +28,17 @@ export function WorkoutCard({
 }: WorkoutCardProps) {
   return (
     <div
-      className={`relative overflow-hidden rounded-xl border border-outline bg-surface-elevated card-elevation transition-all duration-200 hover:border-energy-blue/40 ${className}`}
+      className={`relative overflow-hidden rounded-xl border border-outline bg-surface-elevated card-elevation transition-all duration-200 hover:border-camini-cobalt/40 ${className}`}
     >
       {/* Gradiente de fundo extremamente sutil no topo */}
-      <div className="absolute top-0 left-0 right-0 h-2 bg-gradient-energy opacity-85" />
+      <div className="absolute top-0 left-0 right-0 h-2 bg-gradient-camini opacity-85" />
 
       <div className="p-6">
         <div className="flex items-start justify-between gap-4">
           <div className="flex items-center gap-3">
             {/* Emblema Treino A/B/C */}
             <div className="w-12 h-12 rounded-lg bg-surface flex items-center justify-center font-extrabold text-xl border border-outline shadow-inner">
-              <span className="text-gradient-energy">{letter}</span>
+              <span className="text-transparent bg-clip-text bg-gradient-camini">{letter}</span>
             </div>
             <div>
               <div className="flex items-center gap-2">
@@ -60,11 +60,11 @@ export function WorkoutCard({
         {/* Informações secundárias */}
         <div className="mt-5 flex flex-wrap items-center gap-4 text-xs font-medium text-text-secondary border-t border-outline/60 pt-4">
           <div className="flex items-center gap-1.5">
-            <Dumbbell className="w-4 h-4 text-energy-blue" />
+            <Dumbbell className="w-4 h-4 text-camini-cobalt" />
             <span>{exerciseCount} exercícios</span>
           </div>
           <div className="flex items-center gap-1.5">
-            <Calendar className="w-4 h-4 text-energy-green" />
+            <Calendar className="w-4 h-4 text-camini-aqua" />
             <span>Último: {lastExecuted}</span>
           </div>
         </div>
@@ -72,11 +72,11 @@ export function WorkoutCard({
         {/* CTA Iniciar Treino */}
         <div className="mt-6 flex items-center gap-3">
           <Button
-            variant="energy"
+            variant="camini"
             size="md"
             fullWidth
             onClick={onStart}
-            className="shadow-lg shadow-energy-blue/20"
+            className="shadow-lg shadow-blue-500/20"
           >
             <Play className="w-4 h-4 fill-white" />
             Iniciar treino

@@ -53,14 +53,14 @@ export function ExerciseHero({
       {/* Conteúdo textual do Exercício */}
       <div className="p-6 relative -mt-8 z-10">
         <div className="flex flex-wrap items-center gap-2 mb-2">
-          <Chip variant="energy" size="sm" className="text-xs">
+          <Chip variant="camini" size="sm" className="text-xs">
             {category}
           </Chip>
           <div className="flex items-center gap-1.5 text-xs font-semibold text-text-secondary">
-            <Layers className="w-3.5 h-3.5 text-energy-blue" />
+            <Layers className="w-3.5 h-3.5 text-camini-cobalt" />
             <span>{sets}</span>
             <span>•</span>
-            <Repeat className="w-3.5 h-3.5 text-energy-green" />
+            <Repeat className="w-3.5 h-3.5 text-camini-aqua" />
             <span>{reps}</span>
           </div>
         </div>
@@ -90,7 +90,7 @@ export function ExerciseHero({
         {/* Instruções Essenciais / Cues de Execução */}
         <div className="mt-5 p-4 rounded-lg bg-surface border border-outline/70">
           <div className="flex items-center gap-2 mb-2">
-            <Info className="w-4 h-4 text-energy-blue" />
+            <Info className="w-4 h-4 text-camini-cobalt" />
             <span className="text-xs font-bold uppercase tracking-wider text-text-primary">
               Instruções de Execução
             </span>
@@ -98,7 +98,7 @@ export function ExerciseHero({
           <ul className="space-y-1.5 text-xs text-text-secondary leading-relaxed">
             {cues.map((cue, i) => (
               <li key={i} className="flex items-start gap-2">
-                <span className="w-1.5 h-1.5 rounded-full bg-energy-blue mt-1.5 shrink-0" />
+                <span className="w-1.5 h-1.5 rounded-full bg-camini-cobalt mt-1.5 shrink-0" />
                 <span>{cue}</span>
               </li>
             ))}

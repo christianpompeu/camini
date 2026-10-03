@@ -7,14 +7,14 @@ import { Home, Layers, Sparkles, ArrowLeft, HelpCircle } from "lucide-react";
 
 export default function NotFound() {
   return (
-    <div className="min-h-screen flex flex-col justify-between bg-surface text-text-primary selection:bg-energy-blue/20">
+    <div className="min-h-screen flex flex-col justify-between bg-surface text-text-primary selection:bg-camini-cobalt/20">
       {/* Barra de Navegação Superior Global */}
       <Navbar />
 
       {/* Conteúdo Principal 404 */}
       <main className="flex-1 flex items-center justify-center px-4 sm:px-6 lg:px-8 py-12 relative overflow-hidden">
         {/* Glows e Iluminação de Fundo */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[550px] sm:w-[750px] h-[350px] sm:h-[450px] bg-gradient-to-r from-energy-blue/15 via-energy-violet/15 to-energy-coral/15 rounded-full blur-3xl pointer-events-none -z-10" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[550px] sm:w-[750px] h-[350px] sm:h-[450px] bg-gradient-to-r from-camini-cobalt/15 via-camini-indigo/15 to-camini-red/15 rounded-full blur-3xl pointer-events-none -z-10" />
 
         <div className="max-w-4xl w-full mx-auto flex flex-col items-center text-center relative z-10">
           
@@ -33,7 +33,7 @@ export default function NotFound() {
 
             {/* Badge Flutuante 404 */}
             <div className="absolute -bottom-3 sm:-bottom-4 left-1/2 -translate-x-1/2 px-4 py-1.5 rounded-full bg-surface-elevated border border-outline shadow-lg flex items-center gap-2 backdrop-blur-md">
-              <span className="w-2 h-2 rounded-full bg-energy-coral animate-pulse" />
+              <span className="w-2 h-2 rounded-full bg-camini-red animate-pulse" />
               <span className="text-xs font-bold uppercase tracking-widest text-text-secondary">
                 Erro 404 • Rota Não Encontrada
               </span>
@@ -44,7 +44,7 @@ export default function NotFound() {
           <div className="space-y-3 mt-4 max-w-xl">
             <h1 className="text-4xl sm:text-6xl font-black tracking-tight text-text-primary">
               Perdido no <br className="hidden sm:inline" />
-              <span className="text-transparent bg-clip-text bg-gradient-energy">
+              <span className="text-transparent bg-clip-text bg-gradient-camini">
                 Ecossistema camini?
               </span>
             </h1>
@@ -56,15 +56,15 @@ export default function NotFound() {
           {/* Ações e Navegação */}
           <div className="mt-8 flex flex-wrap items-center justify-center gap-3 w-full max-w-md">
             <Link href="/" className="w-full sm:w-auto flex-1">
-              <Button variant="energy" size="lg" fullWidth className="gap-2 shadow-lg shadow-energy-blue/20">
+              <Button variant="camini" size="lg" fullWidth className="gap-2 shadow-lg shadow-blue-500/20">
                 <Home className="w-4 h-4" />
                 Página Inicial
               </Button>
             </Link>
 
             <Link href="/dashboard" className="w-full sm:w-auto flex-1">
-              <Button variant="secondary" size="lg" fullWidth className="gap-2 border-outline hover:border-energy-blue">
-                <Layers className="w-4 h-4 text-energy-blue" />
+              <Button variant="secondary" size="lg" fullWidth className="gap-2 border-outline hover:border-camini-cobalt">
+                <Layers className="w-4 h-4 text-camini-cobalt" />
                 Painel Hub
               </Button>
             </Link>
@@ -78,11 +78,11 @@ export default function NotFound() {
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <Link 
                 href="/dashboard/ctc" 
-                className="p-3.5 rounded-xl bg-surface-elevated/70 border border-outline hover:border-energy-blue/50 transition-all text-left group"
+                className="p-3.5 rounded-xl bg-surface-elevated/70 border border-outline hover:border-camini-cobalt/50 transition-all text-left group"
               >
                 <div className="flex items-center gap-2 mb-1">
-                  <div className="w-2 h-2 rounded-full bg-energy-blue" />
-                  <span className="text-xs font-bold text-text-primary group-hover:text-energy-blue transition-colors">
+                  <div className="w-2 h-2 rounded-full bg-camini-cobalt" />
+                  <span className="text-xs font-bold text-text-primary group-hover:text-camini-cobalt transition-colors">
                     Gestão CTC
                   </span>
                 </div>
@@ -93,11 +93,11 @@ export default function NotFound() {
 
               <Link 
                 href="/totvs-rm" 
-                className="p-3.5 rounded-xl bg-surface-elevated/70 border border-outline hover:border-energy-cyan/50 transition-all text-left group"
+                className="p-3.5 rounded-xl bg-surface-elevated/70 border border-outline hover:border-camini-cyan/50 transition-all text-left group"
               >
                 <div className="flex items-center gap-2 mb-1">
-                  <div className="w-2 h-2 rounded-full bg-energy-cyan" />
-                  <span className="text-xs font-bold text-text-primary group-hover:text-energy-cyan transition-colors">
+                  <div className="w-2 h-2 rounded-full bg-camini-cyan" />
+                  <span className="text-xs font-bold text-text-primary group-hover:text-camini-cyan transition-colors">
                     RM SQL AI
                   </span>
                 </div>
@@ -108,11 +108,11 @@ export default function NotFound() {
 
               <Link 
                 href="/playground" 
-                className="p-3.5 rounded-xl bg-surface-elevated/70 border border-outline hover:border-energy-violet/50 transition-all text-left group"
+                className="p-3.5 rounded-xl bg-surface-elevated/70 border border-outline hover:border-camini-indigo/50 transition-all text-left group"
               >
                 <div className="flex items-center gap-2 mb-1">
-                  <div className="w-2 h-2 rounded-full bg-energy-violet" />
-                  <span className="text-xs font-bold text-text-primary group-hover:text-energy-violet transition-colors">
+                  <div className="w-2 h-2 rounded-full bg-camini-indigo" />
+                  <span className="text-xs font-bold text-text-primary group-hover:text-camini-indigo transition-colors">
                     Design System
                   </span>
                 </div>
@@ -155,10 +155,10 @@ export default function NotFound() {
             <Link href="/" className="hover:text-text-primary transition-colors">
               Início
             </Link>
-            <Link href="/dashboard" className="hover:text-energy-coral transition-colors">
+            <Link href="/dashboard" className="hover:text-red-500 transition-colors">
               Dashboard
             </Link>
-            <Link href="/playground" className="hover:text-energy-violet transition-colors">
+            <Link href="/playground" className="hover:text-camini-indigo transition-colors">
               Design System
             </Link>
           </div>

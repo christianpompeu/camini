@@ -25,15 +25,15 @@ export function FloatingWorkoutBar({
       className={`glass-surface rounded-xl p-3.5 flex items-center justify-between gap-4 max-w-lg w-full tap-effect ${className}`}
     >
       <div className="flex items-center gap-3 min-w-0">
-        <div className="w-10 h-10 rounded-pill bg-energy-blue/15 border border-energy-blue/30 flex items-center justify-center shrink-0">
-          <Timer className="w-5 h-5 text-energy-blue" />
+        <div className="w-10 h-10 rounded-pill bg-camini-cobalt/15 border border-camini-cobalt/30 flex items-center justify-center shrink-0">
+          <Timer className="w-5 h-5 text-camini-cobalt" />
         </div>
         <div className="min-w-0">
           <div className="flex items-center gap-2">
             <span className="font-mono text-sm font-black text-text-primary tracking-tight">
               {timerFormatted}
             </span>
-            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-pill bg-energy-blue text-white">
+            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-pill bg-camini-cobalt text-white">
               {currentSet}
             </span>
           </div>
@@ -44,7 +44,7 @@ export function FloatingWorkoutBar({
       </div>
 
       <Button
-        variant="energy"
+        variant="camini"
         size="sm"
         onClick={onNextAction}
         className="shrink-0 shadow-sm"

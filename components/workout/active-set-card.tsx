@@ -48,14 +48,14 @@ export function ActiveSetCard({
     <div
       className={`relative overflow-hidden rounded-xl border-2 transition-all duration-300 ${
         isCompleted
-          ? "bg-energy-green/5 border-energy-green/40 shadow-lg shadow-energy-green/5"
+          ? "bg-camini-aqua/5 border-energy-green/40 shadow-lg shadow-energy-green/5"
           : "bg-surface-elevated border-outline shadow-xl shadow-surface-dark/5"
       } ${className}`}
     >
       {/* Top Banner de destaque de série */}
       <div className="flex items-center justify-between px-6 py-4 border-b border-outline/50 bg-surface/40">
         <div>
-          <span className="text-xs font-black tracking-wider uppercase text-energy-blue">
+          <span className="text-xs font-black tracking-wider uppercase text-camini-cobalt">
             SÉRIE {currentSet} DE {totalSets}
           </span>
           <h2 className="text-xl font-bold text-text-primary tracking-tight mt-0.5">
@@ -94,14 +94,14 @@ export function ActiveSetCard({
               <button
                 onClick={() => setWeight((w) => Math.max(0, w - 2))}
                 aria-label="Diminuir 2 kg"
-                className="w-8 h-8 rounded-pill bg-surface-elevated border border-outline flex items-center justify-center text-text-primary hover:border-energy-blue tap-effect"
+                className="w-8 h-8 rounded-pill bg-surface-elevated border border-outline flex items-center justify-center text-text-primary hover:border-camini-cobalt tap-effect"
               >
                 <Minus className="w-3.5 h-3.5" />
               </button>
               <button
                 onClick={() => setWeight((w) => w + 2)}
                 aria-label="Aumentar 2 kg"
-                className="w-8 h-8 rounded-pill bg-surface-elevated border border-outline flex items-center justify-center text-text-primary hover:border-energy-blue tap-effect"
+                className="w-8 h-8 rounded-pill bg-surface-elevated border border-outline flex items-center justify-center text-text-primary hover:border-camini-cobalt tap-effect"
               >
                 <Plus className="w-3.5 h-3.5" />
               </button>
@@ -126,14 +126,14 @@ export function ActiveSetCard({
               <button
                 onClick={() => setReps((r) => Math.max(1, r - 1))}
                 aria-label="Diminuir 1 repetição"
-                className="w-8 h-8 rounded-pill bg-surface-elevated border border-outline flex items-center justify-center text-text-primary hover:border-energy-blue tap-effect"
+                className="w-8 h-8 rounded-pill bg-surface-elevated border border-outline flex items-center justify-center text-text-primary hover:border-camini-cobalt tap-effect"
               >
                 <Minus className="w-3.5 h-3.5" />
               </button>
               <button
                 onClick={() => setReps((r) => r + 1)}
                 aria-label="Aumentar 1 repetição"
-                className="w-8 h-8 rounded-pill bg-surface-elevated border border-outline flex items-center justify-center text-text-primary hover:border-energy-blue tap-effect"
+                className="w-8 h-8 rounded-pill bg-surface-elevated border border-outline flex items-center justify-center text-text-primary hover:border-camini-cobalt tap-effect"
               >
                 <Plus className="w-3.5 h-3.5" />
               </button>
@@ -144,7 +144,7 @@ export function ActiveSetCard({
         {/* Seletor RIR (Reps in Reserve / Esforço) */}
         <div className="mt-5 p-3.5 rounded-lg bg-surface/50 border border-outline/60 flex items-center justify-between gap-2">
           <div className="flex items-center gap-2">
-            <Flame className="w-4 h-4 text-energy-coral" />
+            <Flame className="w-4 h-4 text-red-500" />
             <span className="text-xs font-semibold text-text-primary">
               RIR (Repetições na reserva):
             </span>
@@ -170,18 +170,18 @@ export function ActiveSetCard({
         <div className="mt-6">
           {!isCompleted ? (
             <Button
-              variant="energy"
+              variant="camini"
               size="lg"
               fullWidth
               onClick={handleComplete}
-              className="relative overflow-hidden font-bold tracking-wide shadow-xl shadow-energy-blue/25"
+              className="relative overflow-hidden font-bold tracking-wide shadow-xl shadow-blue-500/25"
             >
               <Check className="w-5 h-5 stroke-[2.5]" />
               Concluir série {currentSet}
             </Button>
           ) : (
             <div className="flex items-center gap-3 animate-in fade-in zoom-in-95 duration-200">
-              <div className="flex-1 min-h-[56px] px-6 rounded-lg bg-energy-green/20 border border-energy-green/40 text-energy-green font-bold flex items-center justify-center gap-2">
+              <div className="flex-1 min-h-[56px] px-6 rounded-lg bg-camini-aqua/20 border border-energy-green/40 text-camini-aqua font-bold flex items-center justify-center gap-2">
                 <Check className="w-5 h-5 stroke-[3]" />
                 Série {currentSet} Registrada!
               </div>

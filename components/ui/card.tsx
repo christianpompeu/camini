@@ -30,7 +30,7 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(
       outline:
         "bg-transparent border border-outline text-text-primary",
       active:
-        "bg-surface-elevated border-2 border-energy-blue text-text-primary shadow-lg shadow-energy-blue/10",
+        "bg-surface-elevated border-2 border-camini-cobalt text-text-primary shadow-lg shadow-blue-500/10",
     };
 
     const radiusClasses = {
@@ -41,7 +41,7 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(
     };
 
     const interactiveClasses = interactive
-      ? "tap-effect cursor-pointer hover:border-energy-blue/40"
+      ? "tap-effect cursor-pointer hover:border-camini-cobalt/40"
       : "";
 
     return (

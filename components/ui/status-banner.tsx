@@ -22,16 +22,16 @@ export function StatusBanner({
     success: {
       icon: CheckCircle2,
       container:
-        "bg-energy-green/10 border-energy-green/30 text-text-primary",
-      iconColor: "text-energy-green",
-      badge: "bg-energy-green text-white",
+        "bg-camini-aqua/10 border-energy-green/30 text-text-primary",
+      iconColor: "text-camini-aqua",
+      badge: "bg-camini-aqua text-white",
       badgeText: "Concluído",
     },
     warning: {
       icon: AlertTriangle,
       container:
         "bg-energy-amber/10 border-energy-amber/30 text-text-primary",
-      iconColor: "text-energy-amber",
+      iconColor: "text-amber-500",
       badge: "bg-energy-amber text-black",
       badgeText: "Atenção",
     },

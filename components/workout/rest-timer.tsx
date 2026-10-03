@@ -63,7 +63,7 @@ export function RestTimer({
       className={`relative p-6 rounded-xl border border-outline bg-surface-elevated card-elevation flex flex-col items-center justify-center ${className}`}
     >
       <div className="flex items-center gap-2 mb-4">
-        <Clock className="w-4 h-4 text-energy-blue" />
+        <Clock className="w-4 h-4 text-camini-cobalt" />
         <span className="text-xs font-bold uppercase tracking-wider text-text-secondary">
           Descanso Entre Séries
         </span>
@@ -136,7 +136,7 @@ export function RestTimer({
           size="md"
           onClick={toggleActive}
           aria-label={isActive ? "Pausar cronômetro" : "Iniciar cronômetro"}
-          className="flex-1 shadow-md shadow-energy-blue/15"
+          className="flex-1 shadow-md shadow-blue-500/15"
         >
           {isActive ? (
             <>

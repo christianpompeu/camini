@@ -42,7 +42,7 @@ export function SqlCodeBlock({ code, dialect = "T-SQL", filename = "consulta_tot
       {/* Barra de título do código */}
       <div className="flex items-center justify-between px-4 py-2.5 bg-[#141822] border-b border-outline/50 text-[#9AA2B1]">
         <div className="flex items-center gap-2">
-          <Terminal className="w-3.5 h-3.5 text-energy-blue" />
+          <Terminal className="w-3.5 h-3.5 text-camini-cobalt" />
           <span className="font-semibold text-[11px] text-text-primary tracking-wide">
             TOTVS RM Script ({dialect})
           </span>
@@ -56,8 +56,8 @@ export function SqlCodeBlock({ code, dialect = "T-SQL", filename = "consulta_tot
           >
             {copied ? (
               <>
-                <Check className="w-3.5 h-3.5 text-energy-green" />
-                <span className="text-[11px] text-energy-green font-medium">Copiado!</span>
+                <Check className="w-3.5 h-3.5 text-camini-aqua" />
+                <span className="text-[11px] text-camini-aqua font-medium">Copiado!</span>
               </>
             ) : (
               <>

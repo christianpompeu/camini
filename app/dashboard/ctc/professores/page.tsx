@@ -3,7 +3,8 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Plus, Trash2, ArrowLeft, Users, UserPlus } from "lucide-react";
-import { getProfessores, createProfessor, deleteProfessor } from "../actions";
+import { getProfessores } from "../actions";
+import { ProfessorForm, DeleteProfessorButton } from "./client-components";
 
 export default async function ProfessoresPage() {
   const professores = await getProfessores();
@@ -40,24 +41,7 @@ export default async function ProfessoresPage() {
           </div>
           <h2 className="text-base sm:text-lg font-semibold text-gray-800 dark:text-gray-100">Adicionar Professor</h2>
         </div>
-        <form action={async (formData) => { "use server"; await createProfessor(formData); }} className="flex gap-4 items-end flex-wrap">
-          <div className="space-y-1 flex-1 min-w-[200px]">
-            <label className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase ml-1">Nome</label>
-            <Input name="nome" placeholder="Nome do Professor" required />
-          </div>
-          <div className="space-y-1 flex-1 min-w-[200px]">
-            <label className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase ml-1">Email</label>
-            <Input name="email" type="email" placeholder="Email (opcional)" />
-          </div>
-          <div className="space-y-1 flex-1 min-w-[150px]">
-            <label className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase ml-1">Telefone</label>
-            <Input name="telefone" placeholder="(11) 99999-9999" />
-          </div>
-          <Button variant="camini" type="submit" className="h-10 px-6">
-            <Plus className="w-4 h-4 mr-2" />
-            Adicionar
-          </Button>
-        </form>
+        <ProfessorForm />
       </div>
 
       <div className="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-gray-100 dark:border-slate-800 overflow-hidden">
@@ -93,14 +77,9 @@ export default async function ProfessoresPage() {
                     <td className="px-4 py-2.5 text-gray-500 dark:text-gray-400">{prof.email || "-"}</td>
                     <td className="px-4 py-2.5 text-gray-500 dark:text-gray-400">{prof.telefone || "-"}</td>
                     <td className="px-4 py-2.5 text-right">
-                      <form action={async () => {
-                        "use server";
-                        await deleteProfessor(prof.id);
-                      }}>
-                        <Button variant="ghost" size="sm" type="submit" className="text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/30 h-8 w-8 p-0">
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      </form>
+                      <div className="relative">
+                        <DeleteProfessorButton id={prof.id} nome={prof.nome} />
+                      </div>
                     </td>
                   </tr>
                 ))}

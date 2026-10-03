@@ -23,17 +23,17 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
   ) => {
     // Base classes: minimum touch target of 44px for accessibility (WCAG AA), motion scale
     const baseClasses =
-      "inline-flex items-center justify-center font-medium transition-all duration-150 select-none tap-effect focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-energy-blue focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none cursor-pointer";
+      "inline-flex items-center justify-center font-medium transition-all duration-150 select-none tap-effect focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-camini-cobalt focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none cursor-pointer";
 
     const variantClasses = {
       energy:
-        "bg-gradient-energy text-white font-semibold shadow-md hover:brightness-105 active:brightness-95",
+        "bg-gradient-camini text-white font-semibold shadow-md hover:brightness-105 active:brightness-95",
       camini:
         "bg-gradient-camini text-white font-semibold shadow-md shadow-blue-500/25 hover:brightness-105 active:brightness-95",
       secondary:
         "bg-surface-elevated text-text-primary border border-outline hover:bg-surface-elevated/90 dark:hover:bg-surface-elevated/70",
       outline:
-        "border border-outline text-text-primary hover:bg-energy-blue/10 hover:border-energy-blue hover:text-energy-blue",
+        "border border-outline text-text-primary hover:bg-camini-cobalt/10 hover:border-camini-cobalt hover:text-camini-cobalt",
       ghost:
         "text-text-secondary hover:text-text-primary hover:bg-surface-elevated/60",
       effort:

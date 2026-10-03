@@ -378,7 +378,7 @@ export default function TotvsRmChatPage() {
                 className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium text-text-secondary hover:text-text-primary hover:bg-surface border border-transparent hover:border-outline transition-colors"
                 title="Explorar dicionário de dados RM"
               >
-                <Database className="w-3.5 h-3.5 text-energy-blue" />
+                <Database className="w-3.5 h-3.5 text-camini-cobalt" />
                 <span className="hidden sm:inline">Dicionário RM</span>
               </button>
 
@@ -387,7 +387,7 @@ export default function TotvsRmChatPage() {
                 className="p-1.5 rounded-lg text-text-secondary hover:text-text-primary hover:bg-surface transition-colors"
                 title="Configurações de IA"
               >
-                <Settings className="w-4 h-4 text-energy-violet" />
+                <Settings className="w-4 h-4 text-camini-indigo" />
               </button>
             </div>
           </div>
@@ -420,7 +420,7 @@ export default function TotvsRmChatPage() {
                     onClick={() => setSelectedModule(mod.value)}
                     className={`px-2 py-0.5 rounded-pill whitespace-nowrap transition-colors font-medium border ${
                       selectedModule === mod.value
-                        ? "bg-energy-blue text-white border-energy-blue"
+                        ? "bg-camini-cobalt text-white border-camini-cobalt"
                         : "bg-surface-elevated text-text-secondary border-outline hover:text-text-primary"
                     }`}
                   >
@@ -430,7 +430,7 @@ export default function TotvsRmChatPage() {
               </div>
 
               {/* Caixa de Texto do Chat */}
-              <div className="relative rounded-2xl border border-outline bg-surface-elevated p-1.5 sm:p-2 shadow-lg focus-within:border-energy-blue/60 transition-all flex items-end gap-2">
+              <div className="relative rounded-2xl border border-outline bg-surface-elevated p-1.5 sm:p-2 shadow-lg focus-within:border-camini-cyan/60 transition-all flex items-end gap-2">
                 <textarea
                   ref={textareaRef}
                   value={inputPrompt}
@@ -444,7 +444,7 @@ export default function TotvsRmChatPage() {
                 <button
                   onClick={() => handleSendMessage()}
                   disabled={!inputPrompt.trim() || isLoading}
-                  className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-energy flex items-center justify-center text-white shadow-md shadow-energy-blue/20 hover:brightness-105 disabled:opacity-40 disabled:hover:brightness-100 transition-all shrink-0"
+                  className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-camini flex items-center justify-center text-white shadow-md shadow-blue-500/20 hover:brightness-105 disabled:opacity-40 disabled:hover:brightness-100 transition-all shrink-0"
                   aria-label="Enviar solicitação"
                 >
                   <Send className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
