@@ -31,18 +31,6 @@ export default async function AulasPage() {
               <p className="text-gray-500 dark:text-gray-400 text-sm">Programação de aulas e alocação de professores</p>
             </div>
           </div>
-        </div>
-
-        <Link href="/dashboard/ctc">
-          <Button
-            variant="camini"
-            size="sm"
-            className="gap-2 shadow-md hover:shadow-lg transition-all rounded-xl"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Voltar ao CTC
-          </Button>
-        </Link>
       </div>
 
       {/* Formulário de Cadastro */}
@@ -97,41 +85,38 @@ export default async function AulasPage() {
               Aulas Programadas
             </h3>
           </div>
-          <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-camini-cyan/15 text-camini-cobalt dark:text-camini-cyan border border-camini-cyan/20">
-            {aulas.length} {aulas.length === 1 ? "aula" : "aulas"}
-          </span>
         </div>
         {aulas.length === 0 ? (
           <div className="p-8 text-center text-gray-500 dark:text-gray-400">
             Nenhuma aula agendada.
           </div>
         ) : (
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto overflow-y-auto max-h-[500px]">
             <table className="w-full text-left text-sm">
-              <thead className="bg-gray-50 dark:bg-slate-800/60 text-gray-500 dark:text-gray-400">
+              <thead className="bg-gray-50 dark:bg-slate-800/60 text-gray-500 dark:text-gray-400 sticky top-0 z-10">
                 <tr>
-                  <th className="px-6 py-3 font-medium">Data e Hora</th>
-                  <th className="px-6 py-3 font-medium">Disciplina</th>
-                  <th className="px-6 py-3 font-medium">Professor</th>
-                  <th className="px-6 py-3 font-medium">Duração</th>
-                  <th className="px-6 py-3 font-medium text-right">Ações</th>
+                  <th className="px-4 py-2 font-medium">Data e Hora</th>
+                  <th className="px-4 py-2 font-medium">Disciplina</th>
+                  <th className="px-4 py-2 font-medium">Professor</th>
+                  <th className="px-4 py-2 font-medium">Duração</th>
+                  <th className="px-4 py-2 font-medium text-right">Ações</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100 dark:divide-slate-800">
                 {aulas.map((aula) => (
                   <tr key={aula.id} className="hover:bg-gray-50/50 dark:hover:bg-slate-800/40">
-                    <td className="px-6 py-4 font-medium text-gray-900 dark:text-gray-100">
+                    <td className="px-4 py-2.5 font-medium text-gray-900 dark:text-gray-100">
                       {new Date(aula.data_hora).toLocaleString("pt-BR")}
                     </td>
-                    <td className="px-6 py-4 font-medium text-gray-900 dark:text-gray-100">{aula.disciplina?.nome || "-"}</td>
-                    <td className="px-6 py-4 text-gray-500 dark:text-gray-400">{aula.professor?.nome || "-"}</td>
-                    <td className="px-6 py-4 text-gray-500 dark:text-gray-400">{aula.duracao_minutos} min</td>
-                    <td className="px-6 py-4 text-right">
+                    <td className="px-4 py-2.5 font-medium text-gray-900 dark:text-gray-100">{aula.disciplina?.nome || "-"}</td>
+                    <td className="px-4 py-2.5 text-gray-500 dark:text-gray-400">{aula.professor?.nome || "-"}</td>
+                    <td className="px-4 py-2.5 text-gray-500 dark:text-gray-400">{aula.duracao_minutos} min</td>
+                    <td className="px-4 py-2.5 text-right">
                       <form action={async () => {
                         "use server";
                         await deleteAula(aula.id);
                       }}>
-                        <Button variant="ghost" size="sm" type="submit" className="text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/30">
+                        <Button variant="ghost" size="sm" type="submit" className="text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/30 h-8 w-8 p-0">
                           <Trash2 className="w-4 h-4" />
                         </Button>
                       </form>
@@ -142,6 +127,11 @@ export default async function AulasPage() {
             </table>
           </div>
         )}
+        <div className="px-4 py-3 border-t border-gray-100 dark:border-slate-800 flex justify-end bg-gray-50/30 dark:bg-slate-800/20">
+          <span className="text-xs font-semibold px-2.5 py-1 rounded bg-camini-cyan/10 text-camini-cobalt dark:text-camini-cyan border border-camini-cyan/20">
+            Total: {aulas.length} {aulas.length === 1 ? "aula" : "aulas"}
+          </span>
+        </div>
       </div>
     </div>
   );

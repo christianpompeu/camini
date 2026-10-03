@@ -76,7 +76,7 @@ export function Sidebar({ isOpenMobile = false, onCloseMobile }: SidebarProps) {
       </div>
 
       {/* Nav */}
-      <nav className="flex-1 px-4 py-2 flex flex-col gap-1">
+      <nav className="flex-1 px-4 py-2 flex flex-col gap-1 overflow-y-auto">
         
         <div className="mb-4">
           <p className="px-2 text-xs font-semibold text-gray-400 dark:text-gray-500 mb-2 tracking-wider">MENU PRINCIPAL</p>
@@ -94,7 +94,14 @@ export function Sidebar({ isOpenMobile = false, onCloseMobile }: SidebarProps) {
 
         <div className="mb-4">
           <p className="px-2 text-xs font-semibold text-gray-400 dark:text-gray-500 mb-2 tracking-wider">UTILITÁRIOS</p>
-          <NavItem href="/dashboard/ctc" icon={<FileText size={18} />} label="Gestão CTC" active={pathname.startsWith("/dashboard/ctc")} onClick={onCloseMobile} />
+          <NavItem href="/dashboard/ctc" icon={<FileText size={18} />} label="Gestão CTC" active={pathname === "/dashboard/ctc"} onClick={onCloseMobile} />
+          {pathname.startsWith("/dashboard/ctc") && (
+            <div className="pl-6 mt-1 flex flex-col gap-1">
+              <NavItem href="/dashboard/ctc/professores" icon={<span className="w-1.5 h-1.5 rounded-full bg-current opacity-50" />} label="Professores" active={pathname === "/dashboard/ctc/professores"} onClick={onCloseMobile} />
+              <NavItem href="/dashboard/ctc/disciplinas" icon={<span className="w-1.5 h-1.5 rounded-full bg-current opacity-50" />} label="Disciplinas" active={pathname === "/dashboard/ctc/disciplinas"} onClick={onCloseMobile} />
+              <NavItem href="/dashboard/ctc/aulas" icon={<span className="w-1.5 h-1.5 rounded-full bg-current opacity-50" />} label="Aulas Programadas" active={pathname === "/dashboard/ctc/aulas"} onClick={onCloseMobile} />
+            </div>
+          )}
           <NavItem href="/dashboard/produtos" icon={<Package size={18} />} label="Produtos" active={pathname.startsWith("/dashboard/produtos")} rightIcon={<ChevronDown size={14} />} onClick={onCloseMobile} />
         </div>
 
@@ -126,7 +133,7 @@ export function Sidebar({ isOpenMobile = false, onCloseMobile }: SidebarProps) {
   return (
     <>
       {/* 1. SIDEBAR DESKTOP: Fixa à esquerda no desktop */}
-      <aside className="w-64 bg-white dark:bg-[#0c1017] border-r border-gray-200 dark:border-slate-800 flex-col h-screen overflow-y-auto hidden md:flex shrink-0">
+      <aside className="w-64 bg-white dark:bg-[#0c1017] border-r border-gray-200 dark:border-slate-800 flex-col h-screen hidden md:flex shrink-0">
         {sidebarContent(false)}
       </aside>
 
@@ -152,7 +159,7 @@ export function Sidebar({ isOpenMobile = false, onCloseMobile }: SidebarProps) {
           aria-modal="true"
           aria-label="Menu do Painel Camini"
           className={`
-            fixed inset-y-0 right-0 z-50 w-80 max-w-[85vw] bg-white/95 dark:bg-[#0c1017]/95 backdrop-blur-xl border-l border-gray-200 dark:border-slate-800 flex flex-col h-screen overflow-y-auto shadow-2xl transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] will-change-transform
+            fixed inset-y-0 right-0 z-50 w-80 max-w-[85vw] bg-white/95 dark:bg-[#0c1017]/95 backdrop-blur-xl border-l border-gray-200 dark:border-slate-800 flex flex-col h-screen shadow-2xl transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] will-change-transform
             ${isOpenMobile ? "translate-x-0" : "translate-x-full"}
           `}
         >
