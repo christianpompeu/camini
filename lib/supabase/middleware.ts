@@ -33,11 +33,8 @@ export async function updateSession(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   // Verifica se o usuário está acessando uma rota protegida (ex: /dashboard)
-  const isDevPreview = process.env.NODE_ENV === "development" && request.cookies.get("camini_dev_session")?.value === "1";
-
   if (
     !user &&
-    !isDevPreview &&
     request.nextUrl.pathname.startsWith("/dashboard")
   ) {
     const url = request.nextUrl.clone();
