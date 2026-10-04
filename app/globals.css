@@ -20,58 +20,63 @@ html.dark .camini-logo-light,
   display: none !important;
 }
 
+@theme inline {
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+  --radius-3xl: calc(var(--radius) + 12px);
+  --radius-4xl: calc(var(--radius) + 16px);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+  
+  /* Fonts */
+  --font-heading: var(--font-sans);
+  --font-sans: var(--font-sans);
+
+  /* Legacy Camini Tokens (Phase A Transition) */
+  --color-camini-navy: var(--camini-navy);
+  --color-camini-indigo: var(--camini-indigo);
+  --color-camini-cobalt: var(--camini-cobalt);
+  --color-camini-cyan: var(--camini-cyan);
+  --color-camini-aqua: var(--camini-aqua);
+  --color-camini-graphite: var(--camini-graphite);
+  --color-camini-softgray: var(--camini-softgray);
+}
+
 :root {
-  /* Neutros - Light Mode */
-  --surface: #F8F9FC;
-  --surface-elevated: rgba(255, 255, 255, 0.82);
-  --surface-dark: #101319;
-  --text-primary: #171A21;
-  --text-secondary: #626A78;
-  --outline: rgba(23, 26, 33, 0.10);
-
-  /* Camini Brand Colors */
-  --camini-navy: #0D1540;
-  --camini-indigo: #0038FF;
-  --camini-cobalt: #0088FF;
-  --camini-cyan: #00C8FF;
-  --camini-aqua: #00F5A0;
-  --camini-graphite: #1F2937;
-  --camini-softgray: #E9EEF5;
-
-  /* Camini Gradient — Fiel ao icon_camini.png (Azul Real -> Ciano -> Aqua/Esmeralda) */
-  --gradient-camini: linear-gradient(135deg, #0038FF 0%, #0099FF 45%, #00F5A0 100%);
-
-  /* Cores expressivas */
-  --energy-blue: #5B7CFA;
-  --energy-cyan: #41C7D9;
-  --energy-violet: #9A6CFF;
-  --energy-coral: #FF706A;
-  --energy-amber: #F4B84A;
-  --energy-green: #52B788;
-
-  /* Gradiente principal */
-  --gradient-energy: linear-gradient(
-    120deg,
-    #5B7CFA 0%,
-    #41C7D9 28%,
-    #9A6CFF 52%,
-    #FF706A 76%,
-    #F4B84A 100%
-  );
-
-  /* Gradientes funcionais */
-  --gradient-progress: linear-gradient(90deg, #5B7CFA, #41C7D9, #52B788);
-  --gradient-effort: linear-gradient(90deg, #F4B84A, #FF706A, #9A6CFF);
-
-  /* Glassmorphism */
-  --glass-bg: rgba(255, 255, 255, 0.72);
-  --glass-border: rgba(255, 255, 255, 0.55);
-  --glass-shadow: 0 12px 40px rgba(20, 25, 35, 0.10);
-
-  /* Card shadow */
-  --card-shadow: 0 4px 20px -2px rgba(23, 26, 33, 0.05), 0 2px 6px -1px rgba(23, 26, 33, 0.04);
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
+  /* Studio Admin Default Theme */
+  --radius: 0.625rem;
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.145 0 0);
   --popover: oklch(1 0 0);
@@ -93,7 +98,6 @@ html.dark .camini-logo-light,
   --chart-3: oklch(0.439 0 0);
   --chart-4: oklch(0.371 0 0);
   --chart-5: oklch(0.269 0 0);
-  --radius: 0.625rem;
   --sidebar: oklch(0.985 0 0);
   --sidebar-foreground: oklch(0.145 0 0);
   --sidebar-primary: oklch(0.205 0 0);
@@ -102,24 +106,25 @@ html.dark .camini-logo-light,
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
+
+  /* Fonts */
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.145 0 0);
+
+  /* Legacy Camini Brand Colors */
+  --camini-navy: #0D1540;
+  --camini-indigo: #0038FF;
+  --camini-cobalt: #0088FF;
+  --camini-cyan: #00C8FF;
+  --camini-aqua: #00F5A0;
+  --camini-graphite: #1F2937;
+  --camini-softgray: #E9EEF5;
+  --gradient-camini: linear-gradient(135deg, #0038FF 0%, #0099FF 45%, #00F5A0 100%);
 }
 
 .dark {
-  /* Neutros - Dark Mode */
-  --surface: #0F1116;
-  --surface-elevated: rgba(28, 31, 39, 0.80);
-  --surface-dark: #171A21;
-  --text-primary: #F1F3F7;
-  --text-secondary: #9AA2B1;
-  --outline: rgba(255, 255, 255, 0.10);
-
-  /* Glassmorphism Dark */
-  --glass-bg: rgba(23, 26, 33, 0.75);
-  --glass-border: rgba(255, 255, 255, 0.10);
-  --glass-shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
-
-  /* Card shadow */
-  --card-shadow: 0 4px 24px -2px rgba(0, 0, 0, 0.40), 0 2px 8px -1px rgba(0, 0, 0, 0.30);
   --background: oklch(0.145 0 0);
   --foreground: oklch(0.985 0 0);
   --card: oklch(0.205 0 0);
@@ -153,249 +158,40 @@ html.dark .camini-logo-light,
   --sidebar-ring: oklch(0.556 0 0);
 }
 
-@theme {
-  --font-sans: var(--font-geist-sans), system-ui, -apple-system, sans-serif;
-  --font-mono: var(--font-geist-mono), monospace;
-
-  /* Semantic Colors */
-  --color-surface: var(--surface);
-  --color-surface-elevated: var(--surface-elevated);
-  --color-surface-dark: var(--surface-dark);
-  --color-text-primary: var(--text-primary);
-  --color-text-secondary: var(--text-secondary);
-  --color-outline: var(--outline);
-
-  /* Expressive Colors */
-  --color-energy-blue: #5B7CFA;
-  --color-energy-cyan: #41C7D9;
-  --color-energy-violet: #9A6CFF;
-  --color-energy-coral: #FF706A;
-  --color-energy-amber: #F4B84A;
-  --color-energy-green: #52B788;
-
-  /* Camini Semantic Colors */
-  --color-camini-navy: var(--camini-navy);
-  --color-camini-indigo: var(--camini-indigo);
-  --color-camini-cobalt: var(--camini-cobalt);
-  --color-camini-cyan: var(--camini-cyan);
-  --color-camini-aqua: var(--camini-aqua);
-  --color-camini-graphite: var(--camini-graphite);
-  --color-camini-softgray: var(--camini-softgray);
-
-  /* Border Radius */
-  --radius-sm: 6px;
-  --radius-md: 8px;
-  --radius-lg: 10px;
-  --radius-xl: 14px;
-  --radius-pill: 999px;
-}
-
-/* Base styling */
-body {
-  background-color: var(--surface);
-  color: var(--text-primary);
-  font-family: var(--font-geist-sans), system-ui, sans-serif;
-  transition: background-color 0.25s cubic-bezier(0.2, 0, 0, 1), color 0.25s cubic-bezier(0.2, 0, 0, 1);
-  -webkit-font-smoothing: antialiased;
-}
-
-.dark body {
-  background: linear-gradient(145deg, #0D1540 0%, #0A0E24 40%, #04050A 100%);
-  background-attachment: fixed;
-}
-
-/* Utilitários Expressivos FORÇA */
-.bg-gradient-energy {
-  background-image: var(--gradient-energy);
-}
-
-.text-gradient-energy {
-  background-image: var(--gradient-energy);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-
-.border-gradient-energy {
-  border-image: var(--gradient-energy) 1;
-}
-
-.bg-gradient-camini {
-  background-image: var(--gradient-camini);
-}
-
-.text-gradient-camini {
-  background-image: var(--gradient-camini);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-
-.bg-gradient-progress {
-  background-image: var(--gradient-progress);
-}
-
-.text-gradient-progress {
-  background-image: var(--gradient-progress);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-
-.bg-gradient-effort {
-  background-image: var(--gradient-effort);
-}
-
-.text-gradient-effort {
-  background-image: var(--gradient-effort);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-
-/* Glassmorphism */
-.glass-surface {
-  background: var(--glass-bg);
-  backdrop-filter: blur(18px) saturate(140%);
-  -webkit-backdrop-filter: blur(18px) saturate(140%);
-  border: 1px solid var(--glass-border);
-  box-shadow: var(--glass-shadow);
-}
-
-/* Card Elevation */
-.card-elevation {
-  box-shadow: var(--card-shadow);
-}
-
-/* Micro-motions táteis */
-.tap-effect {
-  transition: transform 0.15s cubic-bezier(0.2, 0, 0, 1), box-shadow 0.15s cubic-bezier(0.2, 0, 0, 1);
-}
-
-.tap-effect:active {
-  transform: scale(0.97);
-}
-
-/* Transição Fluida de Páginas e Telas (Material 3 Expressive) */
-@keyframes pageEnter {
-  0% {
-    opacity: 0;
-  }
-  100% {
-    opacity: 1;
-  }
-}
-
-.page-transition {
-  animation: pageEnter 0.22s ease-out;
-}
-
-/* Skeleton Loading com Shimmer Fluido */
-@keyframes shimmer {
-  0% {
-    transform: translateX(-100%);
-  }
-  100% {
-    transform: translateX(100%);
-  }
-}
-
-.skeleton-shimmer {
-  position: relative;
-  overflow: hidden;
-  background-color: rgba(150, 160, 180, 0.12);
-}
-
-.dark .skeleton-shimmer {
-  background-color: rgba(255, 255, 255, 0.06);
-}
-
-.skeleton-shimmer::after {
-  position: absolute;
-  inset: 0;
-  transform: translateX(-100%);
-  background-image: linear-gradient(
-    90deg,
-    transparent 0%,
-    rgba(255, 255, 255, 0.22) 50%,
-    transparent 100%
-  );
-  animation: shimmer 1.8s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-  content: "";
-}
-
-.dark .skeleton-shimmer::after {
-  background-image: linear-gradient(
-    90deg,
-    transparent 0%,
-    rgba(255, 255, 255, 0.08) 50%,
-    transparent 100%
-  );
-}
-
-/* Acessibilidade para Movimento Reduzido */
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-    scroll-behavior: auto !important;
-  }
-
-  .tap-effect:active {
-    transform: none !important;
-  }
-}
-
-@theme inline {
-  --font-heading: var(--font-sans);
-  --font-sans: var(--font-sans);
-  --color-sidebar-ring: var(--sidebar-ring);
-  --color-sidebar-border: var(--sidebar-border);
-  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-  --color-sidebar-accent: var(--sidebar-accent);
-  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-  --color-sidebar-primary: var(--sidebar-primary);
-  --color-sidebar-foreground: var(--sidebar-foreground);
-  --color-sidebar: var(--sidebar);
-  --color-chart-5: var(--chart-5);
-  --color-chart-4: var(--chart-4);
-  --color-chart-3: var(--chart-3);
-  --color-chart-2: var(--chart-2);
-  --color-chart-1: var(--chart-1);
-  --color-ring: var(--ring);
-  --color-input: var(--input);
-  --color-border: var(--border);
-  --color-destructive: var(--destructive);
-  --color-accent-foreground: var(--accent-foreground);
-  --color-accent: var(--accent);
-  --color-muted-foreground: var(--muted-foreground);
-  --color-muted: var(--muted);
-  --color-secondary-foreground: var(--secondary-foreground);
-  --color-secondary: var(--secondary);
-  --color-primary-foreground: var(--primary-foreground);
-  --color-primary: var(--primary);
-  --color-popover-foreground: var(--popover-foreground);
-  --color-popover: var(--popover);
-  --color-card-foreground: var(--card-foreground);
-  --color-card: var(--card);
-  --color-foreground: var(--foreground);
-  --color-background: var(--background);
-  --radius-sm: calc(var(--radius) * 0.6);
-  --radius-md: calc(var(--radius) * 0.8);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) * 1.4);
-  --radius-2xl: calc(var(--radius) * 1.8);
-  --radius-3xl: calc(var(--radius) * 2.2);
-  --radius-4xl: calc(var(--radius) * 2.6);
-}
-
 @layer base {
   * {
     @apply border-border outline-ring/50;
   }
   body {
     @apply bg-background text-foreground;
+    font-family: var(--font-sans), system-ui, sans-serif;
   }
   html {
     @apply font-sans;
   }
+}
+
+/* Legacy Utilities for compatibility with Phase B, C, D (TOTVS-RM, FORCA) */
+.bg-gradient-camini {
+  background-image: var(--gradient-camini);
+}
+.text-gradient-camini {
+  background-image: var(--gradient-camini);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.card-elevation {
+  box-shadow: 0 4px 20px -2px rgba(23, 26, 33, 0.05), 0 2px 6px -1px rgba(23, 26, 33, 0.04);
+}
+.dark .card-elevation {
+  box-shadow: 0 4px 24px -2px rgba(0, 0, 0, 0.40), 0 2px 8px -1px rgba(0, 0, 0, 0.30);
+}
+.tap-effect {
+  transition: transform 0.15s cubic-bezier(0.2, 0, 0, 1), box-shadow 0.15s cubic-bezier(0.2, 0, 0, 1);
+}
+.tap-effect:active {
+  transform: scale(0.97);
+}
+@media (prefers-reduced-motion: reduce) {
+  .tap-effect:active { transform: none !important; }
 }

@@ -5,65 +5,56 @@ import Image from "next/image";
 import { login } from "./actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, Hexagon } from "lucide-react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
 
 export default function LoginPage() {
   const [state, formAction, isPending] = useActionState(login, null);
   const [showPassword, setShowPassword] = React.useState(false);
 
   return (
-    <div className="min-h-screen w-full flex bg-camini-softgray dark:bg-[#0c1017]">
-      {/* Left side - Illustration */}
-      <div className="hidden lg:flex lg:w-1/2 relative bg-camini-navy overflow-hidden items-center justify-center">
-        <div className="absolute inset-0 z-0">
-          <Image 
-            src="/doodle_camini_vertical.png" 
-            alt="Camini Background" 
-            fill 
-            className="object-cover opacity-100"
-            priority
-          />
+    <div className="min-h-screen w-full flex flex-col md:flex-row bg-background">
+      {/* Left side - Branding (Studio Style) */}
+      <div className="hidden md:flex md:w-1/2 flex-col justify-between bg-zinc-950 p-10 text-white">
+        <div className="flex items-center gap-2 font-semibold">
+          <Hexagon className="h-6 w-6" />
+          <span className="text-xl tracking-tight">Camini</span>
+        </div>
+        
+        <div className="mt-auto">
+          <blockquote className="space-y-2">
+            <p className="text-lg font-medium leading-relaxed">
+              "O Hub Integrado Camini transformou nossa gestão acadêmica e operacional."
+            </p>
+            <footer className="text-sm text-zinc-400">Diretoria CTC</footer>
+          </blockquote>
         </div>
       </div>
 
       {/* Right side - Login Form */}
-      <div className="w-full lg:w-1/2 flex flex-col items-center justify-center p-6 sm:p-12">
-        <div className="w-full max-w-md bg-white dark:bg-slate-900 rounded-3xl shadow-xl p-8 sm:p-10 border border-gray-100 dark:border-slate-800 flex flex-col relative overflow-hidden">
-          
-          {/* Top Decorative gradient bar */}
-          <div className="absolute top-0 left-0 w-full h-2 bg-gradient-camini"></div>
-
-          {/* Logo and Title */}
-          <div className="flex flex-col items-center text-center mb-10 mt-2">
-            <div className="mb-6 w-44 relative h-12">
-              <Image 
-                src="/logo_camini.png" 
-                alt="Camini Logo" 
-                fill 
-                className="object-contain object-center" 
-                priority
-              />
-            </div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-camini-navy dark:text-white tracking-tight">Acesse o Hub Integrado</h1>
-            <p className="text-sm text-camini-graphite/70 dark:text-gray-400 mt-2">Gerencie sua instituição em um só lugar</p>
+      <div className="w-full md:w-1/2 flex flex-col items-center justify-center p-6 sm:p-12 relative">
+        <div className="w-full max-w-[400px]">
+          <div className="flex flex-col space-y-2 text-center mb-8">
+            <h1 className="text-2xl font-semibold tracking-tight">Entrar na conta</h1>
+            <p className="text-sm text-muted-foreground">Insira seu e-mail e senha para acessar o painel</p>
           </div>
 
-          <form action={formAction} className="flex flex-col gap-5">
-            <div className="space-y-1">
-              <label htmlFor="email" className="text-xs font-bold text-camini-graphite dark:text-gray-400 uppercase tracking-wider ml-1">Usuário / Email</label>
+          <form action={formAction} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="email">E-mail</Label>
               <Input
                 id="email"
                 name="email"
                 type="email"
-                placeholder="nome@email.com"
+                placeholder="nome@exemplo.com"
                 required
                 autoComplete="email"
-                className="bg-camini-softgray/40 dark:bg-slate-800 border-gray-200 dark:border-slate-700 dark:text-white focus:border-camini-indigo rounded-xl h-12 px-4 shadow-sm"
               />
             </div>
 
-            <div className="space-y-1 relative">
-              <label htmlFor="password" className="text-xs font-bold text-camini-graphite dark:text-gray-400 uppercase tracking-wider ml-1">Senha</label>
+            <div className="space-y-2 relative">
+              <Label htmlFor="password">Senha</Label>
               <div className="relative">
                 <Input
                   id="password"
@@ -72,39 +63,41 @@ export default function LoginPage() {
                   placeholder="••••••••••••"
                   required
                   autoComplete="current-password"
-                  className="bg-camini-softgray/40 dark:bg-slate-800 border-gray-200 dark:border-slate-700 dark:text-white focus:border-camini-indigo rounded-xl h-12 px-4 pr-12 shadow-sm"
+                  className="pr-10"
                 />
                 <button
                   type="button"
-                  className="absolute right-4 top-3 text-gray-400 hover:text-camini-indigo focus:outline-none transition-colors"
+                  title={showPassword ? "Ocultar senha" : "Mostrar senha"}
+                  className="absolute right-3 top-2.5 text-muted-foreground hover:text-foreground focus:outline-none"
                   onClick={() => setShowPassword(!showPassword)}
                 >
-                  {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
               </div>
             </div>
 
             {state?.error && (
-              <div className="p-4 bg-red-50 text-red-600 text-sm rounded-xl border border-red-100 flex items-center">
+              <div className="p-3 bg-destructive/15 text-destructive text-sm rounded-md border border-destructive/20 font-medium">
                 {state.error}
               </div>
             )}
 
             <Button
               type="submit"
-              variant="ghost"
-              className="w-full bg-gradient-camini text-white border-none mt-4 h-12 rounded-lg font-medium text-base transition-all hover:brightness-105 shadow-lg shadow-camini-indigo/25"
+              className="w-full"
               disabled={isPending}
             >
-              {isPending ? "Entrando..." : "Entrar na plataforma"}
+              {isPending ? "Entrando..." : "Entrar"}
             </Button>
           </form>
+
+          <p className="px-8 text-center text-sm text-muted-foreground mt-8">
+            Clicando em entrar, você concorda com nossos{" "}
+            <a href="#" className="underline underline-offset-4 hover:text-primary">Termos de Serviço</a>.
+          </p>
         </div>
-        
-        <p className="text-xs text-gray-400 mt-8 flex items-center gap-2">
-          <span>&copy; {new Date().getFullYear()} Camini Hub</span>
-        </p>
       </div>
     </div>
   );
 }
+

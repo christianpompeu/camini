@@ -61,6 +61,7 @@ export default function TotvsRmChatPage() {
 
         // Trava temporária: somente SQL Server (Oracle em breve).
         // Defaults primeiro para normalizar settings antigos sem llmProvider.
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setSettings({
           llmProvider: "gemini",
           groqApiKey: "",
