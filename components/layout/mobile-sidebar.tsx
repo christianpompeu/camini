@@ -9,7 +9,6 @@ import {
   Dumbbell,
   Sparkles,
   ArrowRight,
-  Zap,
   Layers,
   Database,
 } from "lucide-react";

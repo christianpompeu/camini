@@ -34,20 +34,21 @@ export function ThemeToggle({ className = "" }: { className?: string }) {
 
   if (!mounted) {
     return (
-      <div className={`w-11 h-11 rounded-pill bg-surface-elevated border border-outline ${className}`} />
+      <div className={`h-8 w-8 rounded-md border border-input bg-background/50 ${className}`} />
     );
   }
 
   return (
     <button
+      type="button"
       onClick={toggleTheme}
       aria-label={isDark ? "Mudar para modo claro" : "Mudar para modo escuro"}
-      className={`relative inline-flex items-center justify-center w-11 h-11 rounded-pill bg-surface-elevated border border-outline text-text-primary tap-effect shadow-sm hover:border-camini-cobalt/50 ${className}`}
+      className={`inline-flex items-center justify-center h-8 w-8 rounded-md border border-input bg-background text-foreground hover:bg-accent hover:text-accent-foreground transition-colors shadow-xs ${className}`}
     >
       {isDark ? (
-        <Sun className="w-5 h-5 text-amber-500 transition-transform duration-200 rotate-0 hover:rotate-45" />
+        <Sun className="w-4 h-4 transition-transform duration-200" />
       ) : (
-        <Moon className="w-5 h-5 text-camini-indigo transition-transform duration-200 hover:-rotate-12" />
+        <Moon className="w-4 h-4 transition-transform duration-200" />
       )}
     </button>
   );

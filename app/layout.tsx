@@ -16,8 +16,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "FORÇA — Design System & Workout Experience",
-  description: "Linguagem visual contemporânea inspirada em Material 3 Expressive.",
+  title: "Camini — Hub Integrado de Gestão",
+  description: "Plataforma integrada de gestão acadêmica, operacional e inteligência de dados.",
 };
 
 export default function RootLayout({
@@ -38,7 +38,7 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{
             __html: `
               try {
-                const stored = localStorage.getItem('forca-theme');
+                const stored = localStorage.getItem('forca-theme') || localStorage.getItem('theme');
                 if (stored === 'dark' || (!stored && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
                   document.documentElement.classList.add('dark');
                 } else {

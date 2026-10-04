@@ -1,109 +1,56 @@
 import React from "react";
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { CalendarDays, CalendarPlus } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 import { getAulas, getDisciplinas, getProfessores } from "../actions";
-import { AulaForm, DeleteAulaButton } from "./client-components";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { AulasList, NovaAulaDialog } from "./client-components";
+
+export const metadata = {
+  title: "Aulas Programadas — Gestão CTC — Camini",
+  description: "Programação e agendamento de aulas do Curso de Teologia Cristã.",
+};
 
 export default async function AulasPage() {
-  const aulas = await getAulas();
-  const disciplinas = await getDisciplinas();
-  const professores = await getProfessores();
+  const [aulas, disciplinas, professores] = await Promise.all([
+    getAulas(),
+    getDisciplinas(),
+    getProfessores(),
+  ]);
 
   return (
     <div className="space-y-6">
-      {/* Header com Breadcrumb, Ícone e Botão de Voltar com Gradiente de Destaque */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      {/* Header com Breadcrumb e Ação Principal */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-border">
         <div>
-          <div className="flex items-center gap-2 text-xs font-medium text-gray-400 dark:text-gray-500 mb-2">
-            <Link href="/dashboard" className="hover:text-energy-blue transition-colors">Dashboard</Link>
-            <span>/</span>
-            <Link href="/dashboard/ctc" className="hover:text-energy-blue transition-colors">Gestão CTC</Link>
-            <span>/</span>
-            <span className="text-gray-700 dark:text-gray-300 font-semibold">Aulas</span>
-          </div>
-          <div className="flex items-center gap-3">
-            <div className="w-11 h-11 rounded-xl bg-gradient-camini text-white flex items-center justify-center shadow-md shadow-blue-500/20 shrink-0">
-              <CalendarDays className="w-5 h-5 stroke-[2.5]" />
-            </div>
-            <div>
-              <h1 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-white">Aulas</h1>
-              <p className="text-gray-500 dark:text-gray-400 text-sm">Programação de aulas e alocação de professores</p>
-            </div>
-          </div>
+          <nav aria-label="Breadcrumb" className="flex items-center gap-1.5 text-xs text-muted-foreground mb-1.5">
+            <Link href="/dashboard" className="hover:text-foreground transition-colors">
+              Painel
+            </Link>
+            <ChevronRight className="h-3 w-3" />
+            <Link href="/dashboard/ctc" className="hover:text-foreground transition-colors">
+              Gestão CTC
+            </Link>
+            <ChevronRight className="h-3 w-3" />
+            <span className="text-foreground font-medium">Aulas Programadas</span>
+          </nav>
+          <h1 className="text-2xl font-bold tracking-tight text-foreground">
+            Aulas Programadas
+          </h1>
+          <p className="text-sm text-muted-foreground mt-0.5">
+            Programação de horários, alocação de docentes e controle de sessões.
+          </p>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <NovaAulaDialog disciplinas={disciplinas} professores={professores} />
         </div>
       </div>
 
-      {/* Formulário de Cadastro */}
-      <div className="bg-white dark:bg-slate-900 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-slate-800">
-        <div className="flex items-center gap-2.5 mb-5">
-          <div className="w-8 h-8 rounded-lg bg-gradient-camini text-white flex items-center justify-center shadow-sm shrink-0">
-            <CalendarPlus className="w-4 h-4 stroke-[2.5]" />
-          </div>
-          <h2 className="text-base sm:text-lg font-semibold text-gray-800 dark:text-gray-100">Agendar Aula</h2>
-        </div>
-        <AulaForm disciplinas={disciplinas} professores={professores} />
-      </div>
-
-      <div className="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-gray-100 dark:border-slate-800 overflow-hidden">
-        <div className="px-6 py-4 border-b border-gray-100 dark:border-slate-800 flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <div className="w-7 h-7 rounded-md bg-gradient-camini text-white flex items-center justify-center shadow-xs shrink-0">
-              <CalendarDays className="w-3.5 h-3.5 stroke-[2.5]" />
-            </div>
-            <h3 className="font-semibold text-sm text-gray-800 dark:text-gray-200">
-              Aulas Programadas
-            </h3>
-          </div>
-        </div>
-        {aulas.length === 0 ? (
-          <div className="p-8 text-center text-gray-500 dark:text-gray-400">
-            Nenhuma aula agendada.
-          </div>
-        ) : (
-          <div className="overflow-x-auto overflow-y-auto max-h-[500px]">
-            <Table>
-              <TableHeader className="bg-gray-50 dark:bg-slate-800/60 sticky top-0 z-10">
-                <TableRow>
-                  <TableHead className="w-[300px]">Data e Hora</TableHead>
-                  <TableHead>Disciplina</TableHead>
-                  <TableHead>Professor</TableHead>
-                  <TableHead>Duração</TableHead>
-                  <TableHead className="text-right">Ações</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {aulas.map((aula) => {
-                  const data = new Date(aula.data_hora);
-                  const fim = new Date(data.getTime() + aula.duracao_minutos * 60000);
-                  const formatterDate = new Intl.DateTimeFormat('pt-BR', { dateStyle: 'short' });
-                  const formatterTime = new Intl.DateTimeFormat('pt-BR', { timeStyle: 'short' });
-                  
-                  return (
-                  <TableRow key={aula.id} className="hover:bg-gray-50/50 dark:hover:bg-slate-800/40">
-                    <TableCell className="font-medium text-gray-900 dark:text-gray-100">
-                      {formatterDate.format(data)} <span className="text-gray-400 font-normal ml-1">• {formatterTime.format(data)} às {formatterTime.format(fim)}</span>
-                    </TableCell>
-                    <TableCell className="font-medium text-gray-900 dark:text-gray-100">{aula.disciplina?.nome || "-"}</TableCell>
-                    <TableCell className="text-gray-500 dark:text-gray-400">{aula.professor?.nome || "-"}</TableCell>
-                    <TableCell className="text-gray-500 dark:text-gray-400">{aula.duracao_minutos} min</TableCell>
-                    <TableCell className="text-right">
-                      <DeleteAulaButton id={aula.id} />
-                    </TableCell>
-                  </TableRow>
-                )})}
-              </TableBody>
-            </Table>
-          </div>
-        )}
-        <div className="px-4 py-3 border-t border-gray-100 dark:border-slate-800 flex justify-end bg-gray-50/30 dark:bg-slate-800/20">
-          <span className="text-xs font-semibold px-2.5 py-1 rounded bg-camini-cyan/10 text-camini-cobalt dark:text-camini-cyan border border-camini-cyan/20">
-            Total: {aulas.length} {aulas.length === 1 ? "aula" : "aulas"}
-          </span>
-        </div>
-      </div>
+      {/* Lista com Toolbar, Filtros e Tabela */}
+      <AulasList
+        aulas={aulas}
+        disciplinas={disciplinas}
+        professores={professores}
+      />
     </div>
   );
 }
-

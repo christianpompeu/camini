@@ -1,12 +1,15 @@
-import { DashboardShell } from "@/components/layout/dashboard-shell";
 import React from "react";
+import { cookies } from "next/headers";
+import { DashboardShell } from "@/components/layout/dashboard-shell";
 
-export default function DashboardLayout({
+export default async function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  return <DashboardShell>{children}</DashboardShell>;
+  const cookieStore = await cookies();
+  const sidebarCookie = cookieStore.get("sidebar_state");
+  const defaultOpen = sidebarCookie ? sidebarCookie.value === "true" : true;
+
+  return <DashboardShell defaultOpen={defaultOpen}>{children}</DashboardShell>;
 }
-
-

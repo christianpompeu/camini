@@ -14,6 +14,7 @@ const badgeVariants = cva(
         outline: "border-border text-foreground [a]:hover:bg-muted [a]:hover:text-muted-foreground",
         ghost: "hover:bg-muted hover:text-muted-foreground dark:hover:bg-muted/50",
         link: "text-primary underline-offset-4 hover:underline",
+        camini: "bg-primary text-primary-foreground font-semibold shadow-sm h-auto py-1",
         active: "bg-camini-cobalt text-white font-semibold shadow-sm h-auto py-1",
         energy: "bg-gradient-camini text-white font-semibold shadow-sm h-auto py-1",
         success: "bg-camini-aqua/15 text-camini-aqua border border-energy-green/30 font-semibold h-auto py-1",

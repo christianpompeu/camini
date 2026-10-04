@@ -4,20 +4,14 @@ import React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { 
-  Home, 
-  FolderGit2, 
-  CreditCard, 
-  Users, 
-  FileText, 
-  Package, 
-  Settings, 
-  SlidersHorizontal,
-  LogOut,
+  LayoutDashboard, 
+  GraduationCap, 
   Database,
   Dumbbell,
-  Hexagon,
-  ChevronDown,
-  ArrowLeft
+  Calendar,
+  LogOut,
+  ChevronRight,
+  Globe
 } from "lucide-react";
 import { 
   Sidebar,
@@ -47,188 +41,197 @@ export function AppSidebar() {
     }
   };
 
+  const isCtcActive = pathname.startsWith("/dashboard/ctc") || pathname.startsWith("/ctc");
+
   return (
-    <Sidebar variant="sidebar">
+    <Sidebar variant="sidebar" collapsible="icon">
+      {/* Header com Assinatura Camini */}
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton size="lg" asChild>
-              <Link href="/dashboard" onClick={closeMobile} className="flex items-center gap-2">
-                <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-                  <Hexagon className="size-5" />
-                </div>
-                <div className="flex flex-col gap-0.5 leading-none">
-                  <span className="font-semibold tracking-tight text-base">Camini Hub</span>
-                  <span className="text-xs text-muted-foreground">Admin</span>
-                </div>
-              </Link>
+            <SidebarMenuButton
+              size="lg"
+              render={<Link href="/dashboard" onClick={closeMobile} />}
+              className="hover:bg-sidebar-accent"
+            >
+              <div className="flex aspect-square size-8 items-center justify-center rounded-md bg-primary text-primary-foreground font-bold text-sm shrink-0">
+                C
+              </div>
+              <div className="flex flex-col gap-0.5 leading-none overflow-hidden">
+                <span className="font-semibold tracking-tight text-sm text-sidebar-foreground truncate">
+                  Camini
+                </span>
+                <span className="text-[11px] text-muted-foreground truncate">
+                  Painel de Gestão
+                </span>
+              </div>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarHeader>
 
       <SidebarContent>
-        {/* MENU PRINCIPAL */}
+        {/* NAVEGAÇÃO PRINCIPAL */}
         <SidebarGroup>
-          <SidebarGroupLabel>Principal</SidebarGroupLabel>
+          <SidebarGroupLabel>Menu</SidebarGroupLabel>
           <SidebarMenu>
             <SidebarMenuItem>
-              <SidebarMenuButton asChild isActive={pathname === "/dashboard"}>
-                <Link href="/dashboard" onClick={closeMobile}>
-                  <Home />
-                  <span>Página Inicial</span>
-                </Link>
+              <SidebarMenuButton
+                render={<Link href="/dashboard" onClick={closeMobile} />}
+                isActive={pathname === "/dashboard"}
+                tooltip="Visão geral"
+              >
+                <LayoutDashboard className="size-4" />
+                <span>Visão geral</span>
               </SidebarMenuButton>
             </SidebarMenuItem>
-            <SidebarMenuItem>
-              <SidebarMenuButton asChild isActive={pathname.startsWith("/dashboard/workflows")}>
-                <Link href="/dashboard/workflows" onClick={closeMobile}>
-                  <FolderGit2 />
-                  <span>Workflows</span>
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-              <SidebarMenuButton disabled>
-                <CreditCard />
-                <span>Financeiro</span>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-              <SidebarMenuButton disabled>
-                <Users />
-                <span>RH</span>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          </SidebarMenu>
-        </SidebarGroup>
 
-        {/* APLICAÇÕES */}
-        <SidebarGroup>
-          <SidebarGroupLabel>Aplicações</SidebarGroupLabel>
-          <SidebarMenu>
-            <SidebarMenuItem>
-              <SidebarMenuButton asChild isActive={pathname.startsWith("/dashboard/totvs-rm")}>
-                <Link href="/dashboard/totvs-rm" onClick={closeMobile}>
-                  <Database />
-                  <span>RM SQL AI</span>
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-              <SidebarMenuButton asChild isActive={pathname.startsWith("/dashboard/forca")}>
-                <Link href="/dashboard/forca" onClick={closeMobile}>
-                  <Dumbbell />
-                  <span>App FORÇA</span>
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          </SidebarMenu>
-        </SidebarGroup>
-
-        {/* UTILITÁRIOS */}
-        <SidebarGroup>
-          <SidebarGroupLabel>Utilitários</SidebarGroupLabel>
-          <SidebarMenu>
-            <Collapsible defaultOpen={pathname.startsWith("/dashboard/ctc")} className="group/collapsible">
+            {/* MÓDULO CTC COM SUBROTAS VERIFICADAS */}
+            <Collapsible
+              defaultOpen={isCtcActive}
+              className="group/collapsible"
+            >
               <SidebarMenuItem>
-                <CollapsibleTrigger asChild>
-                  <SidebarMenuButton isActive={pathname.startsWith("/dashboard/ctc")}>
-                    <FileText />
-                    <span>Gestão CTC</span>
-                    <ChevronDown className="ml-auto transition-transform group-data-[state=open]/collapsible:rotate-180" />
-                  </SidebarMenuButton>
-                </CollapsibleTrigger>
+                <CollapsibleTrigger
+                  render={
+                    <SidebarMenuButton
+                      isActive={isCtcActive}
+                      tooltip="Gestão CTC"
+                    >
+                      <GraduationCap className="size-4" />
+                      <span>Gestão CTC</span>
+                      <ChevronRight className="ml-auto size-4 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+                    </SidebarMenuButton>
+                  }
+                />
                 <CollapsibleContent>
                   <SidebarMenuSub>
                     <SidebarMenuSubItem>
-                      <SidebarMenuSubButton asChild isActive={pathname === "/dashboard/ctc"}>
-                        <Link href="/dashboard/ctc" onClick={closeMobile}>
-                          <span>Visão Geral</span>
-                        </Link>
+                      <SidebarMenuSubButton
+                        render={<Link href="/dashboard/ctc" onClick={closeMobile} />}
+                        isActive={pathname === "/dashboard/ctc"}
+                      >
+                        <span>Visão Geral</span>
                       </SidebarMenuSubButton>
                     </SidebarMenuSubItem>
                     <SidebarMenuSubItem>
-                      <SidebarMenuSubButton asChild isActive={pathname === "/dashboard/ctc/professores"}>
-                        <Link href="/dashboard/ctc/professores" onClick={closeMobile}>
-                          <span>Professores</span>
-                        </Link>
+                      <SidebarMenuSubButton
+                        render={<Link href="/dashboard/ctc/professores" onClick={closeMobile} />}
+                        isActive={pathname === "/dashboard/ctc/professores"}
+                      >
+                        <span>Professores</span>
                       </SidebarMenuSubButton>
                     </SidebarMenuSubItem>
                     <SidebarMenuSubItem>
-                      <SidebarMenuSubButton asChild isActive={pathname === "/dashboard/ctc/disciplinas"}>
-                        <Link href="/dashboard/ctc/disciplinas" onClick={closeMobile}>
-                          <span>Disciplinas</span>
-                        </Link>
+                      <SidebarMenuSubButton
+                        render={<Link href="/dashboard/ctc/disciplinas" onClick={closeMobile} />}
+                        isActive={pathname === "/dashboard/ctc/disciplinas"}
+                      >
+                        <span>Disciplinas</span>
                       </SidebarMenuSubButton>
                     </SidebarMenuSubItem>
                     <SidebarMenuSubItem>
-                      <SidebarMenuSubButton asChild isActive={pathname === "/dashboard/ctc/aulas"}>
-                        <Link href="/dashboard/ctc/aulas" onClick={closeMobile}>
-                          <span>Aulas Programadas</span>
-                        </Link>
+                      <SidebarMenuSubButton
+                        render={<Link href="/dashboard/ctc/aulas" onClick={closeMobile} />}
+                        isActive={pathname === "/dashboard/ctc/aulas"}
+                      >
+                        <span>Aulas Programadas</span>
+                      </SidebarMenuSubButton>
+                    </SidebarMenuSubItem>
+                    <SidebarMenuSubItem>
+                      <SidebarMenuSubButton
+                        render={<Link href="/ctc/calendario" onClick={closeMobile} />}
+                        isActive={pathname === "/ctc/calendario"}
+                      >
+                        <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                          <Calendar className="size-3" />
+                          Calendário Público
+                        </span>
                       </SidebarMenuSubButton>
                     </SidebarMenuSubItem>
                   </SidebarMenuSub>
                 </CollapsibleContent>
               </SidebarMenuItem>
             </Collapsible>
-            
+          </SidebarMenu>
+        </SidebarGroup>
+
+        {/* APLICAÇÕES VERIFICADAS */}
+        <SidebarGroup>
+          <SidebarGroupLabel>Aplicações</SidebarGroupLabel>
+          <SidebarMenu>
             <SidebarMenuItem>
-              <SidebarMenuButton asChild isActive={pathname.startsWith("/dashboard/produtos")}>
-                <Link href="/dashboard/produtos" onClick={closeMobile}>
-                  <Package />
-                  <span>Produtos</span>
-                </Link>
+              <SidebarMenuButton
+                render={<Link href="/totvs-rm" onClick={closeMobile} />}
+                isActive={pathname.startsWith("/totvs-rm")}
+                tooltip="RM SQL AI"
+              >
+                <Database className="size-4" />
+                <span>RM SQL AI</span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                render={<Link href="/forca" onClick={closeMobile} />}
+                isActive={pathname.startsWith("/forca")}
+                tooltip="App FORÇA"
+              >
+                <Dumbbell className="size-4" />
+                <span>App FORÇA</span>
               </SidebarMenuButton>
             </SidebarMenuItem>
           </SidebarMenu>
         </SidebarGroup>
 
-        {/* ADMINISTRAÇÃO */}
-        <SidebarGroup>
-          <SidebarGroupLabel>Administração</SidebarGroupLabel>
+        {/* SITE INSTITUCIONAL */}
+        <SidebarGroup className="mt-auto">
           <SidebarMenu>
             <SidebarMenuItem>
-              <SidebarMenuButton asChild isActive={pathname.startsWith("/dashboard/permissoes")}>
-                <Link href="/dashboard/permissoes" onClick={closeMobile}>
-                  <Settings />
-                  <span>Permissões</span>
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-              <SidebarMenuButton asChild isActive={pathname.startsWith("/dashboard/config")}>
-                <Link href="/dashboard/config" onClick={closeMobile}>
-                  <SlidersHorizontal />
-                  <span>Configurações</span>
-                </Link>
+              <SidebarMenuButton
+                render={<Link href="/" onClick={closeMobile} />}
+                tooltip="Site Principal"
+              >
+                <Globe className="size-4" />
+                <span>Site Principal</span>
               </SidebarMenuButton>
             </SidebarMenuItem>
           </SidebarMenu>
         </SidebarGroup>
       </SidebarContent>
 
+      {/* FOOTER: IDENTIFICAÇÃO E LOGOUT REAL */}
       <SidebarFooter>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton asChild size="lg">
-              <Link href="/" className="bg-primary/10 text-primary hover:bg-primary/20">
-                <ArrowLeft className="mr-2" />
-                <span>Sair do Dashboard</span>
-              </Link>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-          <SidebarMenuItem>
-            <SidebarMenuButton size="lg" className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground">
-              <Avatar className="h-8 w-8 rounded-lg">
-                <AvatarFallback className="rounded-lg">A</AvatarFallback>
-              </Avatar>
-              <div className="grid flex-1 text-left text-sm leading-tight">
-                <span className="truncate font-semibold">Admin</span>
-                <span className="truncate text-xs text-muted-foreground">admin@camini.com</span>
+            <div className="flex items-center justify-between p-2 rounded-md hover:bg-sidebar-accent transition-colors group-data-[collapsible=icon]:justify-center">
+              <div className="flex items-center gap-2 overflow-hidden group-data-[collapsible=icon]:hidden">
+                <Avatar className="h-7 w-7 rounded-md">
+                  <AvatarFallback className="rounded-md text-xs font-semibold bg-muted text-foreground">
+                    AD
+                  </AvatarFallback>
+                </Avatar>
+                <div className="flex flex-col text-left leading-tight overflow-hidden">
+                  <span className="text-xs font-medium truncate text-sidebar-foreground">
+                    Administração
+                  </span>
+                  <span className="text-[10px] text-muted-foreground truncate">
+                    Painel Operacional
+                  </span>
+                </div>
               </div>
-            </SidebarMenuButton>
+
+              {/* Botão de Logout Funcional via Server Action /auth/signout */}
+              <form action="/auth/signout" method="POST" className="shrink-0">
+                <button
+                  type="submit"
+                  aria-label="Encerrar sessão"
+                  title="Sair da conta"
+                  className="inline-flex items-center justify-center h-7 w-7 rounded-md text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+                >
+                  <LogOut className="size-3.5" />
+                </button>
+              </form>
+            </div>
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarFooter>
