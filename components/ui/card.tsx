@@ -1,59 +1,138 @@
-"use client";
+import * as React from "react"
+import { cva, type VariantProps } from "class-variance-authority"
+import { cn } from "@/lib/utils"
 
-import React, { forwardRef } from "react";
+const cardVariants = cva(
+  "group/card flex flex-col gap-(--card-spacing) overflow-hidden rounded-xl bg-card py-(--card-spacing) text-sm text-card-foreground ring-1 ring-foreground/10 [--card-spacing:--spacing(4)] has-data-[slot=card-footer]:pb-0 has-[>img:first-child]:pt-0 data-[size=sm]:[--card-spacing:--spacing(3)] data-[size=sm]:has-data-[slot=card-footer]:pb-0 *:[img:first-child]:rounded-t-xl *:[img:last-child]:rounded-b-xl",
+  {
+    variants: {
+      variant: {
+        default: "",
+        elevated: "bg-surface-elevated card-elevation border border-outline text-text-primary ring-0",
+        glass: "glass-surface text-text-primary ring-0",
+        outline: "bg-transparent border border-outline text-text-primary ring-0",
+        active: "bg-surface-elevated border-2 border-camini-cobalt text-text-primary shadow-lg shadow-blue-500/10 ring-0",
+      },
+      radius: {
+        default: "",
+        sm: "rounded-sm",
+        md: "rounded-md",
+        lg: "rounded-lg",
+        xl: "rounded-xl",
+      },
+      interactive: {
+        true: "tap-effect cursor-pointer hover:border-camini-cobalt/40",
+      },
+    },
+    defaultVariants: {
+      variant: "default",
+      radius: "default",
+    },
+  }
+)
 
-export interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
-  variant?: "elevated" | "glass" | "outline" | "active";
-  radius?: "sm" | "md" | "lg" | "xl";
-  interactive?: boolean;
+export interface CardProps
+  extends React.ComponentProps<"div">,
+    VariantProps<typeof cardVariants> {
+  size?: "default" | "sm"
 }
 
-export const Card = forwardRef<HTMLDivElement, CardProps>(
-  (
-    {
-      children,
-      className = "",
-      variant = "elevated",
-      radius = "lg",
-      interactive = false,
-      ...props
-    },
-    ref
-  ) => {
-    const baseClasses = "transition-all duration-200";
+function Card({
+  className,
+  size = "default",
+  variant,
+  radius,
+  interactive,
+  ...props
+}: CardProps) {
+  return (
+    <div
+      data-slot="card"
+      data-size={size}
+      className={cn(cardVariants({ variant, radius, interactive, className }))}
+      {...props}
+    />
+  )
+}
 
-    const variantClasses = {
-      elevated:
-        "bg-surface-elevated card-elevation border border-outline text-text-primary",
-      glass:
-        "glass-surface text-text-primary",
-      outline:
-        "bg-transparent border border-outline text-text-primary",
-      active:
-        "bg-surface-elevated border-2 border-camini-cobalt text-text-primary shadow-lg shadow-blue-500/10",
-    };
+function CardHeader({ className, ...props }: React.ComponentProps<"div">) {
+  return (
+    <div
+      data-slot="card-header"
+      className={cn(
+        "group/card-header @container/card-header grid auto-rows-min items-start gap-1 rounded-t-xl px-(--card-spacing) has-data-[slot=card-action]:grid-cols-[1fr_auto] has-data-[slot=card-description]:grid-rows-[auto_auto] [.border-b]:pb-(--card-spacing)",
+        className
+      )}
+      {...props}
+    />
+  )
+}
 
-    const radiusClasses = {
-      sm: "rounded-sm",
-      md: "rounded-md",
-      lg: "rounded-lg",
-      xl: "rounded-xl",
-    };
+function CardTitle({ className, ...props }: React.ComponentProps<"div">) {
+  return (
+    <div
+      data-slot="card-title"
+      className={cn(
+        "font-heading text-base leading-snug font-medium group-data-[size=sm]/card:text-sm",
+        className
+      )}
+      {...props}
+    />
+  )
+}
 
-    const interactiveClasses = interactive
-      ? "tap-effect cursor-pointer hover:border-camini-cobalt/40"
-      : "";
+function CardDescription({ className, ...props }: React.ComponentProps<"div">) {
+  return (
+    <div
+      data-slot="card-description"
+      className={cn("text-sm text-muted-foreground", className)}
+      {...props}
+    />
+  )
+}
 
-    return (
-      <div
-        ref={ref}
-        className={`${baseClasses} ${variantClasses[variant]} ${radiusClasses[radius]} ${interactiveClasses} ${className}`}
-        {...props}
-      >
-        {children}
-      </div>
-    );
-  }
-);
+function CardAction({ className, ...props }: React.ComponentProps<"div">) {
+  return (
+    <div
+      data-slot="card-action"
+      className={cn(
+        "col-start-2 row-span-2 row-start-1 self-start justify-self-end",
+        className
+      )}
+      {...props}
+    />
+  )
+}
 
-Card.displayName = "Card";
+function CardContent({ className, ...props }: React.ComponentProps<"div">) {
+  return (
+    <div
+      data-slot="card-content"
+      className={cn("px-(--card-spacing)", className)}
+      {...props}
+    />
+  )
+}
+
+function CardFooter({ className, ...props }: React.ComponentProps<"div">) {
+  return (
+    <div
+      data-slot="card-footer"
+      className={cn(
+        "flex items-center rounded-b-xl border-t bg-muted/50 p-(--card-spacing)",
+        className
+      )}
+      {...props}
+    />
+  )
+}
+
+export {
+  Card,
+  CardHeader,
+  CardFooter,
+  CardTitle,
+  CardAction,
+  CardDescription,
+  CardContent,
+}

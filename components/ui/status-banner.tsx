@@ -2,6 +2,9 @@
 
 import React from "react";
 import { CheckCircle2, AlertTriangle, WifiOff, X } from "lucide-react";
+import { Alert, AlertTitle, AlertDescription, AlertAction } from "./alert";
+import { Badge } from "./badge";
+import { Button } from "./button";
 
 export interface StatusBannerProps {
   status: "success" | "warning" | "offline";
@@ -21,26 +24,23 @@ export function StatusBanner({
   const configs = {
     success: {
       icon: CheckCircle2,
-      container:
-        "bg-camini-aqua/10 border-energy-green/30 text-text-primary",
+      containerClass: "bg-camini-aqua/10 border-energy-green/30 text-text-primary",
       iconColor: "text-camini-aqua",
-      badge: "bg-camini-aqua text-white",
+      badgeVariant: "success" as const,
       badgeText: "Concluído",
     },
     warning: {
       icon: AlertTriangle,
-      container:
-        "bg-energy-amber/10 border-energy-amber/30 text-text-primary",
+      containerClass: "bg-amber-500/10 border-amber-500/30 text-text-primary",
       iconColor: "text-amber-500",
-      badge: "bg-energy-amber text-black",
+      badgeVariant: "warning" as const,
       badgeText: "Atenção",
     },
     offline: {
       icon: WifiOff,
-      container:
-        "bg-surface-elevated border-outline text-text-primary",
+      containerClass: "bg-surface-elevated border-outline text-text-primary",
       iconColor: "text-text-secondary",
-      badge: "bg-text-secondary text-white",
+      badgeVariant: "default" as const,
       badgeText: "Offline",
     },
   };
@@ -49,35 +49,34 @@ export function StatusBanner({
   const Icon = config.icon;
 
   return (
-    <div
-      role="alert"
-      className={`relative flex items-start gap-3.5 p-4 rounded-lg border card-elevation transition-all ${config.container} ${className}`}
-    >
-      <div className={`mt-0.5 p-1 rounded-full ${config.iconColor}`}>
-        <Icon className="w-5 h-5" />
-      </div>
+    <Alert className={`${config.containerClass} ${className} items-start`}>
+      <Icon className={`w-5 h-5 ${config.iconColor} mt-0.5`} />
       <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2">
+        <AlertTitle className="flex items-center gap-2 m-0 p-0">
           <span className="font-semibold text-sm tracking-tight">{title}</span>
-          <span className={`text-[11px] font-bold px-2 py-0.5 rounded-pill ${config.badge}`}>
+          <Badge variant={config.badgeVariant} size="sm" className="px-2 py-0.5 text-[11px] font-bold">
             {config.badgeText}
-          </span>
-        </div>
+          </Badge>
+        </AlertTitle>
         {description && (
-          <p className="mt-1 text-xs text-text-secondary leading-relaxed">
+          <AlertDescription className="mt-1 text-xs text-text-secondary leading-relaxed">
             {description}
-          </p>
+          </AlertDescription>
         )}
       </div>
       {onClose && (
-        <button
-          onClick={onClose}
-          aria-label="Fechar notificação"
-          className="p-1 rounded-pill text-text-secondary hover:text-text-primary hover:bg-surface tap-effect"
-        >
-          <X className="w-4 h-4" />
-        </button>
+        <AlertAction>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onClose}
+            aria-label="Fechar notificação"
+            className="w-6 h-6 rounded-pill text-text-secondary hover:text-text-primary"
+          >
+            <X className="w-4 h-4" />
+          </Button>
+        </AlertAction>
       )}
-    </div>
+    </Alert>
   );
 }

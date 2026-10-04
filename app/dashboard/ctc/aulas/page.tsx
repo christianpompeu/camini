@@ -1,10 +1,10 @@
 import React from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Plus, Trash2, ArrowLeft, CalendarDays, CalendarPlus } from "lucide-react";
+import { CalendarDays, CalendarPlus } from "lucide-react";
 import { getAulas, getDisciplinas, getProfessores } from "../actions";
 import { AulaForm, DeleteAulaButton } from "./client-components";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 export default async function AulasPage() {
   const aulas = await getAulas();
@@ -63,17 +63,17 @@ export default async function AulasPage() {
           </div>
         ) : (
           <div className="overflow-x-auto overflow-y-auto max-h-[500px]">
-            <table className="w-full text-left text-sm">
-              <thead className="bg-gray-50 dark:bg-slate-800/60 text-gray-500 dark:text-gray-400 sticky top-0 z-10">
-                <tr>
-                  <th className="px-4 py-2 font-medium">Data e Hora</th>
-                  <th className="px-4 py-2 font-medium">Disciplina</th>
-                  <th className="px-4 py-2 font-medium">Professor</th>
-                  <th className="px-4 py-2 font-medium">Duração</th>
-                  <th className="px-4 py-2 font-medium text-right">Ações</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100 dark:divide-slate-800">
+            <Table>
+              <TableHeader className="bg-gray-50 dark:bg-slate-800/60 sticky top-0 z-10">
+                <TableRow>
+                  <TableHead className="w-[300px]">Data e Hora</TableHead>
+                  <TableHead>Disciplina</TableHead>
+                  <TableHead>Professor</TableHead>
+                  <TableHead>Duração</TableHead>
+                  <TableHead className="text-right">Ações</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
                 {aulas.map((aula) => {
                   const data = new Date(aula.data_hora);
                   const fim = new Date(data.getTime() + aula.duracao_minutos * 60000);
@@ -81,22 +81,20 @@ export default async function AulasPage() {
                   const formatterTime = new Intl.DateTimeFormat('pt-BR', { timeStyle: 'short' });
                   
                   return (
-                  <tr key={aula.id} className="hover:bg-gray-50/50 dark:hover:bg-slate-800/40">
-                    <td className="px-4 py-2.5 font-medium text-gray-900 dark:text-gray-100">
+                  <TableRow key={aula.id} className="hover:bg-gray-50/50 dark:hover:bg-slate-800/40">
+                    <TableCell className="font-medium text-gray-900 dark:text-gray-100">
                       {formatterDate.format(data)} <span className="text-gray-400 font-normal ml-1">• {formatterTime.format(data)} às {formatterTime.format(fim)}</span>
-                    </td>
-                    <td className="px-4 py-2.5 font-medium text-gray-900 dark:text-gray-100">{aula.disciplina?.nome || "-"}</td>
-                    <td className="px-4 py-2.5 text-gray-500 dark:text-gray-400">{aula.professor?.nome || "-"}</td>
-                    <td className="px-4 py-2.5 text-gray-500 dark:text-gray-400">{aula.duracao_minutos} min</td>
-                    <td className="px-4 py-2.5 text-right">
-                      <div className="relative">
-                        <DeleteAulaButton id={aula.id} />
-                      </div>
-                    </td>
-                  </tr>
+                    </TableCell>
+                    <TableCell className="font-medium text-gray-900 dark:text-gray-100">{aula.disciplina?.nome || "-"}</TableCell>
+                    <TableCell className="text-gray-500 dark:text-gray-400">{aula.professor?.nome || "-"}</TableCell>
+                    <TableCell className="text-gray-500 dark:text-gray-400">{aula.duracao_minutos} min</TableCell>
+                    <TableCell className="text-right">
+                      <DeleteAulaButton id={aula.id} />
+                    </TableCell>
+                  </TableRow>
                 )})}
-              </tbody>
-            </table>
+              </TableBody>
+            </Table>
           </div>
         )}
         <div className="px-4 py-3 border-t border-gray-100 dark:border-slate-800 flex justify-end bg-gray-50/30 dark:bg-slate-800/20">
@@ -108,3 +106,4 @@ export default async function AulasPage() {
     </div>
   );
 }
+

@@ -1,32 +1,24 @@
-"use client";
+import * as React from "react"
+import { cn } from "@/lib/utils"
 
-import React from "react";
-
-export interface SkeletonProps extends React.HTMLAttributes<HTMLDivElement> {
+export interface SkeletonProps extends React.ComponentProps<"div"> {
   variant?: "rounded" | "pill" | "circle" | "card";
   width?: string | number;
   height?: string | number;
 }
 
-export function Skeleton({
-  className = "",
-  variant = "rounded",
-  width,
-  height,
-  style,
-  ...props
-}: SkeletonProps) {
+function Skeleton({ className, variant = "rounded", width, height, style, ...props }: SkeletonProps) {
   const variantClasses = {
     rounded: "rounded-md",
-    pill: "rounded-pill",
+    pill: "rounded-full",
     circle: "rounded-full",
     card: "rounded-xl",
   };
 
   return (
     <div
-      aria-hidden="true"
-      className={`skeleton-shimmer ${variantClasses[variant]} ${className}`}
+      data-slot="skeleton"
+      className={cn("animate-pulse bg-muted skeleton-shimmer", variantClasses[variant], className)}
       style={{
         width: width,
         height: height,
@@ -34,7 +26,7 @@ export function Skeleton({
       }}
       {...props}
     />
-  );
+  )
 }
 
 /* ==========================================================================
@@ -106,3 +98,5 @@ export function StatCardSkeleton() {
     </div>
   );
 }
+
+export { Skeleton }

@@ -1,10 +1,10 @@
 import React from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Plus, Trash2, ArrowLeft, BookOpen, BookPlus } from "lucide-react";
+import { BookOpen, BookPlus } from "lucide-react";
 import { getDisciplinas } from "../actions";
 import { DisciplinaForm, DeleteDisciplinaButton } from "./client-components";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 export default async function DisciplinasPage() {
   const disciplinas = await getDisciplinas();
@@ -61,30 +61,28 @@ export default async function DisciplinasPage() {
           </div>
         ) : (
           <div className="overflow-x-auto overflow-y-auto max-h-[500px]">
-            <table className="w-full text-left text-sm">
-              <thead className="bg-gray-50 dark:bg-slate-800/60 text-gray-500 dark:text-gray-400 sticky top-0 z-10">
-                <tr>
-                  <th className="px-4 py-2 font-medium">Nome</th>
-                  <th className="px-4 py-2 font-medium">Descrição</th>
-                  <th className="px-4 py-2 font-medium">Carga Horária</th>
-                  <th className="px-4 py-2 font-medium text-right">Ações</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100 dark:divide-slate-800">
+            <Table>
+              <TableHeader className="bg-gray-50 dark:bg-slate-800/60 sticky top-0 z-10">
+                <TableRow>
+                  <TableHead className="w-[300px]">Nome</TableHead>
+                  <TableHead>Descrição</TableHead>
+                  <TableHead>Carga Horária</TableHead>
+                  <TableHead className="text-right">Ações</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
                 {disciplinas.map((disc) => (
-                  <tr key={disc.id} className="hover:bg-gray-50/50 dark:hover:bg-slate-800/40">
-                    <td className="px-4 py-2.5 font-medium text-gray-900 dark:text-gray-100">{disc.nome}</td>
-                    <td className="px-4 py-2.5 text-gray-500 dark:text-gray-400">{disc.descricao || "-"}</td>
-                    <td className="px-4 py-2.5 text-gray-500 dark:text-gray-400">{disc.carga_horaria ? `${disc.carga_horaria}h` : "-"}</td>
-                    <td className="px-4 py-2.5 text-right">
-                      <div className="relative">
-                        <DeleteDisciplinaButton id={disc.id} nome={disc.nome} />
-                      </div>
-                    </td>
-                  </tr>
+                  <TableRow key={disc.id} className="hover:bg-gray-50/50 dark:hover:bg-slate-800/40">
+                    <TableCell className="font-medium text-gray-900 dark:text-gray-100">{disc.nome}</TableCell>
+                    <TableCell className="text-gray-500 dark:text-gray-400">{disc.descricao || "-"}</TableCell>
+                    <TableCell className="text-gray-500 dark:text-gray-400">{disc.carga_horaria ? `${disc.carga_horaria}h` : "-"}</TableCell>
+                    <TableCell className="text-right">
+                      <DeleteDisciplinaButton id={disc.id} nome={disc.nome} />
+                    </TableCell>
+                  </TableRow>
                 ))}
-              </tbody>
-            </table>
+              </TableBody>
+            </Table>
           </div>
         )}
         <div className="px-4 py-3 border-t border-gray-100 dark:border-slate-800 flex justify-end bg-gray-50/30 dark:bg-slate-800/20">
@@ -96,3 +94,4 @@ export default async function DisciplinasPage() {
     </div>
   );
 }
+

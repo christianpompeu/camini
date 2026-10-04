@@ -1,16 +1,35 @@
-"use client";
+import * as React from "react"
+import { Input as InputPrimitive } from "@base-ui/react/input"
+import { cn } from "@/lib/utils"
 
-import React, { forwardRef } from "react";
-
-export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
+export interface InputProps extends React.ComponentProps<"input"> {
   label?: string;
   helperText?: string;
   error?: string;
 }
 
-export const Input = forwardRef<HTMLInputElement, InputProps>(
-  ({ label, helperText, error, id, className = "", ...props }, ref) => {
+const Input = React.forwardRef<HTMLInputElement, InputProps>(
+  ({ className, type, label, helperText, error, id, ...props }, ref) => {
     const inputId = id || (label ? label.toLowerCase().replace(/\s+/g, "-") : undefined);
+
+    const inputElement = (
+      <InputPrimitive
+        type={type}
+        id={inputId}
+        data-slot="input"
+        className={cn(
+          "h-10 w-full min-w-0 rounded-lg border border-input bg-surface px-3 py-2 text-base transition-colors outline-none file:inline-flex file:h-6 file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-camini-cobalt/50 disabled:pointer-events-none disabled:cursor-not-allowed disabled:bg-input/50 disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 md:text-sm dark:bg-input/30 dark:disabled:bg-input/80 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40",
+          error && "border-red-500 focus-visible:ring-red-500",
+          className
+        )}
+        ref={ref}
+        {...props}
+      />
+    );
+
+    if (!label && !helperText && !error) {
+      return inputElement;
+    }
 
     return (
       <div className="flex flex-col gap-1.5 w-full">
@@ -22,16 +41,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
             {label}
           </label>
         )}
-        <input
-          ref={ref}
-          id={inputId}
-          className={`min-h-[40px] px-3 py-2 text-sm rounded-md bg-surface border text-text-primary placeholder:text-text-secondary/60 transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-camini-cobalt focus-visible:border-transparent ${
-            error
-              ? "border-energy-coral focus-visible:ring-energy-coral"
-              : "border-outline hover:border-text-secondary/40"
-          } ${className}`}
-          {...props}
-        />
+        {inputElement}
         {error && <span className="text-xs text-red-500 font-medium">{error}</span>}
         {!error && helperText && (
           <span className="text-xs text-text-secondary">{helperText}</span>
@@ -40,5 +50,6 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
     );
   }
 );
-
 Input.displayName = "Input";
+
+export { Input }

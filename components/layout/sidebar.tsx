@@ -83,7 +83,7 @@ export function Sidebar({ isOpenMobile = false, onCloseMobile }: SidebarProps) {
       </div>
 
       {/* Nav */}
-      <nav className="flex-1 px-4 py-2 flex flex-col gap-1">
+      <nav className="flex-1 px-4 py-2 flex flex-col gap-1 overflow-y-auto custom-scrollbar">
         
         <div className="mb-4">
           <p className="px-2 text-xs font-semibold text-gray-400 dark:text-gray-500 mb-2 tracking-wider">MENU PRINCIPAL</p>
@@ -107,7 +107,11 @@ export function Sidebar({ isOpenMobile = false, onCloseMobile }: SidebarProps) {
             label="Gestão CTC" 
             active={pathname === "/dashboard/ctc"} 
             rightIcon={<ChevronDown size={16} className={`transition-transform duration-200 ${openMenus.ctc ? "rotate-180" : ""}`} />}
-            onRightIconClick={() => toggleMenu("ctc")}
+            onRightIconClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              toggleMenu("ctc");
+            }}
             onClick={onCloseMobile} 
           />
           {openMenus.ctc && (
@@ -128,14 +132,13 @@ export function Sidebar({ isOpenMobile = false, onCloseMobile }: SidebarProps) {
       </nav>
 
       {/* Footer Nav & Theme Toggle */}
-      <div className="px-4 py-4 border-t border-gray-100 dark:border-slate-800 flex flex-col gap-1">
+      <div className="px-4 py-4 border-t border-gray-100 dark:border-slate-800 flex flex-col gap-1 shrink-0">
         {isMobile && (
           <div className="flex items-center justify-between px-3 py-2 rounded-lg bg-gray-50 dark:bg-slate-800/40 mb-2 border border-gray-100 dark:border-slate-800">
             <span className="text-xs font-semibold text-gray-600 dark:text-gray-300">Tema do Sistema</span>
             <ThemeToggle />
           </div>
         )}
-        {/* <NavItem href="/suporte" icon={<HelpCircle size={18} />} label="Suporte" onClick={onCloseMobile} /> */}
         <NavItem href="/ajustes" icon={<Settings size={18} />} label="Ajustes" onClick={onCloseMobile} />
         <form action="/auth/signout" method="post" className="w-full">
           <button type="submit" className="w-full flex items-center gap-3 px-2 py-2 text-sm text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100 rounded-lg transition-colors cursor-pointer">
@@ -150,7 +153,7 @@ export function Sidebar({ isOpenMobile = false, onCloseMobile }: SidebarProps) {
   return (
     <>
       {/* 1. SIDEBAR DESKTOP: Fixa à esquerda no desktop */}
-      <aside className="w-64 bg-white dark:bg-[#0c1017] border-r border-gray-200 dark:border-slate-800 flex-col h-screen overflow-y-auto hidden md:flex shrink-0">
+      <aside className="w-64 bg-white dark:bg-[#0c1017] border-r border-gray-200 dark:border-slate-800 flex-col h-screen overflow-hidden hidden md:flex shrink-0">
         {sidebarContent(false)}
       </aside>
 
@@ -176,7 +179,7 @@ export function Sidebar({ isOpenMobile = false, onCloseMobile }: SidebarProps) {
           aria-modal="true"
           aria-label="Menu do Painel Camini"
           className={`
-            fixed inset-y-0 right-0 z-50 w-80 max-w-[85vw] bg-white/95 dark:bg-[#0c1017]/95 backdrop-blur-xl border-l border-gray-200 dark:border-slate-800 flex flex-col h-screen overflow-y-auto shadow-2xl transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] will-change-transform
+            fixed inset-y-0 right-0 z-50 w-80 max-w-[85vw] bg-white/95 dark:bg-[#0c1017]/95 backdrop-blur-xl border-l border-gray-200 dark:border-slate-800 flex flex-col h-screen overflow-hidden shadow-2xl transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] will-change-transform
             ${isOpenMobile ? "translate-x-0" : "translate-x-full"}
           `}
         >
