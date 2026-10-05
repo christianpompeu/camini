@@ -16,6 +16,8 @@ import {
   Bot,
 } from "lucide-react";
 import { ChatSession } from "@/lib/totvs-rm/types";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 interface ChatSidebarProps {
   sessions: ChatSession[];
@@ -71,82 +73,68 @@ export function ChatSidebar({
 
   return (
     <>
-      {/* Botão de abrir/fechar em telas menores ou recolhido */}
       {!isOpen && (
-        <button
+        <Button
+          variant="outline"
+          size="icon"
           onClick={onToggleOpen}
-          aria-label="Abrir histórico de conversas"
-          className="fixed left-3 top-20 z-30 p-2.5 rounded-xl bg-surface-elevated border border-outline text-text-primary shadow-lg hover:border-camini-cyan transition-all"
+          className="fixed left-4 top-20 z-30 md:hidden h-10 w-10 rounded-full shadow-md"
         >
-          <ChevronRight className="w-4 h-4" />
-        </button>
+          <ChevronRight className="h-4 w-4" />
+        </Button>
       )}
 
-      {/* Barra Lateral Flutuante / Fixa */}
       <aside
-        className={`fixed md:static inset-y-0 left-0 z-40 w-72 sm:w-80 h-full min-h-0 overflow-hidden glass-surface bg-surface-elevated/95 md:bg-surface/50 border-r border-outline flex flex-col transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+        className={`fixed md:static inset-y-0 left-0 z-40 w-72 h-full min-h-0 bg-background border-r border-border flex flex-col transition-transform duration-300 ${
           isOpen ? "translate-x-0" : "-translate-x-full md:hidden"
         }`}
       >
-        {/* Cabeçalho da Sidebar */}
-        <div className="p-4 border-b border-outline/60 flex items-center justify-between shrink-0">
+        <div className="p-4 border-b border-border flex items-center justify-between shrink-0 h-14">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-gradient-camini flex items-center justify-center text-white font-bold shadow-md shadow-blue-500/20">
-              <Bot className="w-4 h-4" />
+            <div className="flex h-8 w-8 items-center justify-center rounded-md bg-primary text-primary-foreground">
+              <Bot className="h-4 w-4" />
             </div>
             <div>
-              <span className="font-bold text-sm text-text-primary block leading-tight">
-                RM SQL Studio
+              <span className="font-semibold text-sm block leading-none">
+                RM SQL AI
               </span>
-              <span className="text-[10px] text-text-secondary">Histórico de Consultas</span>
+              <span className="text-xs text-muted-foreground">Assistente TOTVS</span>
             </div>
           </div>
-
-          <button
-            onClick={onToggleOpen}
-            className="p-1.5 rounded-lg text-text-secondary hover:text-text-primary hover:bg-surface transition-colors"
-            title="Recolher barra lateral"
-          >
-            <ChevronLeft className="w-4 h-4" />
-          </button>
+          <Button variant="ghost" size="icon" onClick={onToggleOpen} className="h-8 w-8 md:hidden">
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
         </div>
 
-        {/* Botão Nova Consulta */}
-        <div className="p-3 border-b border-outline/60 shrink-0">
-          <button
-            onClick={onNewSession}
-            className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-gradient-camini text-white text-xs font-bold shadow-md shadow-blue-500/20 hover:brightness-105 transition-all tap-effect"
-          >
-            <Plus className="w-4 h-4" />
-            <span>Nova Consulta SQL</span>
-          </button>
+        <div className="p-4 border-b border-border shrink-0">
+          <Button onClick={onNewSession} className="w-full justify-start gap-2 h-9">
+            <Plus className="h-4 w-4" />
+            Nova Consulta SQL
+          </Button>
 
-          {/* Busca no histórico */}
           {sessions.length > 3 && (
-            <div className="relative mt-2.5">
-              <Search className="w-3.5 h-3.5 text-text-secondary absolute left-3 top-1/2 -translate-y-1/2" />
-              <input
+            <div className="relative mt-3">
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
                 type="text"
+                placeholder="Buscar consultas..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="Buscar conversas..."
-                className="w-full pl-8 pr-3 py-1.5 rounded-lg border border-outline bg-surface text-text-primary text-[11px] focus:outline-none focus:ring-1 focus:ring-camini-cobalt"
+                className="pl-9 h-9 text-xs"
               />
             </div>
           )}
         </div>
 
-        {/* Lista de Sessões / Histórico */}
         <div className="flex-1 overflow-y-auto p-2 space-y-1 scrollbar-thin">
           {sessions.length === 0 ? (
-            <div className="p-6 text-center text-xs text-text-secondary space-y-1">
-              <MessageSquare className="w-6 h-6 mx-auto text-text-secondary/40 mb-2" />
-              <p>Nenhuma conversa salva.</p>
-              <p className="text-[11px] opacity-70">Inicie uma nova consulta acima.</p>
+            <div className="p-6 text-center text-xs text-muted-foreground">
+              <MessageSquare className="h-6 w-6 mx-auto mb-2 opacity-20" />
+              Nenhuma consulta salva.
             </div>
           ) : filteredSessions.length === 0 ? (
-            <div className="p-4 text-center text-xs text-text-secondary">
-              Nenhuma consulta encontrada com esse termo.
+            <div className="p-4 text-center text-xs text-muted-foreground">
+              Nenhum resultado.
             </div>
           ) : (
             filteredSessions.map((session) => {
@@ -157,14 +145,14 @@ export function ChatSidebar({
                 <div
                   key={session.id}
                   onClick={() => onSelectSession(session.id)}
-                  className={`group relative flex items-center justify-between p-2.5 rounded-xl border text-xs cursor-pointer transition-all ${
+                  className={`group relative flex items-center justify-between px-3 py-2 rounded-md text-xs cursor-pointer transition-colors ${
                     isActive
-                      ? "border-camini-cobalt/50 bg-surface-elevated text-text-primary font-semibold shadow-sm"
-                      : "border-transparent text-text-secondary hover:text-text-primary hover:bg-surface/80"
+                      ? "bg-muted font-medium text-foreground"
+                      : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
                   }`}
                 >
                   <div className="flex items-center gap-2 min-w-0 flex-1">
-                    <MessageSquare className={`w-3.5 h-3.5 shrink-0 ${isActive ? "text-camini-cobalt" : "opacity-60"}`} />
+                    <MessageSquare className={`h-3.5 w-3.5 shrink-0 ${isActive ? "text-foreground" : ""}`} />
                     
                     {isEditing ? (
                       <input
@@ -173,50 +161,36 @@ export function ChatSidebar({
                         onChange={(e) => setEditTitle(e.target.value)}
                         onClick={(e) => e.stopPropagation()}
                         autoFocus
-                        className="w-full px-2 py-0.5 rounded border border-camini-cobalt bg-surface text-xs focus:outline-none"
+                        className="w-full px-1 py-0.5 rounded border border-ring bg-background focus:outline-none"
                       />
                     ) : (
-                      <span className="truncate block text-xs">{session.title}</span>
+                      <span className="truncate">{session.title}</span>
                     )}
                   </div>
 
-                  {/* Ações de Edição e Exclusão */}
-                  <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0 ml-1">
+                  <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0 ml-2">
                     {isEditing ? (
                       <>
-                        <button
-                          onClick={(e) => saveRename(session.id, e)}
-                          className="p-1 text-camini-aqua hover:bg-surface rounded"
-                          title="Salvar título"
-                        >
-                          <Check className="w-3.5 h-3.5" />
+                        <button onClick={(e) => saveRename(session.id, e)} className="p-1 hover:text-foreground">
+                          <Check className="h-3.5 w-3.5" />
                         </button>
-                        <button
-                          onClick={cancelRename}
-                          className="p-1 text-text-secondary hover:bg-surface rounded"
-                          title="Cancelar"
-                        >
-                          <X className="w-3.5 h-3.5" />
+                        <button onClick={cancelRename} className="p-1 hover:text-foreground">
+                          <X className="h-3.5 w-3.5" />
                         </button>
                       </>
                     ) : (
                       <>
-                        <button
-                          onClick={(e) => startRename(session, e)}
-                          className="p-1 text-text-secondary hover:text-text-primary hover:bg-surface rounded"
-                          title="Renomear"
-                        >
-                          <Edit2 className="w-3 h-3" />
+                        <button onClick={(e) => startRename(session, e)} className="p-1 hover:text-foreground">
+                          <Edit2 className="h-3 w-3" />
                         </button>
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
                             onDeleteSession(session.id);
                           }}
-                          className="p-1 text-text-secondary hover:text-red-500 hover:bg-surface rounded"
-                          title="Excluir conversa"
+                          className="p-1 hover:text-destructive"
                         >
-                          <Trash2 className="w-3 h-3" />
+                          <Trash2 className="h-3 w-3" />
                         </button>
                       </>
                     )}
@@ -227,23 +201,24 @@ export function ChatSidebar({
           )}
         </div>
 
-        {/* Rodapé da Sidebar: Dicionário & Configurações */}
-        <div className="p-3 border-t border-outline/60 space-y-1.5 bg-surface/30 shrink-0">
-          <button
+        <div className="p-4 border-t border-border space-y-2 shrink-0">
+          <Button
+            variant="outline"
+            className="w-full justify-start gap-2 h-9 text-xs"
             onClick={onOpenInspector}
-            className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-text-secondary hover:text-text-primary hover:bg-surface-elevated transition-colors border border-transparent hover:border-outline"
           >
-            <Database className="w-4 h-4 text-camini-cobalt" />
-            <span>Explorar Dicionário RM</span>
-          </button>
+            <Database className="h-4 w-4" />
+            Dicionário RM
+          </Button>
 
-          <button
+          <Button
+            variant="ghost"
+            className="w-full justify-start gap-2 h-9 text-xs text-muted-foreground"
             onClick={onOpenSettings}
-            className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-text-secondary hover:text-text-primary hover:bg-surface-elevated transition-colors border border-transparent hover:border-outline"
           >
-            <Settings className="w-4 h-4 text-camini-indigo" />
-            <span>Configurações de IA & Banco</span>
-          </button>
+            <Settings className="h-4 w-4" />
+            Configurações
+          </Button>
         </div>
       </aside>
     </>

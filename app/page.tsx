@@ -21,8 +21,8 @@ export default function CaminiHomePage() {
           </div>
           
           <h1 className="text-4xl font-extrabold tracking-tight sm:text-5xl md:text-6xl lg:text-7xl">
-            Plataforma Integrada de <br className="hidden sm:block" />
-            <span className="text-muted-foreground">Gestão Acadêmica</span>
+            Camini<br className="hidden sm:block" />
+            <span className="text-muted-foreground">aplicações e ferramentas em um só lugar</span>
           </h1>
           
           <p className="max-w-2xl text-lg text-muted-foreground sm:text-xl leading-relaxed">

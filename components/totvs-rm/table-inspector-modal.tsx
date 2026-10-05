@@ -1,8 +1,11 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { X, Search, Database, ArrowRight, Layers, Key, Link2, Copy, Check, Sparkles } from "lucide-react";
+import { Search, Database, ArrowRight, Layers, Key, Link2, Copy, Check, Sparkles } from "lucide-react";
 import { RMSemanticTableWithKey, RMTableSummary, RMSemanticColumn, RMSemanticRelationship } from "@/lib/totvs-rm/types";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 
 interface TableInspectorModalProps {
   isOpen: boolean;
@@ -21,7 +24,6 @@ export function TableInspectorModal({ isOpen, onClose, initialTable, onSelectTab
   const [loadingDetails, setLoadingDetails] = useState(false);
   const [copiedText, setCopiedText] = useState<string | null>(null);
 
-  // Carrega lista ao abrir ou filtrar
   useEffect(() => {
     if (!isOpen) return;
 
@@ -49,9 +51,8 @@ export function TableInspectorModal({ isOpen, onClose, initialTable, onSelectTab
 
     const timer = setTimeout(fetchTables, 250);
     return () => clearTimeout(timer);
-  }, [isOpen, searchTerm, selectedModule]);
+  }, [isOpen, searchTerm, selectedModule, activeTable]);
 
-  // Carrega detalhes da tabela ativa
   useEffect(() => {
     if (!isOpen || !activeTable) return;
 
@@ -82,73 +83,57 @@ export function TableInspectorModal({ isOpen, onClose, initialTable, onSelectTab
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/70 backdrop-blur-sm animate-in fade-in duration-200">
-      <div
-        className="w-full max-w-5xl h-[85vh] max-h-[780px] rounded-2xl border border-outline glass-surface bg-surface-elevated/95 flex flex-col shadow-2xl overflow-hidden text-text-primary"
-        role="dialog"
-        aria-modal="true"
-      >
-        {/* Barra de Título Superior */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-outline/60 bg-surface/50">
-          <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-lg bg-camini-cobalt/15 text-camini-cobalt flex items-center justify-center">
-              <Database className="w-5 h-5" />
+    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="max-w-5xl h-[85vh] p-0 flex flex-col overflow-hidden">
+        <DialogHeader className="p-4 border-b border-border bg-muted/30 shrink-0">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-md bg-primary/10 text-primary">
+              <Database className="h-5 w-5" />
             </div>
-            <div>
-              <h2 className="text-base font-bold flex items-center gap-2">
-                <span>Dicionário de Dados TOTVS Corpore RM</span>
-                <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-pill bg-camini-cobalt/15 text-camini-cobalt">
+            <div className="flex flex-col items-start gap-1">
+              <DialogTitle className="flex items-center gap-2 text-base">
+                Dicionário de Dados TOTVS RM
+                <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded-full bg-primary/10 text-primary">
                   9.400+ Tabelas
                 </span>
-              </h2>
-              <p className="text-xs text-text-secondary">
-                Consulte esquemas, campos, tipos e relacionamentos de chave estrangeira
-              </p>
+              </DialogTitle>
+              <DialogDescription className="text-xs">
+                Consulte esquemas, campos, tipos e relacionamentos
+              </DialogDescription>
             </div>
           </div>
+        </DialogHeader>
 
-          <button
-            onClick={onClose}
-            className="w-9 h-9 rounded-full flex items-center justify-center text-text-secondary hover:text-text-primary hover:bg-surface transition-colors"
-          >
-            <X className="w-5 h-5" />
-          </button>
-        </div>
-
-        {/* Corpo Principal Dividido em Duas Colunas */}
-        <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
-          {/* COLUNA ESQUERDA: Busca e Lista de Tabelas */}
-          <div className="w-full md:w-80 border-r border-outline/60 flex flex-col bg-surface/30 shrink-0">
-            {/* Filtros de Busca */}
-            <div className="p-3 border-b border-outline/60 space-y-2">
+        <div className="flex-1 flex flex-col md:flex-row min-h-0">
+          {/* Esquerda: Busca e Lista */}
+          <div className="w-full md:w-80 border-r border-border flex flex-col bg-muted/10 shrink-0">
+            <div className="p-3 border-b border-border space-y-3">
               <div className="relative">
-                <Search className="w-3.5 h-3.5 text-text-secondary absolute left-3 top-1/2 -translate-y-1/2" />
-                <input
+                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input
                   type="text"
+                  placeholder="Buscar tabela..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  placeholder="Buscar tabela ou termo (ex: FLAN, nota...)"
-                  className="w-full pl-8 pr-3 py-2 rounded-lg border border-outline bg-surface text-text-primary text-xs focus:outline-none focus:ring-1 focus:ring-camini-cobalt font-mono"
+                  className="pl-9 h-9 text-xs font-mono"
                 />
               </div>
 
-              {/* Filtro por Módulo */}
-              <div className="flex items-center gap-1 overflow-x-auto pb-1 text-[11px]">
+              <div className="flex items-center gap-1 overflow-x-auto pb-1 scrollbar-none text-[11px]">
                 {[
                   { label: "Todos", value: "" },
-                  { label: "Fluxus (F)", value: "F" },
-                  { label: "Nucleus (T)", value: "T" },
-                  { label: "Labore (P)", value: "P" },
-                  { label: "Saldus (C)", value: "C" },
-                  { label: "Global (G)", value: "G" },
+                  { label: "Fluxus", value: "F" },
+                  { label: "Nucleus", value: "T" },
+                  { label: "Labore", value: "P" },
+                  { label: "Saldus", value: "C" },
                 ].map((mod) => (
                   <button
                     key={mod.value}
                     onClick={() => setSelectedModule(mod.value)}
-                    className={`px-2.5 py-1 rounded-pill whitespace-nowrap transition-colors font-medium ${
+                    className={`px-3 py-1 rounded-full whitespace-nowrap transition-colors font-medium border ${
                       selectedModule === mod.value
-                        ? "bg-camini-cobalt text-white"
-                        : "bg-surface-elevated text-text-secondary hover:text-text-primary"
+                        ? "bg-primary text-primary-foreground border-primary"
+                        : "bg-muted text-muted-foreground border-transparent hover:text-foreground hover:bg-muted/80"
                     }`}
                   >
                     {mod.label}
@@ -157,116 +142,110 @@ export function TableInspectorModal({ isOpen, onClose, initialTable, onSelectTab
               </div>
             </div>
 
-            {/* Lista de Tabelas Encontradas */}
             <div className="flex-1 overflow-y-auto p-2 space-y-1">
               {loadingList ? (
-                <div className="p-6 text-center text-xs text-text-secondary">Carregando catálogo...</div>
+                <div className="p-6 text-center text-xs text-muted-foreground">Carregando catálogo...</div>
               ) : tables.length === 0 ? (
-                <div className="p-6 text-center text-xs text-text-secondary">Nenhuma tabela encontrada.</div>
+                <div className="p-6 text-center text-xs text-muted-foreground">Nenhuma tabela encontrada.</div>
               ) : (
                 tables.map((t) => (
                   <button
                     key={t.tabela}
                     onClick={() => setActiveTable(t.tabela)}
-                    className={`w-full text-left p-2.5 rounded-xl border transition-all text-xs flex flex-col gap-0.5 ${
+                    className={`w-full text-left px-3 py-2 rounded-md border transition-colors text-xs flex flex-col gap-1 ${
                       activeTable === t.tabela
-                        ? "border-camini-cobalt bg-camini-cobalt/15 text-text-primary shadow-sm"
-                        : "border-transparent hover:bg-surface text-text-secondary hover:text-text-primary"
+                        ? "border-primary bg-primary/5 text-primary shadow-sm"
+                        : "border-transparent hover:bg-muted/50 text-muted-foreground hover:text-foreground"
                     }`}
                   >
-                    <div className="flex items-center justify-between">
-                      <span className="font-bold font-mono text-text-primary">{t.tabela}</span>
-                      <span className="text-[10px] px-1.5 py-0.2 rounded-pill bg-surface border border-outline">
+                    <div className="flex items-center justify-between w-full">
+                      <span className="font-bold font-mono">{t.tabela}</span>
+                      <span className="text-[10px] px-1.5 py-0.5 rounded-sm bg-muted border border-border text-muted-foreground">
                         {t.sistema.replace("RM ", "")}
                       </span>
                     </div>
-                    <span className="text-[11px] truncate opacity-80">{t.descricao || "Sem descrição"}</span>
+                    <span className="text-[11px] truncate w-full block">{t.descricao || "Sem descrição"}</span>
                   </button>
                 ))
               )}
             </div>
           </div>
 
-          {/* COLUNA DIREITA: Detalhes da Tabela Selecionada */}
-          <div className="flex-1 flex flex-col overflow-hidden bg-surface-elevated/40">
+          {/* Direita: Detalhes */}
+          <div className="flex-1 flex flex-col min-h-0 bg-background">
             {loadingDetails ? (
-              <div className="flex-1 flex items-center justify-center text-xs text-text-secondary">
-                Carregando campos e relacionamentos...
+              <div className="flex-1 flex items-center justify-center text-sm text-muted-foreground">
+                Carregando campos...
               </div>
             ) : !tableDetails ? (
-              <div className="flex-1 flex items-center justify-center text-xs text-text-secondary">
-                Selecione uma tabela na lista ao lado para ver a estrutura.
+              <div className="flex-1 flex items-center justify-center text-sm text-muted-foreground">
+                Selecione uma tabela
               </div>
             ) : (
-              <div className="flex-1 flex flex-col overflow-hidden">
-                {/* Cabeçalho da Tabela Ativa */}
-                <div className="p-5 border-b border-outline/60 flex items-center justify-between bg-surface/30">
+              <div className="flex-1 flex flex-col min-h-0">
+                <div className="p-5 border-b border-border bg-muted/10 flex items-center justify-between shrink-0">
                   <div>
                     <div className="flex items-center gap-2">
-                      <h3 className="text-xl font-black font-mono text-text-primary">{tableDetails.tabela}</h3>
-                      <button
+                      <h3 className="text-xl font-bold font-mono">{tableDetails.tabela}</h3>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7"
                         onClick={() => handleCopy(tableDetails.tabela)}
-                        className="text-text-secondary hover:text-camini-cobalt p-1"
-                        title="Copiar nome da tabela"
                       >
                         {copiedText === tableDetails.tabela ? (
-                          <Check className="w-4 h-4 text-camini-aqua" />
+                          <Check className="h-4 w-4 text-green-500" />
                         ) : (
-                          <Copy className="w-4 h-4" />
+                          <Copy className="h-4 w-4 text-muted-foreground" />
                         )}
-                      </button>
+                      </Button>
                     </div>
-                    <p className="text-xs text-text-secondary mt-0.5">
-                      {tableDetails.descricao || "Tabela do banco de dados TOTVS RM"} • {tableDetails.colunas.length} colunas
+                    <p className="text-sm text-muted-foreground mt-1">
+                      {tableDetails.descricao || "Tabela do RM"} • {tableDetails.colunas.length} colunas
                     </p>
                   </div>
 
                   {onSelectTable && (
-                    <button
+                    <Button
                       onClick={() => {
                         onSelectTable(tableDetails.tabela);
                         onClose();
                       }}
-                      className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-gradient-camini text-white text-xs font-bold shadow-sm hover:brightness-105"
+                      className="gap-2"
                     >
-                      <Sparkles className="w-3.5 h-3.5" />
-                      <span>Inserir no Chat</span>
-                    </button>
+                      <Sparkles className="h-4 w-4" />
+                      Inserir no Chat
+                    </Button>
                   )}
                 </div>
 
-                {/* Lista de Colunas e Relacionamentos */}
                 <div className="flex-1 overflow-y-auto p-5 space-y-6">
-                  {/* Tabela de Colunas */}
                   <div>
-                    <h4 className="text-xs font-bold uppercase tracking-wider text-text-secondary mb-3 flex items-center gap-1.5">
-                      <Layers className="w-3.5 h-3.5 text-camini-cobalt" />
-                      Colunas & Tipos de Dados
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-3 flex items-center gap-2">
+                      <Layers className="h-4 w-4" />
+                      Colunas & Tipos
                     </h4>
 
-                    <div className="rounded-xl border border-outline overflow-hidden bg-surface">
-                      <table className="w-full text-left border-collapse text-xs">
-                        <thead>
-                          <tr className="border-b border-outline bg-surface-elevated text-text-secondary font-semibold">
-                            <th className="py-2.5 px-3">Coluna</th>
-                            <th className="py-2.5 px-3">Tipo</th>
-                            <th className="py-2.5 px-3">Descrição RM</th>
+                    <div className="rounded-md border border-border overflow-hidden">
+                      <table className="w-full text-left text-sm">
+                        <thead className="bg-muted">
+                          <tr>
+                            <th className="px-4 py-3 font-medium text-muted-foreground">Coluna</th>
+                            <th className="px-4 py-3 font-medium text-muted-foreground">Tipo</th>
+                            <th className="px-4 py-3 font-medium text-muted-foreground">Descrição</th>
                           </tr>
                         </thead>
-                        <tbody className="divide-y divide-outline/50 font-mono">
+                        <tbody className="divide-y divide-border bg-background">
                           {tableDetails.colunas.map((col: RMSemanticColumn) => {
                             const isPk = col.nome.startsWith("COD") || col.nome.startsWith("ID") || col.nome === "CHAPA";
-
                             return (
-                              <tr key={col.nome} className="hover:bg-surface-elevated/70 transition-colors">
-                                <td className="py-2 px-3 font-bold text-text-primary flex items-center gap-1.5">
-                                  {isPk && <Key className="w-3 h-3 text-amber-500 shrink-0" />}
-                                  <span>{col.nome}</span>
+                              <tr key={col.nome} className="hover:bg-muted/50 transition-colors font-mono">
+                                <td className="px-4 py-3 text-foreground font-semibold flex items-center gap-2">
+                                  {isPk && <Key className="h-3.5 w-3.5 text-amber-500 shrink-0" />}
+                                  {col.nome}
                                 </td>
-                                <td className="py-2 px-3 text-[#38BDF8]">
-                                  {col.tipo}
-                                </td>
-                                <td className="py-2 px-3 font-sans text-text-secondary text-[11px]">
+                                <td className="px-4 py-3 text-sky-500">{col.tipo}</td>
+                                <td className="px-4 py-3 text-muted-foreground text-xs font-sans">
                                   {col.descricao || "-"}
                                 </td>
                               </tr>
@@ -277,26 +256,25 @@ export function TableInspectorModal({ isOpen, onClose, initialTable, onSelectTab
                     </div>
                   </div>
 
-                  {/* Relacionamentos (Chaves Estrangeiras) */}
                   {tableDetails.relacionamentos_saida && tableDetails.relacionamentos_saida.length > 0 && (
                     <div>
-                      <h4 className="text-xs font-bold uppercase tracking-wider text-text-secondary mb-3 flex items-center gap-1.5">
-                        <Link2 className="w-3.5 h-3.5 text-camini-indigo" />
+                      <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-3 flex items-center gap-2">
+                        <Link2 className="h-4 w-4" />
                         Relacionamentos de Saída
                       </h4>
 
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                         {tableDetails.relacionamentos_saida.map((rel: RMSemanticRelationship, idx: number) => (
                           <div
                             key={idx}
-                            className="p-3 rounded-xl border border-outline bg-surface text-xs space-y-1"
+                            className="p-3 rounded-md border border-border bg-muted/20 text-sm space-y-1.5"
                           >
-                            <div className="flex items-center gap-1.5 text-text-primary font-bold font-mono">
+                            <div className="flex items-center gap-2 font-mono font-semibold">
                               <span>{tableDetails.tabela}</span>
-                              <ArrowRight className="w-3 h-3 text-camini-cobalt" />
-                              <span className="text-camini-cobalt">{rel.tabela_destino}</span>
+                              <ArrowRight className="h-3.5 w-3.5 text-muted-foreground" />
+                              <span className="text-primary">{rel.tabela_destino}</span>
                             </div>
-                            <div className="text-[11px] font-mono text-text-secondary break-all">
+                            <div className="text-xs font-mono text-muted-foreground">
                               ON {rel.chaves_ligacao}
                             </div>
                           </div>
@@ -309,7 +287,7 @@ export function TableInspectorModal({ isOpen, onClose, initialTable, onSelectTab
             )}
           </div>
         </div>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }

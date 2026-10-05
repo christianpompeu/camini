@@ -3,14 +3,10 @@
 import React, { useState, useEffect, useRef } from "react";
 import {
   Send,
-  Sparkles,
   Database,
   Settings,
-  Menu,
-  Plus,
   PanelLeftClose,
   PanelLeft,
-  ChevronDown,
 } from "lucide-react";
 import { Navbar } from "@/components/layout/navbar";
 import { ChatSession, ChatMessage, UserSettings } from "@/lib/totvs-rm/types";
@@ -18,6 +14,7 @@ import { ChatSidebar } from "@/components/totvs-rm/chat-sidebar";
 import { ChatMessages } from "@/components/totvs-rm/chat-messages";
 import { TableInspectorModal } from "@/components/totvs-rm/table-inspector-modal";
 import { SettingsModal } from "@/components/totvs-rm/settings-modal";
+import { Button } from "@/components/ui/button";
 
 const LOCAL_STORAGE_SESSIONS = "camini_totvs_rm_sessions";
 const LOCAL_STORAGE_SETTINGS = "camini_totvs_rm_settings";
@@ -59,9 +56,8 @@ export default function TotvsRmChatPage() {
           ? parsed.groqModel 
           : "llama3-70b-8192";
 
-        // Trava temporária: somente SQL Server (Oracle em breve).
-        // Defaults primeiro para normalizar settings antigos sem llmProvider.
-        // eslint-disable-next-line react-hooks/set-state-in-effect
+        // Trava temporária: somente SQL Server
+        // eslint-disable-next-line
         setSettings({
           llmProvider: "gemini",
           groqApiKey: "",
@@ -82,7 +78,6 @@ export default function TotvsRmChatPage() {
         }
       }
 
-      // Sessão inicial padrão caso não haja nenhuma
       const defaultSession: ChatSession = {
         id: "session_" + Date.now(),
         title: "Nova Consulta SQL",
@@ -118,7 +113,7 @@ export default function TotvsRmChatPage() {
     }
   };
 
-  // 3. Salvar configurações (trava temporária: somente SQL Server)
+  // 3. Salvar configurações
   const handleSaveSettings = (newSettings: UserSettings) => {
     const cleanGemini = newSettings.geminiModel && newSettings.geminiModel !== "gemini-2.5-flash" && newSettings.geminiModel !== "gemini-1.5-flash" 
       ? newSettings.geminiModel 
@@ -142,7 +137,6 @@ export default function TotvsRmChatPage() {
     }
   };
 
-  // Criar nova sessão
   const createNewSession = () => {
     const newSession: ChatSession = {
       id: "session_" + Date.now(),
@@ -156,7 +150,6 @@ export default function TotvsRmChatPage() {
     setActiveSessionId(newSession.id);
   };
 
-  // Excluir sessão
   const handleDeleteSession = (id: string) => {
     const remaining = sessions.filter((s) => s.id !== id);
     if (remaining.length === 0) {
@@ -178,7 +171,6 @@ export default function TotvsRmChatPage() {
     }
   };
 
-  // Renomear sessão
   const handleRenameSession = (id: string, newTitle: string) => {
     const updated = sessions.map((s) =>
       s.id === id ? { ...s, title: newTitle, updatedAt: Date.now() } : s
@@ -186,11 +178,9 @@ export default function TotvsRmChatPage() {
     persistSessions(updated);
   };
 
-  // Sessão atual ativa
   const currentSession = sessions.find((s) => s.id === activeSessionId) || sessions[0];
   const messages = currentSession ? currentSession.messages : [];
 
-  // Enviar mensagem para a API
   const handleSendMessage = async (promptToSend?: string) => {
     const text = (promptToSend || inputPrompt).trim();
     if (!text || isLoading) return;
@@ -207,7 +197,6 @@ export default function TotvsRmChatPage() {
       timestamp: Date.now(),
     };
 
-    // Atualiza título da conversa se for a primeira mensagem
     const shouldUpdateTitle = messages.length === 0;
     const generatedTitle = shouldUpdateTitle
       ? text.slice(0, 32) + (text.length > 32 ? "..." : "")
@@ -299,7 +288,6 @@ export default function TotvsRmChatPage() {
     }
   };
 
-  // Ajuste de altura do textarea
   const handleTextareaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setInputPrompt(e.target.value);
     e.target.style.height = "auto";
@@ -312,15 +300,12 @@ export default function TotvsRmChatPage() {
   };
 
   return (
-    <div className="h-[100dvh] flex flex-col bg-surface text-text-primary overflow-hidden">
-      {/* Barra de Navegação Mestre camini */}
+    <div className="h-[100dvh] flex flex-col bg-background text-foreground overflow-hidden font-sans">
       <div className="shrink-0">
         <Navbar />
       </div>
 
-      {/* Conteúdo Principal do Módulo RM SQL */}
       <div className="flex-1 flex min-h-0 overflow-hidden relative">
-        {/* Barra Lateral de Conversas */}
         <ChatSidebar
           sessions={sessions}
           activeSessionId={activeSessionId}
@@ -337,76 +322,70 @@ export default function TotvsRmChatPage() {
           onToggleOpen={() => setIsSidebarOpen(!isSidebarOpen)}
         />
 
-        {/* Área Central de Conversa */}
-        <main className="flex-1 flex flex-col min-w-0 min-h-0 bg-surface relative overflow-hidden">
-          {/* Barra Superior de Contexto do Chat */}
-          <div className="h-11 border-b border-outline px-4 flex items-center justify-between bg-surface-elevated/40 backdrop-blur-sm shrink-0">
+        <main className="flex-1 flex flex-col min-w-0 min-h-0 bg-background relative overflow-hidden">
+          <div className="h-14 border-b border-border px-4 flex items-center justify-between bg-muted/30 shrink-0">
             <div className="flex items-center gap-2 min-w-0">
-              <button
+              <Button
+                variant="ghost"
+                size="icon"
                 onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-                className="p-1.5 rounded-lg text-text-secondary hover:text-text-primary hover:bg-surface transition-colors"
                 title={isSidebarOpen ? "Recolher histórico" : "Expandir histórico"}
+                className="h-8 w-8 hidden md:flex"
               >
                 {isSidebarOpen ? (
-                  <PanelLeftClose className="w-4 h-4" />
+                  <PanelLeftClose className="h-4 w-4" />
                 ) : (
-                  <PanelLeft className="w-4 h-4" />
+                  <PanelLeft className="h-4 w-4" />
                 )}
-              </button>
+              </Button>
 
-              <div className="h-4 w-px bg-outline mx-1" />
+              <div className="h-4 w-px bg-border mx-1 hidden md:block" />
 
-              <span className="font-bold text-xs text-text-primary truncate">
+              <span className="font-semibold text-sm truncate">
                 {currentSession?.title || "Nova Consulta"}
-              </span>
-
-              <span className="text-[10px] px-2 py-0.5 rounded-pill bg-surface border border-outline text-text-secondary hidden sm:inline-block font-mono">
-                {settings.sqlDialect === "oracle" ? "Oracle PL/SQL" : "SQL Server T-SQL"}
-              </span>
-
-              <span className="text-[10px] px-2 py-0.5 rounded-pill bg-surface border border-outline text-text-secondary hidden sm:inline-block font-mono">
-                {settings.llmProvider === "groq" ? "Groq" : "Gemini"}
               </span>
             </div>
 
-            {/* Ações Rápidas no Topo */}
-            <div className="flex items-center gap-1.5">
-              <button
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8 hidden sm:flex gap-2"
                 onClick={() => {
                   setSelectedTableForInspector(undefined);
                   setInspectorOpen(true);
                 }}
-                className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium text-text-secondary hover:text-text-primary hover:bg-surface border border-transparent hover:border-outline transition-colors"
-                title="Explorar dicionário de dados RM"
               >
-                <Database className="w-3.5 h-3.5 text-camini-cobalt" />
-                <span className="hidden sm:inline">Dicionário RM</span>
-              </button>
+                <Database className="h-3.5 w-3.5" />
+                Dicionário RM
+              </Button>
 
-              <button
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8"
                 onClick={() => setSettingsOpen(true)}
-                className="p-1.5 rounded-lg text-text-secondary hover:text-text-primary hover:bg-surface transition-colors"
                 title="Configurações de IA"
               >
-                <Settings className="w-4 h-4 text-camini-indigo" />
-              </button>
+                <Settings className="h-4 w-4" />
+              </Button>
             </div>
           </div>
 
-          {/* Lista de Mensagens */}
           <ChatMessages
             messages={messages}
             isLoading={isLoading}
             onInspectTable={openTableInspector}
-            onSelectPromptSuggestion={(prompt) => handleSendMessage(prompt)}
+            onSelectPromptSuggestion={(prompt) => {
+              setInputPrompt(prompt);
+              textareaRef.current?.focus();
+            }}
           />
 
-          {/* Área de Entrada de Prompt */}
-          <div className="p-2 sm:p-3 border-t border-outline/70 bg-surface/90 backdrop-blur-md shrink-0">
-            <div className="max-w-4xl mx-auto space-y-1.5">
-              {/* Filtro Rápido por Módulo RM */}
-              <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5 text-[10px] sm:text-[11px] scrollbar-none">
-                <span className="text-text-secondary text-[10px] uppercase font-bold mr-0.5 shrink-0">
+          <div className="p-4 border-t border-border bg-background shrink-0">
+            <div className="max-w-4xl mx-auto space-y-2">
+              <div className="flex items-center gap-2 overflow-x-auto pb-1 text-xs scrollbar-none">
+                <span className="font-semibold text-muted-foreground mr-1 shrink-0">
                   Foco:
                 </span>
                 {[
@@ -419,10 +398,10 @@ export default function TotvsRmChatPage() {
                   <button
                     key={mod.value}
                     onClick={() => setSelectedModule(mod.value)}
-                    className={`px-2 py-0.5 rounded-pill whitespace-nowrap transition-colors font-medium border ${
+                    className={`px-3 py-1 rounded-full whitespace-nowrap transition-colors border text-xs font-medium ${
                       selectedModule === mod.value
-                        ? "bg-camini-cobalt text-white border-camini-cobalt"
-                        : "bg-surface-elevated text-text-secondary border-outline hover:text-text-primary"
+                        ? "bg-primary text-primary-foreground border-primary"
+                        : "bg-muted text-muted-foreground border-transparent hover:text-foreground hover:bg-muted/80"
                     }`}
                   >
                     {mod.label}
@@ -430,44 +409,43 @@ export default function TotvsRmChatPage() {
                 ))}
               </div>
 
-              {/* Caixa de Texto do Chat */}
-              <div className="relative rounded-2xl border border-outline bg-surface-elevated p-1.5 sm:p-2 shadow-lg focus-within:border-camini-cyan/60 transition-all flex items-end gap-2">
+              <div className="relative rounded-xl border border-input bg-background p-2 shadow-sm focus-within:ring-1 focus-within:ring-ring focus-within:border-ring transition-all flex items-end gap-2">
                 <textarea
                   ref={textareaRef}
                   value={inputPrompt}
                   onChange={handleTextareaChange}
                   onKeyDown={handleKeyDown}
-                  placeholder="Ex: Consultar lançamentos..."
+                  placeholder="Descreva a consulta SQL desejada..."
                   rows={1}
-                  className="flex-1 min-w-0 resize-none bg-transparent py-1.5 px-2 text-xs sm:text-sm text-text-primary placeholder:text-text-secondary focus:outline-none max-h-32 font-sans leading-relaxed"
+                  className="flex-1 min-w-0 resize-none bg-transparent py-2 px-2 text-sm placeholder:text-muted-foreground focus:outline-none max-h-32 leading-relaxed"
                 />
 
-                <button
+                <Button
                   onClick={() => handleSendMessage()}
                   disabled={!inputPrompt.trim() || isLoading}
-                  className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-camini flex items-center justify-center text-white shadow-md shadow-blue-500/20 hover:brightness-105 disabled:opacity-40 disabled:hover:brightness-100 transition-all shrink-0"
-                  aria-label="Enviar solicitação"
+                  size="icon"
+                  className="h-9 w-9 shrink-0 rounded-lg"
                 >
-                  <Send className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                </button>
+                  <Send className="h-4 w-4" />
+                </Button>
               </div>
 
-              <div className="flex items-center justify-between text-[10px] text-text-secondary px-1">
+              <div className="flex items-center justify-between text-xs text-muted-foreground px-1">
                 <span className="hidden sm:inline">Pressione <strong>Enter</strong> para enviar, <strong>Shift + Enter</strong> para nova linha</span>
-                <span className="hidden sm:inline">TOTVS Corpore RM v12+ • Dicionário Local</span>
+                <span className="hidden sm:inline">TOTVS Corpore RM v12+</span>
               </div>
             </div>
           </div>
         </main>
       </div>
 
-      {/* Modais de Suporte */}
       <TableInspectorModal
         isOpen={inspectorOpen}
         onClose={() => setInspectorOpen(false)}
         initialTable={selectedTableForInspector}
         onSelectTable={(tableName) => {
           setInputPrompt((prev) => (prev ? `${prev} tabela ${tableName}` : `Consultar tabela ${tableName} `));
+          textareaRef.current?.focus();
         }}
       />
 

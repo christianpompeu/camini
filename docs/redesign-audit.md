@@ -38,7 +38,7 @@ A execução foi analisada confrontando o projeto local com as diretrizes e requ
 ## 3. Trabalho Futuro (Fases C-E) e Sanitização
 *Não iniciar antes do término da Fase B*
 
-1. **Fase C (RM SQL AI):** Requer adequação ao design system visual novo e resolução dos erros de tipagem lint (`@typescript-eslint/no-explicit-any`) em `lib/totvs-rm/llm/providers.ts`.
+1. **Fase C (RM SQL AI):** (Concluída). Identidade visual Studio aplicada com sucesso (remoção total dos gradientes obsoletos). Tipagens lint da refatoração corrigidas e consolidadas.
 2. **Fase D (FORÇA):** Refatoração da estética visual.
 3. **Fase E (Design System/Playground):** Consolidação dos componentes interativos soltos.
 4. **Sanitização Global (Knip / Lint):**
@@ -51,8 +51,8 @@ A execução foi analisada confrontando o projeto local com as diretrizes e requ
 
 ## 4. Ordem Recomendada de Correções
 Para retomar o projeto de forma segura:
-1. **Validação E2E Fase A:** Configurar uma conta de testes com acesso e executar o fluxo de criação/deleção nas tabelas CTC para aprovar o fechamento condicional dos modais e a interatividade dos botões de aprovação/erro.
-2. **Fase C (RM SQL AI):** (Trabalho Futuro)
+1. **Validação E2E Fase A:** Configurar validação com sessão autenticada respeitando as políticas existentes para aprovar fluxos de CRUD nas tabelas CTC.
+2. **Fase D (FORÇA):** Iniciar adaptação visual ao Studio Admin, preservando a lógica PWA.
 
 **Próximo Comando Sugerido para o Usuário:** 
-> "Por favor, forneça uma credencial de teste ou um caminho para validar as inserções na Fase A, ou instrua o início do trabalho na Fase C (RM SQL AI)."
+> "Instrua o início do trabalho na Fase D (FORÇA) ou prossiga para a sanitização global do projeto."

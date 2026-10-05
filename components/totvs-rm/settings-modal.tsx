@@ -1,8 +1,12 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { X, Key, Cpu, Database, Check, ExternalLink, ShieldCheck } from "lucide-react";
+import { Key, Cpu, Database, Check, ExternalLink, ShieldCheck } from "lucide-react";
 import { UserSettings } from "@/lib/totvs-rm/types";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -24,7 +28,7 @@ export function SettingsModal({ isOpen, onClose, settings, onSave }: SettingsMod
   const [savedNotice, setSavedNotice] = useState(false);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
+    // eslint-disable-next-line
     setApiKey(settings.geminiApiKey || "");
     setModel(cleanGemini(settings.geminiModel));
     setProvider(settings.llmProvider || "gemini");
@@ -32,8 +36,6 @@ export function SettingsModal({ isOpen, onClose, settings, onSave }: SettingsMod
     setGroqModel(cleanGroq(settings.groqModel));
     setDialect(settings.sqlDialect || "sqlserver");
   }, [settings, isOpen]);
-
-  if (!isOpen) return null;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -44,7 +46,6 @@ export function SettingsModal({ isOpen, onClose, settings, onSave }: SettingsMod
       geminiModel: model,
       groqApiKey: groqKey.trim(),
       groqModel,
-      // Trava temporária: somente SQL Server (Oracle em breve)
       sqlDialect: "sqlserver",
     });
     setSavedNotice(true);
@@ -55,243 +56,194 @@ export function SettingsModal({ isOpen, onClose, settings, onSave }: SettingsMod
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
-      <div
-        className="w-full max-w-lg rounded-2xl border border-outline glass-surface bg-surface-elevated/95 p-6 shadow-2xl space-y-6 text-text-primary"
-        role="dialog"
-        aria-modal="true"
-      >
-        {/* Cabeçalho */}
-        <div className="flex items-center justify-between border-b border-outline/60 pb-4">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-camini-cobalt/15 text-camini-cobalt flex items-center justify-center">
-              <Cpu className="w-4 h-4" />
-            </div>
-            <div>
-              <h2 className="text-base font-bold">Configurações de IA & SQL</h2>
-              <p className="text-xs text-text-secondary">Ajuste o modelo de inteligência e dialeto do RM</p>
-            </div>
-          </div>
+    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="sm:max-w-[500px]">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <Cpu className="h-5 w-5 text-primary" />
+            Configurações de IA & SQL
+          </DialogTitle>
+          <DialogDescription>
+            Ajuste o modelo de inteligência e o dialeto do RM.
+          </DialogDescription>
+        </DialogHeader>
 
-          <button
-            onClick={onClose}
-            className="w-8 h-8 rounded-full flex items-center justify-center text-text-secondary hover:text-text-primary hover:bg-surface transition-colors"
-          >
-            <X className="w-4 h-4" />
-          </button>
-        </div>
-
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Provedor de IA */}
-          <div className="space-y-1.5">
-            <label className="text-xs font-semibold flex items-center gap-1.5">
-              <Cpu className="w-3.5 h-3.5 text-camini-indigo" />
+        <form onSubmit={handleSubmit} className="space-y-6 pt-4">
+          <div className="space-y-3">
+            <Label className="flex items-center gap-2">
+              <Cpu className="h-4 w-4" />
               Provedor de IA
-            </label>
+            </Label>
             <div className="grid grid-cols-3 gap-2">
-              <button
+              <Button
                 type="button"
+                variant={provider === "gemini" ? "default" : "outline"}
                 onClick={() => setProvider("gemini")}
-                className={`flex items-center justify-center gap-1.5 p-2.5 rounded-xl border text-xs font-bold transition-all ${
-                  provider === "gemini"
-                    ? "border-camini-cobalt bg-camini-cobalt/15 text-camini-cobalt shadow-sm"
-                    : "border-outline bg-surface text-text-secondary hover:text-text-primary"
-                }`}
+                className="h-10 text-xs gap-1"
               >
-                <span>Gemini</span>
-                {provider === "gemini" && <Check className="w-3.5 h-3.5" />}
-              </button>
-
-              <button
+                Gemini
+                {provider === "gemini" && <Check className="h-3 w-3" />}
+              </Button>
+              <Button
                 type="button"
+                variant={provider === "groq" ? "default" : "outline"}
                 onClick={() => setProvider("groq")}
-                className={`flex items-center justify-center gap-1.5 p-2.5 rounded-xl border text-xs font-bold transition-all ${
-                  provider === "groq"
-                    ? "border-camini-cobalt bg-camini-cobalt/15 text-camini-cobalt shadow-sm"
-                    : "border-outline bg-surface text-text-secondary hover:text-text-primary"
-                }`}
+                className="h-10 text-xs gap-1"
               >
-                <span>Groq</span>
-                {provider === "groq" && <Check className="w-3.5 h-3.5" />}
-              </button>
-
-              <button
+                Groq
+                {provider === "groq" && <Check className="h-3 w-3" />}
+              </Button>
+              <Button
                 type="button"
+                variant="outline"
                 disabled
-                title="OpenRouter em breve"
-                className="relative flex items-center justify-center gap-1.5 p-2.5 rounded-xl border text-xs font-bold border-outline bg-surface text-text-secondary opacity-50 cursor-not-allowed"
+                className="h-10 text-xs opacity-50"
               >
-                <span>OpenRouter</span>
-                <span className="text-[9px] uppercase font-extrabold tracking-widest px-1.5 py-0.5 rounded-pill bg-surface-elevated border border-outline text-text-secondary">
-                  Em breve
-                </span>
-              </button>
+                OpenRouter
+              </Button>
             </div>
-            <p className="text-[11px] text-text-secondary pt-0.5">
-              Se o provedor principal falhar (limite/queda), o outro é tentado automaticamente.
+            <p className="text-[11px] text-muted-foreground">
+              Se o provedor principal falhar, o outro será tentado automaticamente (se configurado).
             </p>
           </div>
 
           {provider === "groq" ? (
             <>
-              {/* Chave de API Groq */}
-              <div className="space-y-1.5">
-                <label className="text-xs font-semibold flex items-center justify-between">
-                  <span className="flex items-center gap-1.5">
-                    <Key className="w-3.5 h-3.5 text-camini-cobalt" />
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <Label className="flex items-center gap-2">
+                    <Key className="h-4 w-4" />
                     Chave de API Groq
-                  </span>
+                  </Label>
                   <a
                     href="https://console.groq.com/keys"
                     target="_blank"
                     rel="noreferrer"
-                    className="text-[11px] text-camini-cobalt hover:underline inline-flex items-center gap-1"
+                    className="text-[11px] text-primary hover:underline inline-flex items-center gap-1"
                   >
-                    <span>Obter chave grátis</span>
-                    <ExternalLink className="w-3 h-3" />
+                    Obter chave grátis <ExternalLink className="h-3 w-3" />
                   </a>
-                </label>
-                <input
+                </div>
+                <Input
                   type="password"
                   value={groqKey}
                   onChange={(e) => setGroqKey(e.target.value)}
-                  placeholder="Cole sua chave gsk_..."
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-outline bg-surface text-text-primary text-xs focus:outline-none focus:ring-2 focus:ring-camini-cobalt font-mono"
+                  placeholder="gsk_..."
+                  className="font-mono text-sm"
                 />
-                <p className="text-[11px] text-text-secondary flex items-center gap-1 pt-0.5">
-                  <ShieldCheck className="w-3.5 h-3.5 text-camini-aqua shrink-0" />
-                  Sua chave é salva apenas no seu navegador (localStorage) e nunca é exposta publicamente.
+                <p className="text-[11px] text-muted-foreground flex items-center gap-1">
+                  <ShieldCheck className="h-3 w-3 shrink-0" />
+                  Salva apenas localmente no seu navegador.
                 </p>
               </div>
 
-              {/* Seleção do Modelo Groq */}
-              <div className="space-y-1.5">
-                <label className="text-xs font-semibold flex items-center gap-1.5">
-                  <Cpu className="w-3.5 h-3.5 text-camini-indigo" />
+              <div className="space-y-3">
+                <Label className="flex items-center gap-2">
+                  <Cpu className="h-4 w-4" />
                   Modelo de Linguagem (Groq)
-                </label>
+                </Label>
                 <select
                   value={groqModel}
                   onChange={(e) => setGroqModel(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-outline bg-surface text-text-primary text-xs focus:outline-none focus:ring-2 focus:ring-camini-cobalt"
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                 >
-                  <option value="llama3-70b-8192">Llama 3 70B (llama3-70b-8192 - Recomendado)</option>
+                  <option value="llama3-70b-8192">Llama 3 70B (Recomendado)</option>
                   <option value="llama-3.1-70b-versatile">Llama 3.1 70B (Versatile)</option>
-                  <option value="llama-3.1-8b-instant">Llama 3.1 8B (Ultrarrápido, Alta Quota)</option>
+                  <option value="llama-3.1-8b-instant">Llama 3.1 8B (Rápido)</option>
                   <option value="qwen/qwen3-32b">Qwen3 32B (Raciocínio)</option>
-                  <option value="openai/gpt-oss-120b">GPT-OSS 120B (Máxima Capacidade)</option>
                 </select>
               </div>
             </>
           ) : (
             <>
-              {/* Chave de API Gemini */}
-              <div className="space-y-1.5">
-                <label className="text-xs font-semibold flex items-center justify-between">
-                  <span className="flex items-center gap-1.5">
-                    <Key className="w-3.5 h-3.5 text-camini-cobalt" />
-                    Chave de API Gemini (Google AI Studio)
-                  </span>
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <Label className="flex items-center gap-2">
+                    <Key className="h-4 w-4" />
+                    Chave de API Gemini
+                  </Label>
                   <a
                     href="https://aistudio.google.com/app/apikey"
                     target="_blank"
                     rel="noreferrer"
-                    className="text-[11px] text-camini-cobalt hover:underline inline-flex items-center gap-1"
+                    className="text-[11px] text-primary hover:underline inline-flex items-center gap-1"
                   >
-                    <span>Obter chave grátis</span>
-                    <ExternalLink className="w-3 h-3" />
+                    Obter chave grátis <ExternalLink className="h-3 w-3" />
                   </a>
-                </label>
-                <input
+                </div>
+                <Input
                   type="password"
                   value={apiKey}
                   onChange={(e) => setApiKey(e.target.value)}
-                  placeholder="Cole sua chave AIzaSy..."
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-outline bg-surface text-text-primary text-xs focus:outline-none focus:ring-2 focus:ring-camini-cobalt font-mono"
+                  placeholder="AIzaSy..."
+                  className="font-mono text-sm"
                 />
-                <p className="text-[11px] text-text-secondary flex items-center gap-1 pt-0.5">
-                  <ShieldCheck className="w-3.5 h-3.5 text-camini-aqua shrink-0" />
-                  Sua chave é salva apenas no seu navegador (localStorage) e nunca é exposta publicamente.
+                <p className="text-[11px] text-muted-foreground flex items-center gap-1">
+                  <ShieldCheck className="h-3 w-3 shrink-0" />
+                  Salva apenas localmente no seu navegador.
                 </p>
               </div>
 
-              {/* Seleção do Modelo Gemini */}
-              <div className="space-y-1.5">
-                <label className="text-xs font-semibold flex items-center gap-1.5">
-                  <Cpu className="w-3.5 h-3.5 text-camini-indigo" />
+              <div className="space-y-3">
+                <Label className="flex items-center gap-2">
+                  <Cpu className="h-4 w-4" />
                   Modelo de Linguagem (Gemini)
-                </label>
+                </Label>
                 <select
                   value={model}
                   onChange={(e) => setModel(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-outline bg-surface text-text-primary text-xs focus:outline-none focus:ring-2 focus:ring-camini-cobalt"
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                 >
-                  <option value="gemini-1.5-pro-latest">Gemini 1.5 Pro Latest (Recomendado)</option>
+                  <option value="gemini-1.5-pro-latest">Gemini 1.5 Pro (Recomendado)</option>
                   <option value="gemini-1.5-pro">Gemini 1.5 Pro (Estável)</option>
                 </select>
               </div>
             </>
           )}
 
-          {/* Dialeto SQL Padrão */}
-          <div className="space-y-1.5">
-            <label className="text-xs font-semibold flex items-center gap-1.5">
-              <Database className="w-3.5 h-3.5 text-amber-500" />
-              Banco de Dados do TOTVS Corpore RM
-            </label>
-            <div className="grid grid-cols-2 gap-3">
-              <button
+          <div className="space-y-3">
+            <Label className="flex items-center gap-2">
+              <Database className="h-4 w-4" />
+              Banco de Dados do TOTVS RM
+            </Label>
+            <div className="grid grid-cols-2 gap-2">
+              <Button
                 type="button"
+                variant={dialect === "sqlserver" ? "default" : "outline"}
                 onClick={() => setDialect("sqlserver")}
-                className={`flex items-center justify-center gap-2 p-3 rounded-xl border text-xs font-bold transition-all ${
-                  dialect === "sqlserver"
-                    ? "border-camini-cobalt bg-camini-cobalt/15 text-camini-cobalt shadow-sm"
-                    : "border-outline bg-surface text-text-secondary hover:text-text-primary"
-                }`}
+                className="h-10 text-xs gap-2"
               >
-                <span>Microsoft SQL Server</span>
-                {dialect === "sqlserver" && <Check className="w-3.5 h-3.5" />}
-              </button>
-
-              <button
+                SQL Server
+                {dialect === "sqlserver" && <Check className="h-3 w-3" />}
+              </Button>
+              <Button
                 type="button"
+                variant="outline"
                 disabled
-                title="Suporte a Oracle em breve — no momento geramos apenas SQL Server (T-SQL)"
-                className="relative flex items-center justify-center gap-2 p-3 rounded-xl border text-xs font-bold transition-all border-outline bg-surface text-text-secondary opacity-50 cursor-not-allowed"
+                className="h-10 text-xs opacity-50"
               >
-                <span>Oracle PL/SQL</span>
-                <span className="text-[9px] uppercase font-extrabold tracking-widest px-1.5 py-0.5 rounded-pill bg-surface-elevated border border-outline text-text-secondary">
-                  Em breve
-                </span>
-              </button>
+                Oracle (Em breve)
+              </Button>
             </div>
           </div>
 
-          {/* Botões de Ação */}
-          <div className="flex items-center justify-end gap-3 pt-4 border-t border-outline/60">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2 rounded-xl text-xs font-medium text-text-secondary hover:text-text-primary hover:bg-surface transition-colors"
-            >
+          <div className="flex justify-end gap-2 pt-4 border-t border-border">
+            <Button type="button" variant="ghost" onClick={onClose}>
               Cancelar
-            </button>
-            <button
-              type="submit"
-              className="flex items-center gap-1.5 px-5 py-2.5 rounded-xl bg-gradient-camini text-white text-xs font-bold shadow-md shadow-blue-500/20 hover:brightness-105 transition-all"
-            >
+            </Button>
+            <Button type="submit" className="min-w-32">
               {savedNotice ? (
                 <>
-                  <Check className="w-4 h-4" />
-                  <span>Salvo!</span>
+                  <Check className="mr-2 h-4 w-4" />
+                  Salvo!
                 </>
               ) : (
-                <span>Salvar Configurações</span>
+                "Salvar"
               )}
-            </button>
+            </Button>
           </div>
         </form>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }

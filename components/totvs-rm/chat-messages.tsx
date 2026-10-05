@@ -7,15 +7,12 @@ import {
   Sparkles,
   Lightbulb,
   Table as TableIcon,
-  ArrowUpRight,
   Database,
-  Coins,
-  Package,
-  Users,
-  Calculator,
+  ArrowUpRight,
 } from "lucide-react";
 import { ChatMessage } from "@/lib/totvs-rm/types";
 import { SqlCodeBlock } from "./sql-code-block";
+import { Card, CardContent } from "@/components/ui/card";
 
 interface ChatMessagesProps {
   messages: ChatMessage[];
@@ -30,74 +27,61 @@ export function ChatMessages({
   onInspectTable,
   onSelectPromptSuggestion,
 }: ChatMessagesProps) {
-  // Estado Inicial: Sugestões Prontas para o ERP TOTVS RM
   if (messages.length === 0) {
     const suggestions = [
       {
         modulo: "RM Fluxus (Financeiro)",
-        icon: Coins,
-        color: "text-amber-500",
         prompt: "Lançamentos financeiros a pagar em aberto com fornecedor e vencimento",
       },
       {
         modulo: "RM Nucleus (Compras & Estoque)",
-        icon: Package,
-        color: "text-camini-cobalt",
         prompt: "Movimentos de compras com itens, produtos, quantidade e fornecedor",
       },
       {
         modulo: "RM Labore (Folha / RH)",
-        icon: Users,
-        color: "text-camini-aqua",
         prompt: "Funcionários ativos admitidos nos últimos 12 meses com cargo e salário",
       },
       {
         modulo: "RM Saldus (Contábil)",
-        icon: Calculator,
-        color: "text-camini-indigo",
         prompt: "Partidas contábeis do exercício com conta a débito e a crédito",
       },
     ];
 
     return (
-      <div className="flex-1 min-h-0 overflow-y-auto p-4 sm:p-6 flex flex-col justify-center items-center scrollbar-thin">
-        <div className="w-full max-w-2xl my-auto space-y-4 py-2 text-center">
-          <div className="w-12 h-12 mx-auto rounded-xl bg-gradient-camini flex items-center justify-center text-white shadow-lg shadow-blue-500/20 animate-in zoom-in duration-300">
-            <Database className="w-6 h-6" />
+      <div className="flex-1 min-h-0 overflow-y-auto p-4 sm:p-6 flex flex-col justify-center items-center">
+        <div className="w-full max-w-2xl mx-auto space-y-6 text-center">
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 text-primary">
+            <Database className="h-8 w-8" />
           </div>
 
-          <div className="space-y-1">
-            <h2 className="text-xl sm:text-2xl font-black text-text-primary tracking-tight">
-              Escreva consultas SQL para o <span className="text-transparent bg-clip-text bg-gradient-camini font-black">TOTVS RM</span>
+          <div className="space-y-2">
+            <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">
+              Gerador de Consultas RM SQL
             </h2>
-            <p className="text-xs text-text-secondary max-w-md mx-auto leading-relaxed">
-              Catálogo de mais de 9.400 tabelas, colunas, chaves estrangeiras e relacionamentos.
+            <p className="text-muted-foreground max-w-md mx-auto">
+              Descreva a informação que você precisa extrair do TOTVS Corpore RM.
+              A inteligência artificial irá formular a query SQL correspondente.
             </p>
           </div>
 
-          {/* Grade de Sugestões Compacta */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 w-full text-left pt-1">
-            {suggestions.map((item, idx) => {
-              const Icon = item.icon;
-              return (
-                <button
-                  key={idx}
-                  onClick={() => onSelectPromptSuggestion(item.prompt)}
-                  className="group p-3 rounded-xl border border-gray-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-camini-cyan/50 hover:shadow-md transition-all text-xs flex flex-col justify-between gap-2"
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-1.5">
-                      <Icon className={`w-3.5 h-3.5 ${item.color}`} />
-                      <span className="font-bold text-[11px] text-text-primary">{item.modulo}</span>
-                    </div>
-                    <ArrowUpRight className="w-3 h-3 text-gray-400 group-hover:text-camini-cyan group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-4 text-left">
+            {suggestions.map((item, idx) => (
+              <Card 
+                key={idx} 
+                className="cursor-pointer hover:border-primary/50 transition-colors"
+                onClick={() => onSelectPromptSuggestion(item.prompt)}
+              >
+                <CardContent className="p-4 flex flex-col gap-2">
+                  <div className="flex justify-between items-center">
+                    <span className="text-xs font-semibold text-muted-foreground">{item.modulo}</span>
+                    <ArrowUpRight className="h-3.5 w-3.5 text-muted-foreground" />
                   </div>
-                  <p className="text-text-secondary leading-snug line-clamp-2 text-[11px]">
-                    &ldquo;{item.prompt}&rdquo;
+                  <p className="text-sm font-medium leading-snug">
+                    &quot;{item.prompt}&quot;
                   </p>
-                </button>
-              );
-            })}
+                </CardContent>
+              </Card>
+            ))}
           </div>
         </div>
       </div>
@@ -105,107 +89,94 @@ export function ChatMessages({
   }
 
   return (
-    <div className="flex-1 min-h-0 overflow-y-auto p-4 sm:p-6 space-y-5 scrollbar-thin">
+    <div className="flex-1 min-h-0 overflow-y-auto p-4 sm:p-6 space-y-6">
       {messages.map((msg) => {
         const isUser = msg.role === "user";
 
         return (
           <div
             key={msg.id}
-            className={`flex gap-3 sm:gap-4 max-w-4xl ${
-              isUser ? "ml-auto justify-end" : "mr-auto justify-start"
+            className={`flex gap-4 max-w-4xl mx-auto ${
+              isUser ? "flex-row-reverse" : "flex-row"
             }`}
           >
-            {/* Ícone de Avatar Assistente */}
-            {!isUser && (
-              <div className="w-8 h-8 rounded-lg bg-gradient-camini flex items-center justify-center text-white shrink-0 shadow-md shadow-blue-500/20 mt-1">
-                <Bot className="w-4 h-4" />
-              </div>
-            )}
+            <div className={`flex h-8 w-8 shrink-0 select-none items-center justify-center rounded-md border shadow-sm ${isUser ? "bg-background" : "bg-primary text-primary-foreground"}`}>
+              {isUser ? <User className="h-4 w-4" /> : <Bot className="h-4 w-4" />}
+            </div>
 
-            {/* Conteúdo da Mensagem */}
-            <div
-              className={`space-y-3 rounded-2xl p-4 sm:p-5 text-xs sm:text-sm ${
-                isUser
-                  ? "bg-gradient-camini text-white font-medium shadow-md shadow-blue-500/15 max-w-[85%] sm:max-w-xl rounded-tr-none"
-                  : "bg-white dark:bg-slate-900 border border-gray-100 dark:border-slate-800 text-gray-900 dark:text-white shadow-sm w-full rounded-tl-none"
-              }`}
-            >
-              {/* Badges de Tabelas RM Usadas */}
-              {!isUser && msg.tablesUsed && msg.tablesUsed.length > 0 && (
-                <div className="flex flex-wrap items-center gap-1.5 pb-2 border-b border-outline/50">
-                  <span className="text-[10px] font-bold text-text-secondary uppercase tracking-wider flex items-center gap-1 mr-1">
-                    <TableIcon className="w-3 h-3 text-camini-cyan" />
-                    Tabelas RM:
-                  </span>
-                  {msg.tablesUsed.map((tbl) => (
-                    <button
-                      key={tbl}
-                      onClick={() => onInspectTable(tbl)}
-                      className="px-2 py-0.5 rounded-pill bg-camini-cyan/15 hover:bg-camini-cyan/25 text-camini-cobalt dark:text-camini-cyan font-mono font-bold text-[11px] transition-colors border border-camini-cyan/20"
-                      title={`Ver campos e regras da tabela ${tbl}`}
-                    >
-                      {tbl}
-                    </button>
-                  ))}
-                </div>
-              )}
-
-              {/* Explicação da Consulta em Markdown simples */}
-              {msg.sqlExplanation ? (
-                <div className="prose prose-sm dark:prose-invert max-w-none text-xs sm:text-sm leading-relaxed text-text-primary space-y-2">
-                  {msg.sqlExplanation.split("\n\n").map((par, i) => (
-                    <p key={i} className="leading-relaxed">
-                      {par}
-                    </p>
-                  ))}
-                </div>
-              ) : (
-                <p className="leading-relaxed whitespace-pre-wrap">{msg.content}</p>
-              )}
-
-              {/* Bloco de Código SQL Formatado */}
-              {!isUser && msg.sqlCode && (
-                <SqlCodeBlock code={msg.sqlCode} />
-              )}
-
-              {/* Dicas e Boas Práticas do TOTVS RM */}
-              {!isUser && msg.tips && msg.tips.length > 0 && (
-                <div className="p-3.5 rounded-xl bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/50 text-gray-800 dark:text-gray-200 space-y-1.5 text-xs">
-                  <div className="flex items-center gap-1.5 font-bold text-amber-600 dark:text-amber-500 text-[11px]">
-                    <Lightbulb className="w-3.5 h-3.5 shrink-0" />
-                    <span>Boas Práticas & Regras TOTVS RM</span>
+            <div className={`flex w-full flex-col gap-2 ${isUser ? "items-end" : "items-start"}`}>
+              <div
+                className={`rounded-xl px-4 py-3 text-sm max-w-[85%] ${
+                  isUser
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-muted border border-border"
+                }`}
+              >
+                {/* Tabelas Usadas */}
+                {!isUser && msg.tablesUsed && msg.tablesUsed.length > 0 && (
+                  <div className="flex flex-wrap items-center gap-2 mb-3 pb-2 border-b border-border/50">
+                    <span className="text-xs font-medium text-muted-foreground flex items-center gap-1">
+                      <TableIcon className="h-3 w-3" />
+                      Tabelas:
+                    </span>
+                    {msg.tablesUsed.map((tbl) => (
+                      <button
+                        key={tbl}
+                        onClick={() => onInspectTable(tbl)}
+                        className="px-2 py-0.5 rounded-md bg-background/50 hover:bg-background border border-border text-xs font-mono transition-colors"
+                        title={`Explorar tabela ${tbl}`}
+                      >
+                        {tbl}
+                      </button>
+                    ))}
                   </div>
-                  <ul className="space-y-1 list-disc list-inside text-text-secondary text-[11px]">
+                )}
+
+                {msg.sqlExplanation ? (
+                  <div className="prose prose-sm dark:prose-invert max-w-none">
+                    {msg.sqlExplanation.split("\n\n").map((par, i) => (
+                      <p key={i} className="mb-2 last:mb-0">
+                        {par}
+                      </p>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="whitespace-pre-wrap">{msg.content}</p>
+                )}
+              </div>
+
+              {!isUser && msg.sqlCode && (
+                <div className="w-full mt-2">
+                  <SqlCodeBlock code={msg.sqlCode} />
+                </div>
+              )}
+
+              {!isUser && msg.tips && msg.tips.length > 0 && (
+                <div className="mt-2 rounded-xl bg-amber-500/10 border border-amber-500/20 p-4 text-sm text-amber-900 dark:text-amber-200 w-full">
+                  <div className="flex items-center gap-2 font-semibold mb-2">
+                    <Lightbulb className="h-4 w-4" />
+                    <span>Dicas & Regras do RM</span>
+                  </div>
+                  <ul className="list-disc list-inside space-y-1 text-xs">
                     {msg.tips.map((tip, idx) => (
-                      <li key={idx} className="leading-relaxed">
-                        {tip}
-                      </li>
+                      <li key={idx}>{tip}</li>
                     ))}
                   </ul>
                 </div>
               )}
             </div>
-
-            {/* Ícone de Avatar Usuário */}
-            {isUser && (
-              <div className="w-8 h-8 rounded-lg bg-gray-100 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 flex items-center justify-center text-gray-500 dark:text-gray-400 shrink-0 shadow-sm mt-1">
-                <User className="w-4 h-4" />
-              </div>
-            )}
           </div>
         );
       })}
 
-      {/* Indicador de Carregamento */}
       {isLoading && (
-        <div className="flex gap-3 sm:gap-4 mr-auto max-w-2xl animate-pulse">
-          <div className="w-8 h-8 rounded-lg bg-gradient-camini flex items-center justify-center text-white shrink-0 shadow-md">
-            <Bot className="w-4 h-4" />
+        <div className="flex gap-4 max-w-4xl mx-auto">
+          <div className="flex h-8 w-8 shrink-0 select-none items-center justify-center rounded-md border shadow-sm bg-primary text-primary-foreground">
+            <Bot className="h-4 w-4" />
           </div>
-          <div className="p-4 rounded-2xl rounded-tl-none bg-white dark:bg-slate-900 border border-gray-100 dark:border-slate-800 text-xs text-gray-500 dark:text-gray-400 flex items-center gap-2">
-            <Sparkles className="w-3.5 h-3.5 text-camini-cyan animate-spin" />
-            <span>Consultando dicionário de dados RM e gerando consulta SQL...</span>
+          <div className="rounded-xl px-4 py-3 text-sm max-w-[85%] bg-muted border border-border flex items-center gap-2">
+            <Sparkles className="h-4 w-4 animate-spin text-muted-foreground" />
+            <span className="text-muted-foreground">Gerando consulta...</span>
           </div>
         </div>
       )}

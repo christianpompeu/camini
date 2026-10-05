@@ -32,8 +32,10 @@
 - [ ] **Fase B: Home Pública** (Em andamento / Parcial)
   - Integração OpenDocs para composição e navegação pública.
   - Cards de serviço, conteúdo real, sem necessidade de blog neste momento.
-- [ ] **Fase C: RM SQL AI**
-  - Novo sistema visual para chat com assistente, editor SQL monoespaçado, histórico de execuções e grid tabular de resultados.
+- [x] **Fase C: RM SQL AI** (Concluída e Validada)
+  - Novo sistema visual implementado substituindo os gradientes antigos pela identidade neutra Studio Admin.
+  - Sidebar remodelada com busca e edição; blocos de SQL monoespaçados com highlight personalizado.
+  - Modais (Configurações e Dicionário RM) portados para os primitivos Dialog padrão do shadcn.
 - [ ] **Fase D: FORÇA**
   - Adaptação visual ao Studio Admin, preservando offline/PWA, cronômetro, séries e registros de treino.
 - [ ] **Fase E: Blog, documentação, design system e demais páginas**
