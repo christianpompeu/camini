@@ -12,6 +12,7 @@ import {
   Database,
   CalendarDays,
   Palette,
+  Radio,
 } from "lucide-react";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 
@@ -43,6 +44,7 @@ export function MobileSidebar({ isOpen, onClose }: MobileSidebarProps) {
 
   const isHome = pathname === "/";
   const isDashboard = pathname.startsWith("/dashboard");
+  const isRadar = pathname.startsWith("/radar");
   const isPlayground = pathname.startsWith("/playground");
   const isForca = pathname.startsWith("/forca");
   const isTotvsRm = pathname.startsWith("/totvs-rm");
@@ -56,6 +58,14 @@ export function MobileSidebar({ isOpen, onClose }: MobileSidebarProps) {
       badge: "Portal",
       icon: LayoutGrid,
       isActive: isDashboard,
+    },
+    {
+      href: "/radar",
+      title: "Radar Tributário",
+      subtitle: "Reforma Tributária IBS/CBS",
+      badge: "Editorial",
+      icon: Radio,
+      isActive: isRadar,
     },
     {
       href: "/totvs-rm",

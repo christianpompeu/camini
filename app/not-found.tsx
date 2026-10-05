@@ -7,6 +7,7 @@ import {
   Database,
   Dumbbell,
   Palette,
+  Radio,
   FileQuestion,
   ArrowRight,
 } from "lucide-react";
@@ -16,6 +17,12 @@ import { Badge } from "@/components/ui/badge";
 
 export default function NotFound() {
   const quickLinks = [
+    {
+      title: "Radar Tributário",
+      description: "Monitoramento técnico e fiscal da Reforma Tributária (IBS/CBS).",
+      href: "/radar",
+      icon: Radio,
+    },
     {
       title: "Gestão CTC",
       description: "Corpo docente, grade de disciplinas e agendamento de aulas.",
@@ -150,6 +157,9 @@ export default function NotFound() {
           <div className="flex items-center gap-4">
             <Link href="/" className="hover:text-foreground transition-colors">
               Início
+            </Link>
+            <Link href="/radar" className="hover:text-foreground transition-colors">
+              Radar
             </Link>
             <Link href="/dashboard" className="hover:text-foreground transition-colors">
               Painel

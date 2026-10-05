@@ -15,6 +15,7 @@ export function Navbar() {
   const isDashboard = pathname.startsWith("/dashboard");
   const isForca = pathname.startsWith("/forca");
   const isTotvsRm = pathname.startsWith("/totvs-rm");
+  const isRadar = pathname.startsWith("/radar");
   const isPlayground = pathname.startsWith("/playground");
 
   const navItems = [
@@ -27,6 +28,11 @@ export function Navbar() {
       href: "/dashboard",
       label: "Dashboard",
       isActive: isDashboard,
+    },
+    {
+      href: "/radar",
+      label: "Radar Tributário",
+      isActive: isRadar,
     },
     {
       href: "/totvs-rm",

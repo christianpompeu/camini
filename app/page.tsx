@@ -2,7 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
-import { ArrowRight, Database, Dumbbell, LayoutGrid, CalendarDays, Palette } from "lucide-react";
+import { ArrowRight, Database, Dumbbell, LayoutGrid, CalendarDays, Palette, Radio } from "lucide-react";
 import { Navbar } from "@/components/layout/navbar";
 import { Button } from "@/components/ui/button";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -37,9 +37,10 @@ export default function CaminiHomePage() {
                 <ArrowRight className="h-4 w-4" />
               </Button>
             </Link>
-            <Link href="/totvs-rm" className="w-full sm:w-auto">
-              <Button variant="outline" size="lg" className="w-full h-12 px-8">
-                Explorar RM SQL AI
+            <Link href="/radar" className="w-full sm:w-auto">
+              <Button variant="outline" size="lg" className="w-full h-12 px-8 gap-2">
+                <Radio className="h-4 w-4" />
+                Radar da Reforma
               </Button>
             </Link>
           </div>
@@ -64,6 +65,21 @@ export default function CaminiHomePage() {
                   <CardDescription className="text-sm mt-2">
                     Painel administrativo principal. Gestão de professores, 
                     disciplinas e programação de aulas em uma interface consolidada.
+                  </CardDescription>
+                </CardHeader>
+              </Card>
+            </Link>
+
+            {/* Radar da Reforma Tributária */}
+            <Link href="/radar" className="group">
+              <Card className="h-full transition-colors hover:border-primary/50 hover:bg-muted/30">
+                <CardHeader>
+                  <div className="mb-4 inline-flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                    <Radio className="h-5 w-5" />
+                  </div>
+                  <CardTitle className="text-xl">Radar Tributário</CardTitle>
+                  <CardDescription className="text-sm mt-2">
+                    Monitoramento técnico e fiscal da Reforma Tributária (IBS, CBS, NFS-e, NF-e, CGIBS e Receita Federal).
                   </CardDescription>
                 </CardHeader>
               </Card>
@@ -145,6 +161,9 @@ export default function CaminiHomePage() {
             </span>
           </div>
           <div className="flex items-center gap-6 text-sm font-medium text-muted-foreground">
+            <Link href="/radar" className="hover:text-foreground transition-colors">
+              Radar Tributário
+            </Link>
             <Link href="/dashboard" className="hover:text-foreground transition-colors">
               Administração
             </Link>

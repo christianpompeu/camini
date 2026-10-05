@@ -12,7 +12,8 @@ import {
   LogOut,
   ChevronRight,
   Globe,
-  Palette
+  Palette,
+  Radio
 } from "lucide-react";
 import { 
   Sidebar,
@@ -171,6 +172,16 @@ export function AppSidebar() {
         <SidebarGroup>
           <SidebarGroupLabel>Aplicações</SidebarGroupLabel>
           <SidebarMenu>
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                render={<Link href="/radar" onClick={closeMobile} />}
+                isActive={pathname.startsWith("/radar")}
+                tooltip="Radar Tributário"
+              >
+                <Radio className="size-4" />
+                <span>Radar Tributário</span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
             <SidebarMenuItem>
               <SidebarMenuButton
                 render={<Link href="/totvs-rm" onClick={closeMobile} />}
