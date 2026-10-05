@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { 
@@ -42,6 +42,15 @@ export function AppSidebar() {
   };
 
   const isCtcActive = pathname.startsWith("/dashboard/ctc") || pathname.startsWith("/ctc");
+  const [prevPathname, setPrevPathname] = useState(pathname);
+  const [ctcOpen, setCtcOpen] = useState(isCtcActive);
+
+  if (prevPathname !== pathname) {
+    setPrevPathname(pathname);
+    if (isCtcActive) {
+      setCtcOpen(true);
+    }
+  }
 
   return (
     <Sidebar variant="sidebar" collapsible="icon">
@@ -88,7 +97,8 @@ export function AppSidebar() {
 
             {/* MÓDULO CTC COM SUBROTAS VERIFICADAS */}
             <Collapsible
-              defaultOpen={isCtcActive}
+              open={ctcOpen}
+              onOpenChange={setCtcOpen}
               className="group/collapsible"
             >
               <SidebarMenuItem>
@@ -100,7 +110,7 @@ export function AppSidebar() {
                     >
                       <GraduationCap className="size-4" />
                       <span>Gestão CTC</span>
-                      <ChevronRight className="ml-auto size-4 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+                      <ChevronRight className={`ml-auto size-4 transition-transform duration-200 ${ctcOpen ? "rotate-90" : ""}`} />
                     </SidebarMenuButton>
                   }
                 />

@@ -29,15 +29,17 @@
     - Tabela shadcn com datas e horários em pt-BR ("às"), badges de duração e cálculo de término.
     - Exclusão com `AlertDialog`.
   - [x] Auditoria de Segurança: Remoção de qualquer bypass temporário em `lib/supabase/middleware.ts`. O acesso a rotas `/dashboard/**` exige estritamente sessão autenticada (`supabase.auth.getUser()`).
-- [ ] **Fase B: Home Pública** (Em andamento / Parcial)
-  - Integração OpenDocs para composição e navegação pública.
-  - Cards de serviço, conteúdo real, sem necessidade de blog neste momento.
+- [x] **Fase B: Home Pública** (Concluída e Validada)
+  - Composição OpenDocs com header minimalista, Hero centralizado e grid de módulos reais.
+  - Validado em desktop/mobile, modos claro/escuro e navegação por teclado.
 - [x] **Fase C: RM SQL AI** (Concluída e Validada)
   - Novo sistema visual implementado substituindo os gradientes antigos pela identidade neutra Studio Admin.
   - Sidebar remodelada com busca e edição; blocos de SQL monoespaçados com highlight personalizado.
-  - Modais (Configurações e Dicionário RM) portados para os primitivos Dialog padrão do shadcn.
-- [ ] **Fase D: FORÇA**
-  - Adaptação visual ao Studio Admin, preservando offline/PWA, cronômetro, séries e registros de treino.
+  - Modais (Configurações e Dicionário RM) portados para os primitivos Dialog padrão do shadcn com dimensões responsivas.
+- [x] **Fase D: FORÇA** (Concluída e Validada)
+  - Reformulação visual completa aderente ao Studio Admin, mobile-first e touch-friendly (44px+).
+  - 4 abas funcionais (Treinos A/B/C, Sessão Ativa com ActiveSetCard + RestTimer, Biblioteca de Exercícios com ExerciseHero, Histórico e Progresso).
+  - Validação técnica (tsc, eslint, build) com 0 erros e validação em browser desktop (1440px) e mobile (375px).
 - [ ] **Fase E: Blog, documentação, design system e demais páginas**
   - Catálogo de componentes em `/playground`, consolidação final de tokens, blog e revisão cross-módulo.
 

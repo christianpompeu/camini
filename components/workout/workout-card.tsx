@@ -1,9 +1,9 @@
 "use client";
 
 import React from "react";
-import { Dumbbell, Calendar, ChevronRight, Play } from "lucide-react";
+import { Dumbbell, Calendar, Play } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Chip } from "@/components/ui/chip";
+import { Badge } from "@/components/ui/badge";
 
 export interface WorkoutCardProps {
   letter: "A" | "B" | "C" | "D" | "E";
@@ -28,57 +28,53 @@ export function WorkoutCard({
 }: WorkoutCardProps) {
   return (
     <div
-      className={`relative overflow-hidden rounded-xl border border-outline bg-surface-elevated card-elevation transition-all duration-200 hover:border-camini-cobalt/40 ${className}`}
+      className={`relative overflow-hidden rounded-xl border border-border bg-card text-card-foreground shadow-sm transition-all duration-200 hover:border-foreground/25 hover:shadow-md ${className}`}
     >
-      {/* Gradiente de fundo extremamente sutil no topo */}
-      <div className="absolute top-0 left-0 right-0 h-2 bg-gradient-camini opacity-85" />
-
-      <div className="p-6">
-        <div className="flex items-start justify-between gap-4">
-          <div className="flex items-center gap-3">
-            {/* Emblema Treino A/B/C */}
-            <div className="w-12 h-12 rounded-lg bg-surface flex items-center justify-center font-extrabold text-xl border border-outline shadow-inner">
-              <span className="text-transparent bg-clip-text bg-gradient-camini">{letter}</span>
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h3 className="text-lg font-bold text-text-primary tracking-tight">
+      <div className="p-5 sm:p-6 flex flex-col justify-between h-full">
+        <div>
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex items-center gap-3">
+              {/* Emblema Treino A/B/C */}
+              <div className="w-11 h-11 rounded-lg bg-primary text-primary-foreground flex items-center justify-center font-bold text-lg shrink-0 shadow-sm">
+                <span>{letter}</span>
+              </div>
+              <div className="min-w-0">
+                <h3 className="text-base sm:text-lg font-bold text-foreground tracking-tight truncate">
                   {title}
                 </h3>
+                <p className="text-xs sm:text-sm font-medium text-muted-foreground mt-0.5 line-clamp-1">
+                  {focus}
+                </p>
               </div>
-              <p className="text-sm font-medium text-text-secondary mt-0.5">
-                {focus}
-              </p>
             </div>
+
+            <Badge variant="secondary" className="shrink-0 text-xs font-semibold">
+              {estimatedMinutes} min
+            </Badge>
           </div>
 
-          <Chip variant="default" size="sm">
-            {estimatedMinutes} min
-          </Chip>
-        </div>
-
-        {/* Informações secundárias */}
-        <div className="mt-5 flex flex-wrap items-center gap-4 text-xs font-medium text-text-secondary border-t border-outline/60 pt-4">
-          <div className="flex items-center gap-1.5">
-            <Dumbbell className="w-4 h-4 text-camini-cobalt" />
-            <span>{exerciseCount} exercícios</span>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <Calendar className="w-4 h-4 text-camini-aqua" />
-            <span>Último: {lastExecuted}</span>
+          {/* Informações secundárias */}
+          <div className="mt-4 flex flex-wrap items-center gap-4 text-xs font-medium text-muted-foreground border-t border-border/60 pt-3.5">
+            <div className="flex items-center gap-1.5">
+              <Dumbbell className="w-3.5 h-3.5" />
+              <span>{exerciseCount} exercícios</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <Calendar className="w-3.5 h-3.5" />
+              <span>Último: {lastExecuted}</span>
+            </div>
           </div>
         </div>
 
         {/* CTA Iniciar Treino */}
-        <div className="mt-6 flex items-center gap-3">
+        <div className="mt-5 pt-1">
           <Button
-            variant="camini"
-            size="md"
-            fullWidth
+            variant="default"
+            size="default"
+            className="w-full gap-2 font-semibold h-10"
             onClick={onStart}
-            className="shadow-lg shadow-blue-500/20"
           >
-            <Play className="w-4 h-4 fill-white" />
+            <Play className="w-4 h-4 fill-current" />
             Iniciar treino
           </Button>
         </div>

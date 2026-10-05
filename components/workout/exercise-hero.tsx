@@ -2,7 +2,7 @@
 
 import React from "react";
 import { Dumbbell, Info, Layers, Repeat } from "lucide-react";
-import { Chip } from "@/components/ui/chip";
+import { Badge } from "@/components/ui/badge";
 
 export interface ExerciseHeroProps {
   name?: string;
@@ -29,76 +29,71 @@ export function ExerciseHero({
 }: ExerciseHeroProps) {
   return (
     <div
-      className={`relative overflow-hidden rounded-xl border border-outline bg-surface-elevated card-elevation ${className}`}
+      className={`relative overflow-hidden rounded-xl border border-border bg-card text-card-foreground shadow-sm ${className}`}
     >
-      {/* Imagem / Área Visual com Gradiente Protetor de Legibilidade */}
-      <div className="relative h-48 sm:h-56 w-full bg-surface-dark overflow-hidden flex items-center justify-center">
-        {/* Arte abstrata geométrica de exercício */}
-        <div className="absolute inset-0 bg-gradient-to-tr from-surface-dark via-surface-dark/90 to-energy-blue/20" />
-
-        {/* Ilustração geométrica contemporânea */}
-        <div className="relative z-10 flex flex-col items-center justify-center text-center p-4">
-          <div className="w-16 h-16 rounded-pill bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center shadow-2xl mb-2 tap-effect">
-            <Dumbbell className="w-8 h-8 text-energy-cyan" />
+      {/* Área de Destaque Visual */}
+      <div className="relative h-40 sm:h-48 w-full bg-muted/40 border-b border-border flex items-center justify-center">
+        <div className="flex flex-col items-center justify-center text-center p-4">
+          <div className="w-14 h-14 rounded-xl bg-background border border-border flex items-center justify-center shadow-xs mb-2 text-primary">
+            <Dumbbell className="w-7 h-7" />
           </div>
-          <span className="text-xs uppercase tracking-widest font-extrabold text-energy-cyan/90">
+          <span className="text-xs uppercase tracking-wider font-semibold text-muted-foreground">
             Exercício Composto
           </span>
         </div>
-
-        {/* Gradiente suave inferior para legibilidade absoluta */}
-        <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-surface-elevated via-surface-elevated/70 to-transparent" />
       </div>
 
       {/* Conteúdo textual do Exercício */}
-      <div className="p-6 relative -mt-8 z-10">
-        <div className="flex flex-wrap items-center gap-2 mb-2">
-          <Chip variant="camini" size="sm" className="text-xs">
-            {category}
-          </Chip>
-          <div className="flex items-center gap-1.5 text-xs font-semibold text-text-secondary">
-            <Layers className="w-3.5 h-3.5 text-camini-cobalt" />
-            <span>{sets}</span>
-            <span>•</span>
-            <Repeat className="w-3.5 h-3.5 text-camini-aqua" />
-            <span>{reps}</span>
+      <div className="p-5 sm:p-6 space-y-5">
+        <div>
+          <div className="flex flex-wrap items-center gap-2 mb-2">
+            <Badge variant="secondary" className="text-xs font-semibold">
+              {category}
+            </Badge>
+            <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
+              <Layers className="w-3.5 h-3.5" />
+              <span>{sets}</span>
+              <span>•</span>
+              <Repeat className="w-3.5 h-3.5" />
+              <span>{reps}</span>
+            </div>
           </div>
+
+          <h2 className="text-xl sm:text-2xl font-bold text-foreground tracking-tight">
+            {name}
+          </h2>
         </div>
 
-        <h1 className="text-2xl sm:text-3xl font-extrabold text-text-primary tracking-tight">
-          {name}
-        </h1>
-
         {/* Músculos trabalhados */}
-        <div className="mt-4">
-          <span className="text-xs font-bold uppercase tracking-wider text-text-secondary block mb-2">
+        <div>
+          <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground block mb-2">
             Músculos Ativados
           </span>
           <div className="flex flex-wrap gap-1.5">
             {muscles.map((muscle, idx) => (
-              <Chip
+              <Badge
                 key={idx}
-                variant={idx === 0 ? "active" : "outline"}
-                size="sm"
+                variant={idx === 0 ? "default" : "outline"}
+                className="text-xs font-medium"
               >
                 {muscle}
-              </Chip>
+              </Badge>
             ))}
           </div>
         </div>
 
         {/* Instruções Essenciais / Cues de Execução */}
-        <div className="mt-5 p-4 rounded-lg bg-surface border border-outline/70">
-          <div className="flex items-center gap-2 mb-2">
-            <Info className="w-4 h-4 text-camini-cobalt" />
-            <span className="text-xs font-bold uppercase tracking-wider text-text-primary">
+        <div className="p-4 rounded-lg bg-muted/30 border border-border">
+          <div className="flex items-center gap-2 mb-2.5">
+            <Info className="w-4 h-4 text-muted-foreground" />
+            <span className="text-xs font-bold uppercase tracking-wider text-foreground">
               Instruções de Execução
             </span>
           </div>
-          <ul className="space-y-1.5 text-xs text-text-secondary leading-relaxed">
+          <ul className="space-y-2 text-xs sm:text-sm text-muted-foreground leading-relaxed">
             {cues.map((cue, i) => (
               <li key={i} className="flex items-start gap-2">
-                <span className="w-1.5 h-1.5 rounded-full bg-camini-cobalt mt-1.5 shrink-0" />
+                <span className="w-1.5 h-1.5 rounded-full bg-foreground/60 mt-2 shrink-0" />
                 <span>{cue}</span>
               </li>
             ))}

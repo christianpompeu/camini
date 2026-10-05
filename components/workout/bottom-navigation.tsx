@@ -1,23 +1,23 @@
 "use client";
 
-import React, { useState } from "react";
+import React from "react";
 import { Dumbbell, History, BookOpen, TrendingUp } from "lucide-react";
 
 export interface NavItem {
-  id: "treinos" | "historico" | "exercicios" | "progresso";
+  id: "treinos" | "exercicios" | "historico" | "progresso";
   label: string;
   icon: React.ComponentType<{ className?: string }>;
 }
 
 export const defaultNavItems: NavItem[] = [
   { id: "treinos", label: "Treinos", icon: Dumbbell },
-  { id: "historico", label: "Histórico", icon: History },
   { id: "exercicios", label: "Exercícios", icon: BookOpen },
+  { id: "historico", label: "Histórico", icon: History },
   { id: "progresso", label: "Progresso", icon: TrendingUp },
 ];
 
 export interface BottomNavigationProps {
-  activeId?: NavItem["id"];
+  activeId?: string;
   onChange?: (id: NavItem["id"]) => void;
   className?: string;
 }
@@ -27,35 +27,33 @@ export function BottomNavigation({
   onChange,
   className = "",
 }: BottomNavigationProps) {
-  const [current, setCurrent] = useState<NavItem["id"]>(activeId);
-
   const handleClick = (id: NavItem["id"]) => {
-    setCurrent(id);
     if (onChange) onChange(id);
   };
 
   return (
     <nav
-      aria-label="Navegação principal"
-      className={`glass-surface rounded-pill p-2 max-w-md w-full shadow-2xl ${className}`}
+      aria-label="Navegação do módulo FORÇA"
+      className={`bg-card/95 backdrop-blur-md border border-border rounded-xl p-1.5 max-w-md w-full shadow-lg ${className}`}
     >
       <ul className="flex items-center justify-around gap-1">
         {defaultNavItems.map((item) => {
-          const isActive = current === item.id;
+          const isActive = activeId === item.id;
           const Icon = item.icon;
 
           return (
             <li key={item.id} className="flex-1">
               <button
+                type="button"
                 onClick={() => handleClick(item.id)}
                 aria-current={isActive ? "page" : undefined}
-                className={`relative flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 w-full min-h-[48px] py-1.5 px-3 rounded-pill text-xs font-semibold transition-all duration-200 tap-effect ${
+                className={`relative flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-1.5 w-full min-h-[46px] py-1.5 px-2.5 rounded-lg text-xs font-semibold transition-all duration-150 ${
                   isActive
-                    ? "bg-gradient-camini text-white shadow-md shadow-blue-500/20"
-                    : "text-text-secondary hover:text-text-primary hover:bg-surface-elevated/40"
+                    ? "bg-primary text-primary-foreground shadow-xs"
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted/60"
                 }`}
               >
-                <Icon className={`w-5 h-5 ${isActive ? "stroke-[2.5]" : "stroke-2"}`} />
+                <Icon className="w-4 h-4 shrink-0" />
                 <span className="tracking-tight text-[11px] sm:text-xs">
                   {item.label}
                 </span>
