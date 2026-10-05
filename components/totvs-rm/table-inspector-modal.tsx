@@ -1,9 +1,31 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Search, Database, ArrowRight, Layers, Key, Link2, Copy, Check, Sparkles } from "lucide-react";
-import { RMSemanticTableWithKey, RMTableSummary, RMSemanticColumn, RMSemanticRelationship } from "@/lib/totvs-rm/types";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import {
+  Search,
+  Database,
+  ArrowRight,
+  Layers,
+  Key,
+  Link2,
+  Copy,
+  Check,
+  Sparkles,
+  X,
+} from "lucide-react";
+import {
+  RMSemanticTableWithKey,
+  RMTableSummary,
+  RMSemanticColumn,
+  RMSemanticRelationship,
+} from "@/lib/totvs-rm/types";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
@@ -14,7 +36,12 @@ interface TableInspectorModalProps {
   onSelectTable?: (tableName: string) => void;
 }
 
-export function TableInspectorModal({ isOpen, onClose, initialTable, onSelectTable }: TableInspectorModalProps) {
+export function TableInspectorModal({
+  isOpen,
+  onClose,
+  initialTable,
+  onSelectTable,
+}: TableInspectorModalProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedModule, setSelectedModule] = useState("");
   const [tables, setTables] = useState<RMTableSummary[]>([]);
@@ -59,7 +86,9 @@ export function TableInspectorModal({ isOpen, onClose, initialTable, onSelectTab
     const fetchDetails = async () => {
       setLoadingDetails(true);
       try {
-        const res = await fetch(`/api/totvs-rm/tables?table=${encodeURIComponent(activeTable)}`);
+        const res = await fetch(
+          `/api/totvs-rm/tables?table=${encodeURIComponent(activeTable)}`
+        );
         if (res.ok) {
           const data: RMSemanticTableWithKey = await res.json();
           setTableDetails(data);
@@ -84,30 +113,44 @@ export function TableInspectorModal({ isOpen, onClose, initialTable, onSelectTab
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-w-5xl h-[85vh] p-0 flex flex-col overflow-hidden">
-        <DialogHeader className="p-4 border-b border-border bg-muted/30 shrink-0">
+      <DialogContent
+        showCloseButton={false}
+        className="p-0 gap-0 w-[96vw] sm:max-w-5xl md:max-w-6xl h-[88vh] max-h-[840px] flex flex-col overflow-hidden ring-1 ring-border shadow-2xl"
+      >
+        <DialogHeader className="p-4 border-b border-border bg-muted/30 shrink-0 flex flex-row items-center justify-between space-y-0">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-md bg-primary/10 text-primary">
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary shrink-0">
               <Database className="h-5 w-5" />
             </div>
-            <div className="flex flex-col items-start gap-1">
-              <DialogTitle className="flex items-center gap-2 text-base">
-                Dicionário de Dados TOTVS RM
-                <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded-full bg-primary/10 text-primary">
+            <div className="flex flex-col items-start gap-0.5">
+              <DialogTitle className="flex items-center gap-2 text-base font-bold">
+                <span>Dicionário de Dados TOTVS RM</span>
+                <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20">
                   9.400+ Tabelas
                 </span>
               </DialogTitle>
-              <DialogDescription className="text-xs">
-                Consulte esquemas, campos, tipos e relacionamentos
+              <DialogDescription className="text-xs text-muted-foreground">
+                Consulte esquemas, campos, tipos e relacionamentos de chave estrangeira
               </DialogDescription>
             </div>
           </div>
+
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onClose}
+            className="h-8 w-8 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted"
+            title="Fechar"
+          >
+            <X className="h-4 w-4" />
+            <span className="sr-only">Fechar</span>
+          </Button>
         </DialogHeader>
 
-        <div className="flex-1 flex flex-col md:flex-row min-h-0">
+        <div className="flex-1 flex flex-col md:flex-row min-h-0 overflow-hidden">
           {/* Esquerda: Busca e Lista */}
-          <div className="w-full md:w-80 border-r border-border flex flex-col bg-muted/10 shrink-0">
-            <div className="p-3 border-b border-border space-y-3">
+          <div className="w-full md:w-80 border-r border-border flex flex-col bg-muted/10 shrink-0 h-48 md:h-full">
+            <div className="p-3 border-b border-border space-y-3 shrink-0">
               <div className="relative">
                 <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                 <Input
@@ -144,9 +187,13 @@ export function TableInspectorModal({ isOpen, onClose, initialTable, onSelectTab
 
             <div className="flex-1 overflow-y-auto p-2 space-y-1">
               {loadingList ? (
-                <div className="p-6 text-center text-xs text-muted-foreground">Carregando catálogo...</div>
+                <div className="p-6 text-center text-xs text-muted-foreground">
+                  Carregando catálogo...
+                </div>
               ) : tables.length === 0 ? (
-                <div className="p-6 text-center text-xs text-muted-foreground">Nenhuma tabela encontrada.</div>
+                <div className="p-6 text-center text-xs text-muted-foreground">
+                  Nenhuma tabela encontrada.
+                </div>
               ) : (
                 tables.map((t) => (
                   <button
@@ -164,7 +211,9 @@ export function TableInspectorModal({ isOpen, onClose, initialTable, onSelectTab
                         {t.sistema.replace("RM ", "")}
                       </span>
                     </div>
-                    <span className="text-[11px] truncate w-full block">{t.descricao || "Sem descrição"}</span>
+                    <span className="text-[11px] truncate w-full block">
+                      {t.descricao || "Sem descrição"}
+                    </span>
                   </button>
                 ))
               )}
@@ -172,7 +221,7 @@ export function TableInspectorModal({ isOpen, onClose, initialTable, onSelectTab
           </div>
 
           {/* Direita: Detalhes */}
-          <div className="flex-1 flex flex-col min-h-0 bg-background">
+          <div className="flex-1 flex flex-col min-h-0 bg-background overflow-hidden">
             {loadingDetails ? (
               <div className="flex-1 flex items-center justify-center text-sm text-muted-foreground">
                 Carregando campos...
@@ -182,26 +231,30 @@ export function TableInspectorModal({ isOpen, onClose, initialTable, onSelectTab
                 Selecione uma tabela
               </div>
             ) : (
-              <div className="flex-1 flex flex-col min-h-0">
-                <div className="p-5 border-b border-border bg-muted/10 flex items-center justify-between shrink-0">
-                  <div>
+              <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
+                <div className="p-4 sm:p-5 border-b border-border bg-muted/10 flex items-center justify-between shrink-0">
+                  <div className="min-w-0 flex-1 mr-4">
                     <div className="flex items-center gap-2">
-                      <h3 className="text-xl font-bold font-mono">{tableDetails.tabela}</h3>
+                      <h3 className="text-lg sm:text-xl font-bold font-mono truncate">
+                        {tableDetails.tabela}
+                      </h3>
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="h-7 w-7"
+                        className="h-7 w-7 shrink-0 text-muted-foreground hover:text-foreground"
                         onClick={() => handleCopy(tableDetails.tabela)}
+                        title="Copiar nome da tabela"
                       >
                         {copiedText === tableDetails.tabela ? (
                           <Check className="h-4 w-4 text-green-500" />
                         ) : (
-                          <Copy className="h-4 w-4 text-muted-foreground" />
+                          <Copy className="h-4 w-4" />
                         )}
                       </Button>
                     </div>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      {tableDetails.descricao || "Tabela do RM"} • {tableDetails.colunas.length} colunas
+                    <p className="text-xs sm:text-sm text-muted-foreground mt-0.5 truncate">
+                      {tableDetails.descricao || "Tabela do RM"} •{" "}
+                      {tableDetails.colunas.length} colunas
                     </p>
                   </div>
 
@@ -211,41 +264,59 @@ export function TableInspectorModal({ isOpen, onClose, initialTable, onSelectTab
                         onSelectTable(tableDetails.tabela);
                         onClose();
                       }}
-                      className="gap-2"
+                      size="sm"
+                      className="gap-2 shrink-0 h-9"
                     >
                       <Sparkles className="h-4 w-4" />
-                      Inserir no Chat
+                      <span className="hidden sm:inline">Inserir no Chat</span>
+                      <span className="sm:hidden">Inserir</span>
                     </Button>
                   )}
                 </div>
 
-                <div className="flex-1 overflow-y-auto p-5 space-y-6">
+                <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6">
                   <div>
                     <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-3 flex items-center gap-2">
                       <Layers className="h-4 w-4" />
                       Colunas & Tipos
                     </h4>
 
-                    <div className="rounded-md border border-border overflow-hidden">
-                      <table className="w-full text-left text-sm">
-                        <thead className="bg-muted">
+                    <div className="rounded-md border border-border overflow-hidden bg-background">
+                      <table className="w-full text-left text-xs sm:text-sm">
+                        <thead className="bg-muted/60 border-b border-border">
                           <tr>
-                            <th className="px-4 py-3 font-medium text-muted-foreground">Coluna</th>
-                            <th className="px-4 py-3 font-medium text-muted-foreground">Tipo</th>
-                            <th className="px-4 py-3 font-medium text-muted-foreground">Descrição</th>
+                            <th className="px-4 py-2.5 font-semibold text-muted-foreground w-1/3">
+                              Coluna
+                            </th>
+                            <th className="px-4 py-2.5 font-semibold text-muted-foreground w-1/4">
+                              Tipo
+                            </th>
+                            <th className="px-4 py-2.5 font-semibold text-muted-foreground">
+                              Descrição
+                            </th>
                           </tr>
                         </thead>
-                        <tbody className="divide-y divide-border bg-background">
+                        <tbody className="divide-y divide-border">
                           {tableDetails.colunas.map((col: RMSemanticColumn) => {
-                            const isPk = col.nome.startsWith("COD") || col.nome.startsWith("ID") || col.nome === "CHAPA";
+                            const isPk =
+                              col.nome.startsWith("COD") ||
+                              col.nome.startsWith("ID") ||
+                              col.nome === "CHAPA";
                             return (
-                              <tr key={col.nome} className="hover:bg-muted/50 transition-colors font-mono">
-                                <td className="px-4 py-3 text-foreground font-semibold flex items-center gap-2">
-                                  {isPk && <Key className="h-3.5 w-3.5 text-amber-500 shrink-0" />}
-                                  {col.nome}
+                              <tr
+                                key={col.nome}
+                                className="hover:bg-muted/40 transition-colors font-mono"
+                              >
+                                <td className="px-4 py-2.5 text-foreground font-semibold flex items-center gap-2">
+                                  {isPk && (
+                                    <Key className="h-3.5 w-3.5 text-amber-500 shrink-0" />
+                                  )}
+                                  <span className="truncate">{col.nome}</span>
                                 </td>
-                                <td className="px-4 py-3 text-sky-500">{col.tipo}</td>
-                                <td className="px-4 py-3 text-muted-foreground text-xs font-sans">
+                                <td className="px-4 py-2.5 text-sky-500 dark:text-sky-400 font-mono text-xs">
+                                  {col.tipo}
+                                </td>
+                                <td className="px-4 py-2.5 text-muted-foreground text-xs font-sans">
                                   {col.descricao || "-"}
                                 </td>
                               </tr>
@@ -256,32 +327,38 @@ export function TableInspectorModal({ isOpen, onClose, initialTable, onSelectTab
                     </div>
                   </div>
 
-                  {tableDetails.relacionamentos_saida && tableDetails.relacionamentos_saida.length > 0 && (
-                    <div>
-                      <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-3 flex items-center gap-2">
-                        <Link2 className="h-4 w-4" />
-                        Relacionamentos de Saída
-                      </h4>
+                  {tableDetails.relacionamentos_saida &&
+                    tableDetails.relacionamentos_saida.length > 0 && (
+                      <div>
+                        <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-3 flex items-center gap-2">
+                          <Link2 className="h-4 w-4" />
+                          Relacionamentos de Saída (
+                          {tableDetails.relacionamentos_saida.length})
+                        </h4>
 
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                        {tableDetails.relacionamentos_saida.map((rel: RMSemanticRelationship, idx: number) => (
-                          <div
-                            key={idx}
-                            className="p-3 rounded-md border border-border bg-muted/20 text-sm space-y-1.5"
-                          >
-                            <div className="flex items-center gap-2 font-mono font-semibold">
-                              <span>{tableDetails.tabela}</span>
-                              <ArrowRight className="h-3.5 w-3.5 text-muted-foreground" />
-                              <span className="text-primary">{rel.tabela_destino}</span>
-                            </div>
-                            <div className="text-xs font-mono text-muted-foreground">
-                              ON {rel.chaves_ligacao}
-                            </div>
-                          </div>
-                        ))}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                          {tableDetails.relacionamentos_saida.map(
+                            (rel: RMSemanticRelationship, idx: number) => (
+                              <div
+                                key={idx}
+                                className="p-3 rounded-md border border-border bg-muted/20 text-xs space-y-1.5 hover:border-border/80 transition-colors"
+                              >
+                                <div className="flex items-center gap-2 font-mono font-semibold">
+                                  <span>{tableDetails.tabela}</span>
+                                  <ArrowRight className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                                  <span className="text-primary font-bold">
+                                    {rel.tabela_destino}
+                                  </span>
+                                </div>
+                                <div className="text-[11px] font-mono text-muted-foreground break-all">
+                                  ON {rel.chaves_ligacao}
+                                </div>
+                              </div>
+                            )
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  )}
+                    )}
                 </div>
               </div>
             )}
