@@ -1,8 +1,10 @@
 "use client";
 
 import React, { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { 
   Plus, 
+  Pencil,
   Loader2, 
   Search, 
   Users, 
@@ -29,8 +31,140 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { createProfessor, deleteProfessor, type Professor } from "../actions";
+import { createProfessor, updateProfessor, deleteProfessor, type Professor } from "../actions";
 import { DeleteWithDependencyCheckDialog } from "../delete-dependency-dialog";
+
+// =========================================================================
+// Dialog de Edição de Professor
+// =========================================================================
+export function EditarProfessorDialog({
+  professor,
+  onUpdated,
+}: {
+  professor: Professor;
+  onUpdated?: () => void;
+}) {
+  const router = useRouter();
+  const [open, setOpen] = useState(false);
+  const [isPending, startTransition] = useTransition();
+  const [error, setError] = useState<string | null>(null);
+
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setError(null);
+    const formData = new FormData(e.currentTarget);
+
+    startTransition(async () => {
+      const res = await updateProfessor(professor.id, formData);
+      if (res.error) {
+        setError(res.error);
+      } else {
+        setOpen(false);
+        router.refresh();
+        onUpdated?.();
+      }
+    });
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger
+        render={
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 text-muted-foreground hover:text-foreground"
+            title={`Editar ${professor.nome}`}
+          />
+        }
+      >
+        <Pencil className="h-3.5 w-3.5" />
+        <span className="sr-only">Editar {professor.nome}</span>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Editar Professor</DialogTitle>
+          <DialogDescription>
+            Atualize as informações do docente no CTC.
+          </DialogDescription>
+        </DialogHeader>
+
+        <form onSubmit={handleSubmit} className="space-y-4 py-2">
+          {error && (
+            <div
+              role="alert"
+              className="p-3 bg-destructive/10 text-destructive text-sm rounded-md border border-destructive/20 flex items-center gap-2 font-medium"
+            >
+              <AlertCircle className="h-4 w-4 shrink-0" />
+              <span>{error}</span>
+            </div>
+          )}
+
+          <div className="space-y-1.5">
+            <Label htmlFor={`edit-nome-${professor.id}`} className="text-sm font-medium">
+              Nome Completo <span className="text-destructive">*</span>
+            </Label>
+            <Input
+              id={`edit-nome-${professor.id}`}
+              name="nome"
+              defaultValue={professor.nome}
+              required
+              disabled={isPending}
+            />
+          </div>
+
+          <div className="space-y-1.5">
+            <Label htmlFor={`edit-email-${professor.id}`} className="text-sm font-medium">
+              E-mail
+            </Label>
+            <Input
+              id={`edit-email-${professor.id}`}
+              name="email"
+              type="email"
+              defaultValue={professor.email || ""}
+              placeholder="carlos.eduardo@exemplo.com"
+              disabled={isPending}
+            />
+          </div>
+
+          <div className="space-y-1.5">
+            <Label htmlFor={`edit-telefone-${professor.id}`} className="text-sm font-medium">
+              Telefone / WhatsApp
+            </Label>
+            <Input
+              id={`edit-telefone-${professor.id}`}
+              name="telefone"
+              defaultValue={professor.telefone || ""}
+              placeholder="(11) 98765-4321"
+              disabled={isPending}
+            />
+          </div>
+
+          <DialogFooter className="pt-3">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setOpen(false)}
+              disabled={isPending}
+            >
+              Cancelar
+            </Button>
+            <Button type="submit" disabled={isPending}>
+              {isPending ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Salvando...
+                </>
+              ) : (
+                "Salvar Alterações"
+              )}
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
 
 // =========================================================================
 // Dialog de Criação de Professor
@@ -296,7 +430,7 @@ export function ProfessoresList({
                   <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                     Telefone
                   </TableHead>
-                  <TableHead className="w-[100px] text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  <TableHead className="w-[110px] text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                     Ações
                   </TableHead>
                 </TableRow>
@@ -317,11 +451,14 @@ export function ProfessoresList({
                       {prof.telefone || <span className="text-muted-foreground/50">—</span>}
                     </TableCell>
                     <TableCell className="text-right">
-                      <DeleteProfessorDialog
-                        id={prof.id}
-                        nome={prof.nome}
-                        onDeleted={handleDeleted}
-                      />
+                      <div className="flex items-center justify-end gap-1">
+                        <EditarProfessorDialog professor={prof} />
+                        <DeleteProfessorDialog
+                          id={prof.id}
+                          nome={prof.nome}
+                          onDeleted={handleDeleted}
+                        />
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}

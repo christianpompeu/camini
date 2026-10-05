@@ -1,8 +1,10 @@
 "use client";
 
 import React, { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { 
   Plus, 
+  Pencil,
   Loader2, 
   Search, 
   BookOpen, 
@@ -30,8 +32,141 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { createDisciplina, deleteDisciplina, type Disciplina } from "../actions";
+import { createDisciplina, updateDisciplina, deleteDisciplina, type Disciplina } from "../actions";
 import { DeleteWithDependencyCheckDialog } from "../delete-dependency-dialog";
+
+// =========================================================================
+// Dialog de Edição de Disciplina
+// =========================================================================
+export function EditarDisciplinaDialog({
+  disciplina,
+  onUpdated,
+}: {
+  disciplina: Disciplina;
+  onUpdated?: () => void;
+}) {
+  const router = useRouter();
+  const [open, setOpen] = useState(false);
+  const [isPending, startTransition] = useTransition();
+  const [error, setError] = useState<string | null>(null);
+
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setError(null);
+    const formData = new FormData(e.currentTarget);
+
+    startTransition(async () => {
+      const res = await updateDisciplina(disciplina.id, formData);
+      if (res.error) {
+        setError(res.error);
+      } else {
+        setOpen(false);
+        router.refresh();
+        onUpdated?.();
+      }
+    });
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger
+        render={
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 text-muted-foreground hover:text-foreground"
+            title={`Editar ${disciplina.nome}`}
+          />
+        }
+      >
+        <Pencil className="h-3.5 w-3.5" />
+        <span className="sr-only">Editar {disciplina.nome}</span>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Editar Disciplina</DialogTitle>
+          <DialogDescription>
+            Atualize as informações da disciplina na grade curricular.
+          </DialogDescription>
+        </DialogHeader>
+
+        <form onSubmit={handleSubmit} className="space-y-4 py-2">
+          {error && (
+            <div
+              role="alert"
+              className="p-3 bg-destructive/10 text-destructive text-sm rounded-md border border-destructive/20 flex items-center gap-2 font-medium"
+            >
+              <AlertCircle className="h-4 w-4 shrink-0" />
+              <span>{error}</span>
+            </div>
+          )}
+
+          <div className="space-y-1.5">
+            <Label htmlFor={`edit-nome-${disciplina.id}`} className="text-sm font-medium">
+              Nome da Disciplina <span className="text-destructive">*</span>
+            </Label>
+            <Input
+              id={`edit-nome-${disciplina.id}`}
+              name="nome"
+              defaultValue={disciplina.nome}
+              required
+              disabled={isPending}
+            />
+          </div>
+
+          <div className="space-y-1.5">
+            <Label htmlFor={`edit-descricao-${disciplina.id}`} className="text-sm font-medium">
+              Descrição / Ementa
+            </Label>
+            <Input
+              id={`edit-descricao-${disciplina.id}`}
+              name="descricao"
+              defaultValue={disciplina.descricao || ""}
+              placeholder="Breve ementa ou tópicos da matéria"
+              disabled={isPending}
+            />
+          </div>
+
+          <div className="space-y-1.5">
+            <Label htmlFor={`edit-carga-${disciplina.id}`} className="text-sm font-medium">
+              Carga Horária Total (Horas)
+            </Label>
+            <Input
+              id={`edit-carga-${disciplina.id}`}
+              name="carga_horaria"
+              type="number"
+              min="1"
+              defaultValue={disciplina.carga_horaria ?? ""}
+              placeholder="Ex: 40"
+              disabled={isPending}
+            />
+          </div>
+
+          <DialogFooter className="pt-3">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setOpen(false)}
+              disabled={isPending}
+            >
+              Cancelar
+            </Button>
+            <Button type="submit" disabled={isPending}>
+              {isPending ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Salvando...
+                </>
+              ) : (
+                "Salvar Alterações"
+              )}
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
 
 // =========================================================================
 // Dialog de Criação de Disciplina
@@ -296,7 +431,7 @@ export function DisciplinasList({
                   <TableHead className="w-[140px] text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                     Carga Horária
                   </TableHead>
-                  <TableHead className="w-[100px] text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  <TableHead className="w-[110px] text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                     Ações
                   </TableHead>
                 </TableRow>
@@ -323,11 +458,14 @@ export function DisciplinasList({
                       )}
                     </TableCell>
                     <TableCell className="text-right">
-                      <DeleteDisciplinaDialog
-                        id={disc.id}
-                        nome={disc.nome}
-                        onDeleted={handleDeleted}
-                      />
+                      <div className="flex items-center justify-end gap-1">
+                        <EditarDisciplinaDialog disciplina={disc} />
+                        <DeleteDisciplinaDialog
+                          id={disc.id}
+                          nome={disc.nome}
+                          onDeleted={handleDeleted}
+                        />
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}

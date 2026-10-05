@@ -1,8 +1,10 @@
 "use client";
 
 import React, { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { 
   Plus, 
+  Pencil,
   Trash2, 
   Loader2, 
   Search, 
@@ -43,7 +45,198 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { createAula, deleteAula, type Aula, type Disciplina, type Professor } from "../actions";
+import { createAula, updateAula, deleteAula, type Aula, type Disciplina, type Professor } from "../actions";
+
+function formatForDateTimeLocal(isoString: string): string {
+  if (!isoString) return "";
+  try {
+    const d = new Date(isoString);
+    if (isNaN(d.getTime())) {
+      return isoString.slice(0, 16);
+    }
+    const pad = (n: number) => String(n).padStart(2, "0");
+    const year = d.getFullYear();
+    const month = pad(d.getMonth() + 1);
+    const day = pad(d.getDate());
+    const hours = pad(d.getHours());
+    const minutes = pad(d.getMinutes());
+    return `${year}-${month}-${day}T${hours}:${minutes}`;
+  } catch {
+    return isoString.slice(0, 16);
+  }
+}
+
+// =========================================================================
+// Dialog de Edição de Aula
+// =========================================================================
+export function EditarAulaDialog({
+  aula,
+  disciplinas,
+  professores,
+  onUpdated,
+}: {
+  aula: Aula;
+  disciplinas: Disciplina[];
+  professores: Professor[];
+  onUpdated?: () => void;
+}) {
+  const router = useRouter();
+  const [open, setOpen] = useState(false);
+  const [isPending, startTransition] = useTransition();
+  const [error, setError] = useState<string | null>(null);
+
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setError(null);
+    const formData = new FormData(e.currentTarget);
+
+    startTransition(async () => {
+      const res = await updateAula(aula.id, formData);
+      if (res.error) {
+        setError(res.error);
+      } else {
+        setOpen(false);
+        router.refresh();
+        onUpdated?.();
+      }
+    });
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger
+        render={
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 text-muted-foreground hover:text-foreground"
+            title="Editar aula"
+          />
+        }
+      >
+        <Pencil className="h-3.5 w-3.5" />
+        <span className="sr-only">Editar aula</span>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-lg">
+        <DialogHeader>
+          <DialogTitle>Editar Aula Programada</DialogTitle>
+          <DialogDescription>
+            Altere a disciplina, professor, data e horário ou duração da aula.
+          </DialogDescription>
+        </DialogHeader>
+
+        <form onSubmit={handleSubmit} className="space-y-4 py-2">
+          {error && (
+            <div
+              role="alert"
+              className="p-3 bg-destructive/10 text-destructive text-sm rounded-md border border-destructive/20 flex items-center gap-2 font-medium"
+            >
+              <AlertCircle className="h-4 w-4 shrink-0" />
+              <span>{error}</span>
+            </div>
+          )}
+
+          <div className="space-y-1.5">
+            <Label htmlFor={`edit-disciplina-${aula.id}`} className="text-sm font-medium">
+              Disciplina <span className="text-destructive">*</span>
+            </Label>
+            <select
+              id={`edit-disciplina-${aula.id}`}
+              name="disciplina_id"
+              defaultValue={aula.disciplina_id}
+              required
+              disabled={isPending}
+              className="w-full h-9 rounded-md border border-input bg-background px-3 py-1 text-sm text-foreground shadow-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              <option value="">Selecione uma disciplina...</option>
+              {disciplinas.map((d) => (
+                <option key={d.id} value={d.id}>
+                  {d.nome} {d.carga_horaria ? `(${d.carga_horaria}h)` : ""}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="space-y-1.5">
+            <Label htmlFor={`edit-professor-${aula.id}`} className="text-sm font-medium">
+              Professor Responsável <span className="text-destructive">*</span>
+            </Label>
+            <select
+              id={`edit-professor-${aula.id}`}
+              name="professor_id"
+              defaultValue={aula.professor_id}
+              required
+              disabled={isPending}
+              className="w-full h-9 rounded-md border border-input bg-background px-3 py-1 text-sm text-foreground shadow-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              <option value="">Selecione um professor...</option>
+              {professores.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.nome}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <Label htmlFor={`edit-data-hora-${aula.id}`} className="text-sm font-medium">
+                Data e Horário de Início <span className="text-destructive">*</span>
+              </Label>
+              <Input
+                id={`edit-data-hora-${aula.id}`}
+                name="data_hora"
+                type="datetime-local"
+                defaultValue={formatForDateTimeLocal(aula.data_hora)}
+                required
+                disabled={isPending}
+                className="h-9 text-sm"
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor={`edit-duracao-${aula.id}`} className="text-sm font-medium">
+                Duração (Minutos)
+              </Label>
+              <Input
+                id={`edit-duracao-${aula.id}`}
+                name="duracao_minutos"
+                type="number"
+                defaultValue={aula.duracao_minutos || 60}
+                min={15}
+                step={15}
+                required
+                disabled={isPending}
+                className="h-9 text-sm"
+              />
+            </div>
+          </div>
+
+          <DialogFooter className="pt-3">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setOpen(false)}
+              disabled={isPending}
+            >
+              Cancelar
+            </Button>
+            <Button type="submit" disabled={isPending}>
+              {isPending ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Salvando...
+                </>
+              ) : (
+                "Salvar Alterações"
+              )}
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
 
 // =========================================================================
 // Dialog de Agendamento de Aula
@@ -485,7 +678,7 @@ export function AulasList({
                   <TableHead className="w-[120px] text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                     Duração
                   </TableHead>
-                  <TableHead className="w-[100px] text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  <TableHead className="w-[110px] text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                     Ações
                   </TableHead>
                 </TableRow>
@@ -519,11 +712,18 @@ export function AulasList({
                         </Badge>
                       </TableCell>
                       <TableCell className="text-right">
-                        <DeleteAulaDialog
-                          id={aula.id}
-                          disciplinaNome={aula.disciplina?.nome}
-                          dataHora={aula.data_hora}
-                        />
+                        <div className="flex items-center justify-end gap-1">
+                          <EditarAulaDialog
+                            aula={aula}
+                            disciplinas={disciplinas}
+                            professores={professores}
+                          />
+                          <DeleteAulaDialog
+                            id={aula.id}
+                            disciplinaNome={aula.disciplina?.nome}
+                            dataHora={aula.data_hora}
+                          />
+                        </div>
                       </TableCell>
                     </TableRow>
                   );

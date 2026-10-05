@@ -139,6 +139,31 @@ export async function createProfessor(formData: FormData) {
   return { success: true };
 }
 
+export async function updateProfessor(id: string, formData: FormData) {
+  const nome = formData.get("nome") as string;
+  const email = formData.get("email") as string;
+  const telefone = formData.get("telefone") as string;
+
+  if (!nome || !nome.trim()) return { error: "Nome é obrigatório." };
+
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("ctc_professores")
+    .update({
+      nome: nome.trim(),
+      email: email?.trim() || null,
+      telefone: telefone?.trim() || null,
+    })
+    .eq("id", id);
+
+  if (error) return { error: error.message };
+
+  revalidatePath("/dashboard/ctc/professores");
+  revalidatePath("/dashboard/ctc/aulas");
+  revalidatePath("/ctc/calendario");
+  return { success: true };
+}
+
 export async function deleteProfessor(id: string) {
   const supabase = await createClient();
   const { error } = await supabase.from("ctc_professores").delete().eq("id", id);
@@ -187,6 +212,31 @@ export async function createDisciplina(formData: FormData) {
 
   revalidatePath("/dashboard/ctc/disciplinas");
   revalidatePath("/dashboard/ctc/aulas");
+  return { success: true };
+}
+
+export async function updateDisciplina(id: string, formData: FormData) {
+  const nome = formData.get("nome") as string;
+  const descricao = formData.get("descricao") as string;
+  const carga_horaria_str = formData.get("carga_horaria") as string;
+
+  if (!nome || !nome.trim()) return { error: "Nome é obrigatório." };
+
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("ctc_disciplinas")
+    .update({
+      nome: nome.trim(),
+      descricao: descricao?.trim() || null,
+      carga_horaria: carga_horaria_str ? parseInt(carga_horaria_str) : null,
+    })
+    .eq("id", id);
+
+  if (error) return { error: error.message };
+
+  revalidatePath("/dashboard/ctc/disciplinas");
+  revalidatePath("/dashboard/ctc/aulas");
+  revalidatePath("/ctc/calendario");
   return { success: true };
 }
 
@@ -242,6 +292,34 @@ export async function createAula(formData: FormData) {
 
   revalidatePath("/dashboard/ctc/aulas");
   revalidatePath("/ctc/calendario"); // Caso exista página pública
+  return { success: true };
+}
+
+export async function updateAula(id: string, formData: FormData) {
+  const disciplina_id = formData.get("disciplina_id") as string;
+  const professor_id = formData.get("professor_id") as string;
+  const data_hora = formData.get("data_hora") as string;
+  const duracao_str = formData.get("duracao_minutos") as string;
+
+  if (!disciplina_id || !professor_id || !data_hora) {
+    return { error: "Preencha todos os campos obrigatórios." };
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("ctc_aulas")
+    .update({
+      disciplina_id,
+      professor_id,
+      data_hora,
+      duracao_minutos: duracao_str ? parseInt(duracao_str) : 60,
+    })
+    .eq("id", id);
+
+  if (error) return { error: error.message };
+
+  revalidatePath("/dashboard/ctc/aulas");
+  revalidatePath("/ctc/calendario");
   return { success: true };
 }
 
