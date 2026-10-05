@@ -7,10 +7,11 @@ import {
   X,
   Home,
   Dumbbell,
-  Sparkles,
   ArrowRight,
-  Layers,
+  LayoutGrid,
   Database,
+  CalendarDays,
+  Palette,
 } from "lucide-react";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 
@@ -45,6 +46,50 @@ export function MobileSidebar({ isOpen, onClose }: MobileSidebarProps) {
   const isPlayground = pathname.startsWith("/playground");
   const isForca = pathname.startsWith("/forca");
   const isTotvsRm = pathname.startsWith("/totvs-rm");
+  const isCalendario = pathname.startsWith("/ctc/calendario");
+
+  const modules = [
+    {
+      href: "/dashboard",
+      title: "Dashboard Central",
+      subtitle: "Portal Administrativo",
+      badge: "Portal",
+      icon: LayoutGrid,
+      isActive: isDashboard,
+    },
+    {
+      href: "/totvs-rm",
+      title: "RM SQL AI",
+      subtitle: "Consultas & Dicionário",
+      badge: "TOTVS RM",
+      icon: Database,
+      isActive: isTotvsRm,
+    },
+    {
+      href: "/forca",
+      title: "App FORÇA",
+      subtitle: "Cargas, Séries & RIR",
+      badge: "Treino",
+      icon: Dumbbell,
+      isActive: isForca,
+    },
+    {
+      href: "/ctc/calendario",
+      title: "Calendário Público",
+      subtitle: "Grade de Aulas CTC",
+      badge: "CTC",
+      icon: CalendarDays,
+      isActive: isCalendario,
+    },
+    {
+      href: "/playground",
+      title: "Design System",
+      subtitle: "Playground & Tokens",
+      badge: "Catálogo",
+      icon: Palette,
+      isActive: isPlayground,
+    },
+  ];
 
   return (
     <div
@@ -53,7 +98,7 @@ export function MobileSidebar({ isOpen, onClose }: MobileSidebarProps) {
       }`}
       aria-hidden={!isOpen}
     >
-      {/* Backdrop escuro com blur com transição suave de opacidade */}
+      {/* Backdrop escuro com blur */}
       <div
         onClick={onClose}
         aria-hidden="true"
@@ -62,32 +107,32 @@ export function MobileSidebar({ isOpen, onClose }: MobileSidebarProps) {
         }`}
       />
 
-      {/* Drawer lateral deslizante vindo da direita com física suave Material 3 */}
+      {/* Drawer lateral deslizante */}
       <aside
         role="dialog"
         aria-modal="true"
-        aria-label="Menu de Navegação camini"
-        className={`fixed inset-y-0 right-0 w-4/5 max-w-sm glass-surface bg-surface/95 border-l border-outline p-6 flex flex-col justify-between shadow-2xl transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] will-change-transform ${
+        aria-label="Menu de Navegação Camini"
+        className={`fixed inset-y-0 right-0 w-4/5 max-w-sm bg-background border-l border-border p-6 flex flex-col justify-between shadow-2xl transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] will-change-transform overflow-y-auto ${
           isOpen ? "translate-x-0" : "translate-x-full"
         }`}
       >
-        <div>
+        <div className="space-y-6">
           {/* Cabeçalho da Sidebar */}
-          <div className="flex items-center justify-between pb-6 border-b border-outline">
+          <div className="flex items-center justify-between pb-5 border-b border-border">
             <Link
               href="/"
               onClick={onClose}
-              className="flex items-center gap-2.5 tap-effect"
+              className="flex items-center gap-2.5"
             >
-              <div className="w-10 h-10 rounded-lg bg-gradient-energy flex items-center justify-center text-white font-black text-lg shadow-md shadow-energy-blue/20">
+              <div className="h-9 w-9 rounded-lg bg-primary text-primary-foreground flex items-center justify-center font-bold text-lg">
                 C
               </div>
               <div className="flex flex-col">
-                <span className="font-black text-xl tracking-tight text-text-primary">
-                  camini
+                <span className="font-bold text-lg tracking-tight leading-tight">
+                  Camini
                 </span>
-                <span className="text-[10px] font-bold text-energy-blue tracking-wider uppercase">
-                  Plataforma Integrada
+                <span className="text-[10px] font-semibold text-muted-foreground tracking-wider uppercase">
+                  Studio Admin
                 </span>
               </div>
             </Link>
@@ -95,242 +140,107 @@ export function MobileSidebar({ isOpen, onClose }: MobileSidebarProps) {
             <button
               onClick={onClose}
               aria-label="Fechar menu"
-              className="w-11 h-11 rounded-pill bg-surface-elevated border border-outline flex items-center justify-center text-text-secondary hover:text-text-primary tap-effect"
+              className="h-9 w-9 rounded-md border border-border flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
             >
-              <X className="w-5 h-5" />
+              <X className="w-4 h-4" />
             </button>
           </div>
 
-          {/* Links e Módulos */}
-          <nav className="mt-6 space-y-4" aria-label="Aplicações camini">
+          {/* Links Principais */}
+          <nav className="space-y-4" aria-label="Navegação Principal">
             <div>
-              <span className="text-[11px] font-bold uppercase tracking-wider text-text-secondary px-2 mb-2 block">
+              <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground px-1 mb-2 block">
                 Navegação
               </span>
               <Link
                 href="/"
                 onClick={onClose}
-                className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-semibold transition-all tap-effect min-h-[48px] ${
+                className={`flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-colors ${
                   isHome
-                    ? "bg-gradient-energy text-white font-bold shadow-md shadow-energy-blue/20"
-                    : "text-text-secondary hover:text-text-primary hover:bg-surface-elevated"
+                    ? "bg-primary text-primary-foreground font-semibold"
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
                 }`}
               >
-                <Home className="w-5 h-5 shrink-0" />
-                <span>Início (camini Hub)</span>
+                <Home className="w-4 h-4 shrink-0" />
+                <span>Início (Hub Camini)</span>
               </Link>
             </div>
 
             {/* Módulos do Ecossistema */}
-            <div className="space-y-2 pt-2 border-t border-outline/50">
-              <span className="text-[11px] font-bold uppercase tracking-wider text-text-secondary px-2 mb-2 block">
+            <div className="space-y-2 pt-3 border-t border-border">
+              <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground px-1 mb-2 block">
                 Módulos & Aplicações
               </span>
 
-              {/* Card / Link do Dashboard */}
-              <Link
-                href="/dashboard"
-                onClick={onClose}
-                className={`flex items-center justify-between p-3.5 rounded-xl border transition-all tap-effect min-h-[56px] ${
-                  isDashboard
-                    ? "bg-gradient-energy text-white font-bold border-transparent shadow-lg shadow-energy-blue/25"
-                    : "bg-surface-elevated border-outline hover:border-energy-coral/40 text-text-primary"
-                }`}
-              >
-                <div className="flex items-center gap-3">
-                  <div
-                    className={`w-9 h-9 rounded-pill flex items-center justify-center shrink-0 ${
-                      isDashboard
-                        ? "bg-white/20 text-white"
-                        : "bg-energy-coral/15 text-energy-coral"
+              {modules.map((mod) => {
+                const Icon = mod.icon;
+                return (
+                  <Link
+                    key={mod.href}
+                    href={mod.href}
+                    onClick={onClose}
+                    className={`flex items-center justify-between p-3 rounded-lg border text-sm transition-colors ${
+                      mod.isActive
+                        ? "bg-primary text-primary-foreground border-primary font-semibold shadow-sm"
+                        : "bg-card border-border hover:border-primary/40 hover:bg-muted/30 text-card-foreground"
                     }`}
                   >
-                    <Layers className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-sm font-bold block leading-tight">
-                        Dashboard Central
-                      </span>
-                      <span
-                        className={`text-[9px] uppercase font-extrabold px-1.5 py-0.2 rounded-pill ${
-                          isDashboard
-                            ? "bg-white/25 text-white"
-                            : "bg-energy-coral text-white"
+                    <div className="flex items-center gap-3">
+                      <div
+                        className={`h-8 w-8 rounded-md flex items-center justify-center shrink-0 ${
+                          mod.isActive
+                            ? "bg-primary-foreground/20 text-primary-foreground"
+                            : "bg-primary/10 text-primary"
                         }`}
                       >
-                        Portal
-                      </span>
+                        <Icon className="w-4 h-4" />
+                      </div>
+                      <div className="flex flex-col">
+                        <div className="flex items-center gap-1.5">
+                          <span className="font-semibold text-sm leading-tight">
+                            {mod.title}
+                          </span>
+                          <span
+                            className={`text-[9px] uppercase font-bold px-1.5 py-0.5 rounded ${
+                              mod.isActive
+                                ? "bg-primary-foreground/20 text-primary-foreground"
+                                : "bg-muted text-muted-foreground"
+                            }`}
+                          >
+                            {mod.badge}
+                          </span>
+                        </div>
+                        <span
+                          className={`text-xs mt-0.5 ${
+                            mod.isActive
+                              ? "text-primary-foreground/80"
+                              : "text-muted-foreground"
+                          }`}
+                        >
+                          {mod.subtitle}
+                        </span>
+                      </div>
                     </div>
-                    <span
-                      className={`text-xs block mt-0.5 ${
-                        isDashboard ? "text-white/80" : "text-text-secondary"
+                    <ArrowRight
+                      className={`w-4 h-4 shrink-0 ${
+                        mod.isActive ? "text-primary-foreground" : "text-muted-foreground"
                       }`}
-                    >
-                      Módulos Integrados
-                    </span>
-                  </div>
-                </div>
-                <ArrowRight
-                  className={`w-4 h-4 shrink-0 ${
-                    isDashboard ? "text-white" : "text-text-secondary"
-                  }`}
-                />
-              </Link>
-
-              {/* Card / Link do RM SQL AI */}
-              <Link
-                href="/totvs-rm"
-                onClick={onClose}
-                className={`flex items-center justify-between p-3.5 rounded-xl border transition-all tap-effect min-h-[56px] ${
-                  isTotvsRm
-                    ? "bg-gradient-energy text-white font-bold border-transparent shadow-lg shadow-energy-blue/25"
-                    : "bg-surface-elevated border-outline hover:border-energy-blue/40 text-text-primary"
-                }`}
-              >
-                <div className="flex items-center gap-3">
-                  <div
-                    className={`w-9 h-9 rounded-pill flex items-center justify-center shrink-0 ${
-                      isTotvsRm
-                        ? "bg-white/20 text-white"
-                        : "bg-energy-blue/15 text-energy-blue"
-                    }`}
-                  >
-                    <Database className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-sm font-bold block leading-tight">
-                        RM SQL AI
-                      </span>
-                      <span
-                        className={`text-[9px] uppercase font-extrabold px-1.5 py-0.2 rounded-pill ${
-                          isTotvsRm
-                            ? "bg-white/25 text-white"
-                            : "bg-energy-blue text-white"
-                        }`}
-                      >
-                        TOTVS RM
-                      </span>
-                    </div>
-                    <span
-                      className={`text-xs block mt-0.5 ${
-                        isTotvsRm ? "text-white/80" : "text-text-secondary"
-                      }`}
-                    >
-                      Consultas & Dicionário
-                    </span>
-                  </div>
-                </div>
-                <ArrowRight
-                  className={`w-4 h-4 shrink-0 ${
-                    isTotvsRm ? "text-white" : "text-text-secondary"
-                  }`}
-                />
-              </Link>
-
-              {/* Card / Link do App FORÇA */}
-              <Link
-                href="/forca"
-                onClick={onClose}
-                className={`flex items-center justify-between p-3.5 rounded-xl border transition-all tap-effect min-h-[56px] ${
-                  isForca
-                    ? "bg-gradient-energy text-white font-bold border-transparent shadow-lg shadow-energy-blue/25"
-                    : "bg-surface-elevated border-outline hover:border-energy-blue/40 text-text-primary"
-                }`}
-              >
-                <div className="flex items-center gap-3">
-                  <div
-                    className={`w-9 h-9 rounded-pill flex items-center justify-center shrink-0 ${
-                      isForca
-                        ? "bg-white/20 text-white"
-                        : "bg-energy-blue/15 text-energy-blue"
-                    }`}
-                  >
-                    <Dumbbell className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-sm font-bold block leading-tight">
-                        App FORÇA
-                      </span>
-                      <span
-                        className={`text-[9px] uppercase font-extrabold px-1.5 py-0.2 rounded-pill ${
-                          isForca
-                            ? "bg-white/25 text-white"
-                            : "bg-energy-blue text-white"
-                        }`}
-                      >
-                        Treino
-                      </span>
-                    </div>
-                    <span
-                      className={`text-xs block mt-0.5 ${
-                        isForca ? "text-white/80" : "text-text-secondary"
-                      }`}
-                    >
-                      Cargas, Séries & RIR
-                    </span>
-                  </div>
-                </div>
-                <ArrowRight
-                  className={`w-4 h-4 shrink-0 ${
-                    isForca ? "text-white" : "text-text-secondary"
-                  }`}
-                />
-              </Link>
-
-              {/* Card / Link do Design System Playground */}
-              <Link
-                href="/playground"
-                onClick={onClose}
-                className={`flex items-center justify-between p-3.5 rounded-xl border transition-all tap-effect min-h-[56px] ${
-                  isPlayground
-                    ? "bg-gradient-energy text-white font-bold border-transparent shadow-lg shadow-energy-blue/25"
-                    : "bg-surface-elevated border-energy-violet/30 hover:border-energy-violet text-text-primary"
-                }`}
-              >
-                <div className="flex items-center gap-3">
-                  <div
-                    className={`w-9 h-9 rounded-pill flex items-center justify-center shrink-0 ${
-                      isPlayground
-                        ? "bg-white/20 text-white"
-                        : "bg-energy-violet/15 text-energy-violet"
-                    }`}
-                  >
-                    <Sparkles className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <span className="text-sm font-bold block leading-tight">
-                      Design System
-                    </span>
-                    <span
-                      className={`text-xs ${
-                        isPlayground ? "text-white/80" : "text-text-secondary"
-                      }`}
-                    >
-                      Playground & Tokens
-                    </span>
-                  </div>
-                </div>
-                <ArrowRight
-                  className={`w-4 h-4 shrink-0 ${
-                    isPlayground ? "text-white" : "text-text-secondary"
-                  }`}
-                />
-              </Link>
+                    />
+                  </Link>
+                );
+              })}
             </div>
           </nav>
         </div>
 
         {/* Rodapé da Sidebar com Tema */}
-        <div className="pt-6 border-t border-outline flex items-center justify-between">
+        <div className="pt-6 mt-6 border-t border-border flex items-center justify-between">
           <div>
-            <span className="text-xs font-bold text-text-primary block">
+            <span className="text-xs font-semibold text-foreground block">
               Tema da Interface
             </span>
-            <span className="text-[11px] text-text-secondary">
-              Claro ou Escuro
+            <span className="text-[11px] text-muted-foreground">
+              Alternar claro ou escuro
             </span>
           </div>
           <ThemeToggle />

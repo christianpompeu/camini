@@ -2,7 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
-import { ArrowRight, Database, Dumbbell, LayoutGrid, CalendarDays } from "lucide-react";
+import { ArrowRight, Database, Dumbbell, LayoutGrid, CalendarDays, Palette } from "lucide-react";
 import { Navbar } from "@/components/layout/navbar";
 import { Button } from "@/components/ui/button";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -52,7 +52,7 @@ export default function CaminiHomePage() {
             <p className="text-muted-foreground">Recursos integrados disponíveis no ecossistema Camini.</p>
           </div>
 
-          <div className="grid gap-6 sm:grid-cols-2">
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {/* Dashboard Administrativo */}
             <Link href="/dashboard" className="group">
               <Card className="h-full transition-colors hover:border-primary/50 hover:bg-muted/30">
@@ -112,6 +112,21 @@ export default function CaminiHomePage() {
                   <CardDescription className="text-sm mt-2">
                     Visualização da grade de aulas aberta aos alunos e professores.
                     Sincronizado em tempo real com o módulo CTC.
+                  </CardDescription>
+                </CardHeader>
+              </Card>
+            </Link>
+
+            {/* Design System Playground */}
+            <Link href="/playground" className="group">
+              <Card className="h-full transition-colors hover:border-primary/50 hover:bg-muted/30">
+                <CardHeader>
+                  <div className="mb-4 inline-flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                    <Palette className="h-5 w-5" />
+                  </div>
+                  <CardTitle className="text-xl">Design System</CardTitle>
+                  <CardDescription className="text-sm mt-2">
+                    Catálogo vivo de componentes, tokens e padrões visuais Studio Admin integrados ao Base UI.
                   </CardDescription>
                 </CardHeader>
               </Card>

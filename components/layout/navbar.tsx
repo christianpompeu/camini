@@ -15,6 +15,7 @@ export function Navbar() {
   const isDashboard = pathname.startsWith("/dashboard");
   const isForca = pathname.startsWith("/forca");
   const isTotvsRm = pathname.startsWith("/totvs-rm");
+  const isPlayground = pathname.startsWith("/playground");
 
   const navItems = [
     {
@@ -36,6 +37,11 @@ export function Navbar() {
       href: "/forca",
       label: "App FORÇA",
       isActive: isForca,
+    },
+    {
+      href: "/playground",
+      label: "Design System",
+      isActive: isPlayground,
     },
   ];
 

@@ -11,7 +11,8 @@ import {
   Calendar,
   LogOut,
   ChevronRight,
-  Globe
+  Globe,
+  Palette
 } from "lucide-react";
 import { 
   Sidebar,
@@ -188,6 +189,16 @@ export function AppSidebar() {
               >
                 <Dumbbell className="size-4" />
                 <span>App FORÇA</span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                render={<Link href="/playground" onClick={closeMobile} />}
+                isActive={pathname.startsWith("/playground")}
+                tooltip="Design System"
+              >
+                <Palette className="size-4" />
+                <span>Design System</span>
               </SidebarMenuButton>
             </SidebarMenuItem>
           </SidebarMenu>
