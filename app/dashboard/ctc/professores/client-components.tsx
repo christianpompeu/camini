@@ -3,7 +3,6 @@
 import React, { useState, useTransition } from "react";
 import { 
   Plus, 
-  Trash2, 
   Loader2, 
   Search, 
   Users, 
@@ -23,17 +22,6 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
-import {
   Table,
   TableBody,
   TableCell,
@@ -42,6 +30,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { createProfessor, deleteProfessor, type Professor } from "../actions";
+import { DeleteWithDependencyCheckDialog } from "../delete-dependency-dialog";
 
 // =========================================================================
 // Dialog de Criação de Professor
@@ -157,82 +146,25 @@ export function NovoProfessorDialog({ onCreated }: { onCreated?: () => void }) {
 }
 
 // =========================================================================
-// Botão e Diálogo de Exclusão com AlertDialog
+// Botão e Diálogo de Exclusão com Verificação Prévia de Vínculos
 // =========================================================================
 export function DeleteProfessorDialog({
   id,
   nome,
+  onDeleted,
 }: {
   id: string;
   nome: string;
+  onDeleted?: (id: string) => void;
 }) {
-  const [open, setOpen] = useState(false);
-  const [isPending, startTransition] = useTransition();
-  const [error, setError] = useState<string | null>(null);
-
-  const handleDelete = () => {
-    setError(null);
-    startTransition(async () => {
-      const res = await deleteProfessor(id);
-      if (res.error) {
-        setError(res.error);
-      } else {
-        setOpen(false);
-      }
-    });
-  };
-
   return (
-    <AlertDialog open={open} onOpenChange={setOpen}>
-      <AlertDialogTrigger
-        render={
-          <Button
-            variant="ghost"
-            size="icon-sm"
-            className="text-muted-foreground hover:text-destructive hover:bg-destructive/10"
-            title={`Excluir ${nome}`}
-          />
-        }
-      >
-        <Trash2 className="h-4 w-4" />
-      </AlertDialogTrigger>
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>Excluir Professor</AlertDialogTitle>
-          <AlertDialogDescription>
-            Tem certeza que deseja remover o cadastro de{" "}
-            <strong className="text-foreground">{nome}</strong>? Esta ação não pode ser desfeita e pode afetar as aulas agendadas associadas.
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-
-        {error && (
-          <div className="p-3 bg-destructive/10 text-destructive text-sm rounded-md border border-destructive/20">
-            {error}
-          </div>
-        )}
-
-        <AlertDialogFooter>
-          <AlertDialogCancel disabled={isPending}>Cancelar</AlertDialogCancel>
-          <AlertDialogAction
-            variant="destructive"
-            onClick={(e) => {
-              e.preventDefault();
-              handleDelete();
-            }}
-            disabled={isPending}
-          >
-            {isPending ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Excluindo...
-              </>
-            ) : (
-              "Confirmar Exclusão"
-            )}
-          </AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
+    <DeleteWithDependencyCheckDialog
+      id={id}
+      name={nome}
+      type="professor"
+      onDelete={deleteProfessor}
+      onDeleted={onDeleted}
+    />
   );
 }
 
@@ -244,12 +176,19 @@ export function ProfessoresList({
 }: {
   professores: Professor[];
 }) {
+  const [deletedIds, setDeletedIds] = useState<string[]>([]);
   const [search, setSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 10;
 
+  const handleDeleted = (deletedId: string) => {
+    setDeletedIds((prev) => [...prev, deletedId]);
+  };
+
+  const visibleProfessores = professores.filter((p) => !deletedIds.includes(p.id));
+
   // Filtro client-side por nome, email ou telefone
-  const filtered = professores.filter((p) => {
+  const filtered = visibleProfessores.filter((p) => {
     const term = search.toLowerCase().trim();
     if (!term) return true;
     return (
@@ -297,11 +236,11 @@ export function ProfessoresList({
         <div className="text-xs text-muted-foreground sm:text-right">
           {search ? (
             <span>
-              Encontrados: <strong className="text-foreground">{filtered.length}</strong> de {professores.length}
+              Encontrados: <strong className="text-foreground">{filtered.length}</strong> de {visibleProfessores.length}
             </span>
           ) : (
             <span>
-              Total: <strong className="text-foreground">{professores.length}</strong> {professores.length === 1 ? "professor" : "professores"}
+              Total: <strong className="text-foreground">{visibleProfessores.length}</strong> {visibleProfessores.length === 1 ? "professor" : "professores"}
             </span>
           )}
         </div>
@@ -378,7 +317,11 @@ export function ProfessoresList({
                       {prof.telefone || <span className="text-muted-foreground/50">—</span>}
                     </TableCell>
                     <TableCell className="text-right">
-                      <DeleteProfessorDialog id={prof.id} nome={prof.nome} />
+                      <DeleteProfessorDialog
+                        id={prof.id}
+                        nome={prof.nome}
+                        onDeleted={handleDeleted}
+                      />
                     </TableCell>
                   </TableRow>
                 ))}

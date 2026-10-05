@@ -40,8 +40,12 @@
   - Reformulação visual completa aderente ao Studio Admin, mobile-first e touch-friendly (44px+).
   - 4 abas funcionais (Treinos A/B/C, Sessão Ativa com ActiveSetCard + RestTimer, Biblioteca de Exercícios com ExerciseHero, Histórico e Progresso).
   - Validação técnica (tsc, eslint, build) com 0 erros e validação em browser desktop (1440px) e mobile (375px).
-- [ ] **Fase E: Blog, documentação, design system e demais páginas**
-  - Catálogo de componentes em `/playground`, consolidação final de tokens, blog e revisão cross-módulo.
+- [x] **Fase E: Demais Páginas e Consolidação do Design System** (Concluída e Validada)
+  - [x] Reformulação do `/ctc/calendario` como página pública com consulta real a `ctc_aulas` no Supabase, filtros e agrupamento por data.
+  - [x] Reformulação do erro 404 (`app/not-found.tsx`) com identidade Studio Admin/OpenDocs e atalhos rápidos.
+  - [x] Transformação do `/playground` no catálogo vivo de componentes do Camini (Base UI + shadcn/ui).
+  - [x] Padronização de `components/ui/input.tsx` e atualização da documentação em `docs/design-system.md` e `docs/phase-e-redesign.md`.
+  - [x] Validação técnica com `npx tsc --noEmit` (0 erros), ESLint (0 erros) e `npm run build` (0 erros). Blog e CMS registrados como evolução futura.
 
 ## 2. Matriz de Rotas Administrativas e Autenticação (Fase A)
 

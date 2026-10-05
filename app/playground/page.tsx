@@ -3,735 +3,1015 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import {
-  Zap,
-  Sparkles,
-  Shield,
-  Activity,
-  Layers,
   Palette,
-  Type,
-  Maximize2,
-  Bell,
-  ArrowRight,
-  Flame,
+  Layers,
+  Sparkles,
   CheckCircle2,
-  AlertTriangle,
-  WifiOff,
-  Dumbbell,
-  Timer,
-  Eye,
+  AlertCircle,
+  Info,
+  Calendar,
+  Users,
+  Trash2,
+  ChevronRight,
   Sliders,
-  Home,
+  Bell,
+  Eye,
+  Settings,
+  Plus,
+  Loader2,
 } from "lucide-react";
 
-import { Button } from "@/components/ui/button";
-import { Chip } from "@/components/ui/chip";
-import { Card } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { StatusBanner } from "@/components/ui/status-banner";
-import { ThemeToggle } from "@/components/ui/theme-toggle";
-import {
-  Skeleton,
-  WorkoutCardSkeleton,
-  ActiveSetCardSkeleton,
-  StatCardSkeleton,
-} from "@/components/ui/skeleton";
-
-import { WorkoutCard } from "@/components/workout/workout-card";
-import { ActiveSetCard } from "@/components/workout/active-set-card";
-import { RestTimer } from "@/components/workout/rest-timer";
-import { FloatingWorkoutBar } from "@/components/workout/floating-workout-bar";
-import { BottomNavigation } from "@/components/workout/bottom-navigation";
-import { ExerciseHero } from "@/components/workout/exercise-hero";
+// Componentes Reais do Camini
 import { Navbar } from "@/components/layout/navbar";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardContent,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
+import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableHead,
+  TableRow,
+  TableCell,
+} from "@/components/ui/table";
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Dialog,
+  DialogTrigger,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogTrigger,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogAction,
+  AlertDialogCancel,
+} from "@/components/ui/alert-dialog";
+import {
+  Sheet,
+  SheetTrigger,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
+  SheetFooter,
+} from "@/components/ui/sheet";
+import {
+  Tooltip,
+  TooltipTrigger,
+  TooltipContent,
+  TooltipProvider,
+} from "@/components/ui/tooltip";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
+import { toast } from "sonner";
 
 export default function DesignSystemPlaygroundPage() {
-  const [activeTab, setActiveTab] = useState<"todos" | "tokens" | "ui" | "treino">("todos");
-  const [simulateLoading, setSimulateLoading] = useState(false);
-  const [sampleInput, setSampleInput] = useState("80");
-  const [sampleError, setSampleError] = useState("");
-  const [showSuccessBanner, setShowSuccessBanner] = useState(true);
-  const [showWarningBanner, setShowWarningBanner] = useState(true);
-  const [showOfflineBanner, setShowOfflineBanner] = useState(true);
-  const [lastWorkoutLog, setLastWorkoutLog] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<
+    "todos" | "fundamentos" | "acoes" | "formularios" | "conteudo" | "feedback" | "navegacao"
+  >("todos");
 
-  const expressiveColors = [
-    { name: "Camini Cobalt", var: "--camini-cobalt", hex: "#5B7CFA", role: "Ação primária, foco, cronômetro", bgClass: "bg-camini-cobalt" },
-    { name: "Camini Cyan", var: "--camini-cyan", hex: "#41C7D9", role: "Movimento, fluxo, oxigenação", bgClass: "bg-camini-cyan" },
-    { name: "Camini Indigo", var: "--camini-indigo", hex: "#9A6CFF", role: "Intensidade neural, precisão", bgClass: "bg-camini-indigo" },
-    { name: "Camini Red", var: "--camini-red", hex: "#FF706A", role: "Alerta, esgotamento, carga limite", bgClass: "bg-camini-red" },
-    { name: "Camini Amber", var: "--amber-500", hex: "#F4B84A", role: "Atenção, descanso ativo, calor", bgClass: "bg-amber-500" },
-    { name: "Camini Aqua", var: "--camini-aqua", hex: "#52B788", role: "Conclusão, meta atingida, PR", bgClass: "bg-camini-aqua" },
-  ];
+  // Estados dos componentes interativos do sandbox
+  const [demoSwitch, setDemoSwitch] = useState(true);
+  const [demoInput, setDemoInput] = useState("Christian Pompeu");
+  const [demoLoading, setDemoLoading] = useState(false);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [alertDialogOpen, setAlertDialogOpen] = useState(false);
+  const [sheetOpen, setSheetOpen] = useState(false);
+  const [showSkeleton, setShowSkeleton] = useState(false);
 
-  const neutralsLight = [
-    { name: "Surface", hex: "#F8F9FC", role: "Fundo de tela light" },
-    { name: "Surface Elevated", hex: "rgba(255,255,255,.82)", role: "Cards e containers" },
-    { name: "Text Primary", hex: "#171A21", role: "Títulos e métricas principais" },
-    { name: "Text Secondary", hex: "#626A78", role: "Subtítulos e rótulos" },
-    { name: "Outline", hex: "rgba(23,26,33,.10)", role: "Divisores e bordas" },
+  // Simulação de ação assíncrona
+  const handleSimulateAsync = () => {
+    setDemoLoading(true);
+    setTimeout(() => {
+      setDemoLoading(false);
+      toast.success("Ação de demonstração concluída com sucesso!");
+    }, 1200);
+  };
+
+  const navCategories = [
+    { id: "todos", label: "Visão Geral" },
+    { id: "fundamentos", label: "Fundamentos" },
+    { id: "acoes", label: "Ações" },
+    { id: "formularios", label: "Formulários" },
+    { id: "conteudo", label: "Conteúdo" },
+    { id: "feedback", label: "Feedback & Modais" },
+    { id: "navegacao", label: "Navegação" },
+  ] as const;
+
+  const colorTokens = [
+    {
+      name: "Background",
+      varName: "--background",
+      description: "Fundo base de toda a aplicação",
+      lightHex: "#FFFFFF",
+      darkHex: "#18181B",
+      sampleClass: "bg-background border border-border text-foreground",
+    },
+    {
+      name: "Foreground",
+      varName: "--foreground",
+      description: "Cor principal de tipografia e ícones",
+      lightHex: "#18181B",
+      darkHex: "#FAFAFA",
+      sampleClass: "bg-foreground text-background",
+    },
+    {
+      name: "Card",
+      varName: "--card",
+      description: "Superfície de cartões, formulários e seções",
+      lightHex: "#FFFFFF",
+      darkHex: "#27272A",
+      sampleClass: "bg-card border border-border text-card-foreground",
+    },
+    {
+      name: "Primary",
+      varName: "--primary",
+      description: "Ações dominantes e elementos de foco",
+      lightHex: "#27272A",
+      darkHex: "#ECECEE",
+      sampleClass: "bg-primary text-primary-foreground",
+    },
+    {
+      name: "Secondary",
+      varName: "--secondary",
+      description: "Superfícies atenuadas e botões secundários",
+      lightHex: "#F4F4F5",
+      darkHex: "#3F3F46",
+      sampleClass: "bg-secondary text-secondary-foreground",
+    },
+    {
+      name: "Muted",
+      varName: "--muted",
+      description: "Subtítulos, legendas e fundos discretos",
+      lightHex: "#F4F4F5",
+      darkHex: "#3F3F46",
+      sampleClass: "bg-muted text-muted-foreground",
+    },
+    {
+      name: "Border",
+      varName: "--border",
+      description: "Linhas divisórias, tabelas e molduras",
+      lightHex: "#E4E4E7",
+      darkHex: "rgba(255,255,255,0.1)",
+      sampleClass: "border-2 border-border bg-transparent text-foreground",
+    },
+    {
+      name: "Destructive",
+      varName: "--destructive",
+      description: "Exclusão, erros críticos e alertas de perigo",
+      lightHex: "#EF4444",
+      darkHex: "#F87171",
+      sampleClass: "bg-destructive text-white",
+    },
   ];
 
   const radiusTokens = [
-    { name: "--radius-sm", value: "12px", usage: "Badges pequenos, botões compactos" },
-    { name: "--radius-md", value: "18px", usage: "Inputs, botões principais, controles" },
-    { name: "--radius-lg", value: "26px", usage: "Cards padrão, banners, hero" },
-    { name: "--radius-xl", value: "34px", usage: "Containers grandes, bottom bar" },
-    { name: "--radius-pill", value: "999px", usage: "Chips, tabs, tags e contadores" },
+    { token: "--radius-sm", value: "calc(var(--radius) - 4px) • ~6px", desc: "Badges compactos, tooltips" },
+    { token: "--radius-md", value: "calc(var(--radius) - 2px) • ~8px", desc: "Inputs, botões, tags" },
+    { token: "--radius-lg", value: "var(--radius) • 10px", desc: "Cards padrão, containers" },
+    { token: "--radius-xl", value: "calc(var(--radius) + 4px) • 14px", desc: "Diálogos, modais, sheets" },
   ];
 
   return (
-    <div className="min-h-screen bg-surface text-text-primary pb-32">
-      {/* Barra de Navegação Superior Padronizada camini */}
-      <Navbar />
+    <TooltipProvider>
+      <div className="min-h-screen flex flex-col bg-background text-foreground">
+        {/* Barra de Navegação Pública OpenDocs */}
+        <Navbar />
 
-      {/* Sub-barra de Contexto e Filtros de Abas do Playground */}
-      <div className="bg-surface-elevated/80 border-b border-outline/50 px-4 sm:px-8 py-2.5">
-        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div className="flex items-center gap-2 text-xs text-text-secondary">
-            <Link href="/" className="hover:text-text-primary transition-colors flex items-center gap-1">
-              <Home className="w-3.5 h-3.5" />
-              <span>camini Hub</span>
-            </Link>
-            <span>/</span>
-            <span className="font-bold text-camini-indigo">Design System Playground</span>
-          </div>
-
-          {/* Abas de Navegação de Tokens / Seções */}
-          <div className="flex items-center bg-surface border border-outline rounded-pill p-1 self-start sm:self-auto overflow-x-auto">
-            {(["todos", "tokens", "ui", "treino"] as const).map((tab) => (
-              <button
-                key={tab}
-                onClick={() => setActiveTab(tab)}
-                className={`px-3 py-1 rounded-pill text-xs font-semibold capitalize transition-all tap-effect ${
-                  activeTab === tab
-                    ? "bg-gradient-camini text-white shadow-sm font-bold"
-                    : "text-text-secondary hover:text-text-primary"
-                }`}
-              >
-                {tab}
-              </button>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* Hero do Playground */}
-      <section className="px-4 sm:px-8 max-w-6xl mx-auto pt-8 pb-6">
-        <div className="relative overflow-hidden rounded-xl border border-outline bg-surface-elevated p-6 sm:p-10 card-elevation">
-          <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-camini opacity-10 rounded-full blur-3xl pointer-events-none -mr-20 -mt-20" />
-
-          <div className="relative z-10 max-w-2xl">
-            <Chip variant="camini" size="sm" className="mb-3">
-              Identidade Visual Contemporânea
-            </Chip>
-            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-text-primary leading-tight">
-              Design System <span className="text-transparent bg-clip-text bg-gradient-camini">FORÇA</span>
-            </h1>
-            <p className="mt-4 text-base sm:text-lg text-text-secondary leading-relaxed">
-              Linguagem visual inspirada nos princípios modernos de <strong>Material 3 Expressive</strong>:
-              força, energia, clareza, disciplina e progresso. Desenvolvida sob demanda para interfaces táteis,
-              mobile-first, com contraste WCAG AA e foco absoluto na leitura imediata em treinos de alta performance.
-            </p>
-
-            <div className="mt-6 flex flex-wrap gap-2">
-              <Chip variant="outline" size="sm">Mobile-first</Chip>
-              <Chip variant="outline" size="sm">WCAG AA Contrast</Chip>
-              <Chip variant="outline" size="sm">Tailwind CSS v4</Chip>
-              <Chip variant="outline" size="sm">Geist Typography</Chip>
-              <Chip variant="outline" size="sm">Glassmorphism Moderado</Chip>
-              <Chip variant="outline" size="sm">Touch Targets ≥ 44px</Chip>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Navegação Mobile de Abas */}
-      <div className="md:hidden px-4 mb-6">
-        <div className="flex items-center justify-between bg-surface-elevated border border-outline rounded-pill p-1 overflow-x-auto">
-          {(["todos", "tokens", "ui", "treino"] as const).map((tab) => (
-            <button
-              key={tab}
-              onClick={() => setActiveTab(tab)}
-              className={`flex-1 min-w-[70px] py-2 px-2 rounded-pill text-xs font-semibold capitalize text-center transition-all tap-effect ${
-                activeTab === tab
-                  ? "bg-gradient-camini text-white shadow-sm"
-                  : "text-text-secondary"
-              }`}
-            >
-              {tab}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      <main className="px-4 sm:px-8 max-w-6xl mx-auto space-y-12">
-        {/* ========================================================
-            SEÇÃO 1: TOKENS DE COR, GRADIENTES & SUPERFÍCIES
-           ======================================================== */}
-        {(activeTab === "todos" || activeTab === "tokens") && (
-          <section className="space-y-8 animate-in fade-in duration-300">
-            <div>
-              <div className="flex items-center gap-2">
-                <Palette className="w-5 h-5 text-camini-cobalt" />
-                <h2 className="text-2xl font-bold tracking-tight text-text-primary">
-                  1. Paleta de Cores e Tokens Semânticos
-                </h2>
-              </div>
-              <p className="text-sm text-text-secondary mt-1">
-                Definidos como tokens semânticos no Tailwind CSS v4, garantindo coerência sem repetição de hexadecimais arbitrários.
-              </p>
+        {/* Sub-Header Contextual com Tabs de Categoria */}
+        <div className="sticky top-14 z-30 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+          <div className="max-w-5xl mx-auto px-4 sm:px-6 py-2.5 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              <Link href="/" className="hover:text-foreground transition-colors">
+                Início
+              </Link>
+              <ChevronRight className="h-3 w-3" />
+              <span className="text-foreground font-medium">Design System</span>
             </div>
 
-            {/* Cores Expressivas */}
-            <div>
-              <h3 className="text-sm font-bold uppercase tracking-wider text-text-secondary mb-3">
-                Cores Expressivas
-              </h3>
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-                {expressiveColors.map((color) => (
-                  <div
-                    key={color.name}
-                    className="p-3.5 rounded-lg bg-surface-elevated border border-outline card-elevation flex flex-col justify-between h-36"
-                  >
-                    <div className="flex items-start justify-between">
-                      <div className={`w-8 h-8 rounded-pill ${color.bgClass} shadow-md`} />
-                      <span className="font-mono text-[11px] font-bold text-text-secondary">
-                        {color.hex}
-                      </span>
-                    </div>
-                    <div>
-                      <span className="text-xs font-bold text-text-primary block">
-                        {color.name}
-                      </span>
-                      <span className="text-[11px] text-text-secondary leading-tight line-clamp-2 mt-0.5">
-                        {color.role}
-                      </span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Gradientes Expressivos */}
-            <div>
-              <h3 className="text-sm font-bold uppercase tracking-wider text-text-secondary mb-3">
-                Gradientes Funcionais
-              </h3>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {/* Energy */}
-                <div className="p-5 rounded-lg bg-surface-elevated border border-outline card-elevation space-y-3">
-                  <div className="h-16 rounded-md bg-gradient-camini flex items-center justify-center text-white font-bold text-sm shadow-md">
-                    --gradient-energy
-                  </div>
-                  <div>
-                    <h4 className="font-bold text-sm text-text-primary">
-                      Gradiente Principal de Energia
-                    </h4>
-                    <p className="text-xs text-text-secondary mt-1">
-                      Usado em indicadores de progresso, heros, CTA principal e evolução de treino.
-                    </p>
-                  </div>
-                </div>
-
-                {/* Progress */}
-                <div className="p-5 rounded-lg bg-surface-elevated border border-outline card-elevation space-y-3">
-                  <div className="h-16 rounded-md bg-gradient-progress flex items-center justify-center text-white font-bold text-sm shadow-md">
-                    --gradient-progress
-                  </div>
-                  <div>
-                    <h4 className="font-bold text-sm text-text-primary">
-                      Progresso e Conclusão
-                    </h4>
-                    <p className="text-xs text-text-secondary mt-1">
-                      Transição suave do azul para o ciano e verde, simbolizando metas atingidas.
-                    </p>
-                  </div>
-                </div>
-
-                {/* Effort */}
-                <div className="p-5 rounded-lg bg-surface-elevated border border-outline card-elevation space-y-3">
-                  <div className="h-16 rounded-md bg-gradient-effort flex items-center justify-center text-white font-bold text-sm shadow-md">
-                    --gradient-effort
-                  </div>
-                  <div>
-                    <h4 className="font-bold text-sm text-text-primary">
-                      Esforço e Intensidade (RIR)
-                    </h4>
-                    <p className="text-xs text-text-secondary mt-1">
-                      Do âmbar ao coral e violeta para registrar séries no limite e esforço máximo.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Glassmorphism e Superfícies */}
-            <div>
-              <h3 className="text-sm font-bold uppercase tracking-wider text-text-secondary mb-3">
-                Superfícies Glassmorphism & Profundidade
-              </h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="relative p-6 rounded-xl overflow-hidden border border-outline bg-gradient-to-r from-camini-cobalt/10 via-camini-indigo/10 to-camini-red/10">
-                  <div className="glass-surface p-5 rounded-lg space-y-2">
-                    <span className="text-[11px] font-bold uppercase tracking-wider text-camini-cobalt">
-                      Glass Surface Moderada
-                    </span>
-                    <p className="text-sm font-semibold text-text-primary">
-                      Fundo translúcido (72%) com blur de 18px e saturação 140%.
-                    </p>
-                    <p className="text-xs text-text-secondary">
-                      Destinada para barras flutuantes, bottom navigation e modais rápidos.
-                    </p>
-                  </div>
-                </div>
-
-                <div className="p-6 rounded-xl border border-outline bg-surface-elevated card-elevation flex flex-col justify-center space-y-2">
-                  <span className="text-[11px] font-bold uppercase tracking-wider text-camini-aqua">
-                    Card Elevation Sólida
-                  </span>
-                  <p className="text-sm font-semibold text-text-primary">
-                    Superfície elevada com sombra calculada para modos claro e escuro.
-                  </p>
-                  <p className="text-xs text-text-secondary">
-                    Garante legibilidade alta sem poluição visual em formulários e listas densas.
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Border Radius Tokens */}
-            <div>
-              <h3 className="text-sm font-bold uppercase tracking-wider text-text-secondary mb-3">
-                Tokens de Border Radius (Cantos Generosamente Arredondados)
-              </h3>
-              <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
-                {radiusTokens.map((r) => (
-                  <div
-                    key={r.name}
-                    className="p-3 rounded-md bg-surface-elevated border border-outline flex flex-col items-center text-center justify-center gap-1"
-                  >
-                    <span className="font-mono text-xs font-bold text-camini-cobalt">
-                      {r.name}
-                    </span>
-                    <span className="text-sm font-extrabold text-text-primary">
-                      {r.value}
-                    </span>
-                    <span className="text-[10px] text-text-secondary line-clamp-1">
-                      {r.usage}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </section>
-        )}
-
-        {/* ========================================================
-            SEÇÃO 2: TIPOGRAFIA & HIERARQUIA VISUAL
-           ======================================================== */}
-        {(activeTab === "todos" || activeTab === "tokens") && (
-          <section className="space-y-6 animate-in fade-in duration-300">
-            <div>
-              <div className="flex items-center gap-2">
-                <Type className="w-5 h-5 text-camini-cyan" />
-                <h2 className="text-2xl font-bold tracking-tight text-text-primary">
-                  2. Tipografia e Escala de Leitura (Geist)
-                </h2>
-              </div>
-              <p className="text-sm text-text-secondary mt-1">
-                Tipografia limpa, geométrica e de alto contraste. No modo treino, métricas numéricas ganham peso e escala dominante.
-              </p>
-            </div>
-
-            <div className="p-6 rounded-xl bg-surface-elevated border border-outline card-elevation space-y-6">
-              {/* Display */}
-              <div className="border-b border-outline/50 pb-4">
-                <span className="text-xs font-bold uppercase tracking-wider text-camini-cobalt">
-                  Display (44–56 px)
-                </span>
-                <p className="text-4xl sm:text-5xl font-black text-text-primary tracking-tight mt-1">
-                  SUPERAÇÃO DIÁRIA
-                </p>
-              </div>
-
-              {/* H1 */}
-              <div className="border-b border-outline/50 pb-4">
-                <span className="text-xs font-bold uppercase tracking-wider text-camini-cyan">
-                  H1 (32–40 px)
-                </span>
-                <h1 className="text-3xl sm:text-4xl font-extrabold text-text-primary tracking-tight mt-1">
-                  Treino A • Peitoral e Tríceps
-                </h1>
-              </div>
-
-              {/* H2 */}
-              <div className="border-b border-outline/50 pb-4">
-                <span className="text-xs font-bold uppercase tracking-wider text-camini-indigo">
-                  H2 (24–30 px)
-                </span>
-                <h2 className="text-2xl font-bold text-text-primary tracking-tight mt-1">
-                  Supino Reto com Barra Olímpica
-                </h2>
-              </div>
-
-              {/* Body */}
-              <div className="border-b border-outline/50 pb-4">
-                <span className="text-xs font-bold uppercase tracking-wider text-text-secondary">
-                  Body (16–18 px)
-                </span>
-                <p className="text-base text-text-primary leading-relaxed mt-1">
-                  Mantenha a contração constante no topo sem hiperestender os cotovelos. Inspire na descida de 3 segundos e expire com força na subida explosiva.
-                </p>
-              </div>
-
-              {/* Labels */}
-              <div>
-                <span className="text-xs font-bold uppercase tracking-wider text-text-secondary">
-                  Labels & Tags (13–15 px)
-                </span>
-                <div className="flex items-center gap-3 mt-2">
-                  <span className="text-sm font-semibold text-text-secondary">
-                    TEMPO DE DESCANSO: 90 SEG
-                  </span>
-                  <span className="text-sm font-bold text-camini-aqua">
-                    +4.5% EM RELAÇÃO À ÚLTIMA SEMANA
-                  </span>
-                </div>
-              </div>
-            </div>
-          </section>
-        )}
-
-        {/* ========================================================
-            SEÇÃO 3: COMPONENTES FUNDAMENTAIS DE UI
-           ======================================================== */}
-        {(activeTab === "todos" || activeTab === "ui") && (
-          <section className="space-y-8 animate-in fade-in duration-300">
-            <div>
-              <div className="flex items-center gap-2">
-                <Layers className="w-5 h-5 text-camini-indigo" />
-                <h2 className="text-2xl font-bold tracking-tight text-text-primary">
-                  3. Componentes Fundamentais
-                </h2>
-              </div>
-              <p className="text-sm text-text-secondary mt-1">
-                Alvos de toque ergonômicos (≥ 44px), micro-interações táteis (`active:scale-[0.97]`) e estados de foco acessíveis.
-              </p>
-            </div>
-
-            {/* Botões */}
-            <div className="p-6 rounded-xl bg-surface-elevated border border-outline card-elevation space-y-4">
-              <h3 className="text-sm font-bold uppercase tracking-wider text-text-secondary">
-                Botões e Ações
-              </h3>
-              <div className="flex flex-wrap items-center gap-3">
-                <Button variant="camini" size="md">
-                  <Zap className="w-4 h-4" />
-                  Botão Energia (CTA)
-                </Button>
-
-                <Button variant="secondary" size="md">
-                  Botão Secundário
-                </Button>
-
-                <Button variant="outline" size="md">
-                  Botão Outline
-                </Button>
-
-                <Button variant="effort" size="md">
-                  <Flame className="w-4 h-4" />
-                  Botão Esforço
-                </Button>
-
-                <Button variant="ghost" size="md">
-                  Ghost Button
-                </Button>
-
-                <Button variant="coral" size="md">
-                  Ação Crítica
-                </Button>
-              </div>
-
-              <div className="pt-2 text-xs text-text-secondary flex items-center gap-2">
-                <Sparkles className="w-3.5 h-3.5 text-amber-500" />
-                <span>Pressione os botões para testar a resposta tátil de escala física (`tap-effect`).</span>
-              </div>
-            </div>
-
-            {/* Chips e Badges */}
-            <div className="p-6 rounded-xl bg-surface-elevated border border-outline card-elevation space-y-4">
-              <h3 className="text-sm font-bold uppercase tracking-wider text-text-secondary">
-                Chips e Pílulas de Estado
-              </h3>
-              <div className="flex flex-wrap items-center gap-2">
-                <Chip variant="default" interactive>Padrão</Chip>
-                <Chip variant="active" interactive>Ativo</Chip>
-                <Chip variant="camini" interactive>Energia M3</Chip>
-                <Chip variant="success" interactive>Sucesso / Concluído</Chip>
-                <Chip variant="warning" interactive>Atenção / Limite</Chip>
-                <Chip variant="outline" interactive>Outline Interativo</Chip>
-              </div>
-            </div>
-
-            {/* Formulários & Inputs */}
-            <div className="p-6 rounded-xl bg-surface-elevated border border-outline card-elevation space-y-4">
-              <h3 className="text-sm font-bold uppercase tracking-wider text-text-secondary">
-                Inputs e Controles de Formulário
-              </h3>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <Input
-                  label="Carga Atual (kg)"
-                  value={sampleInput}
-                  onChange={(e) => {
-                    setSampleInput(e.target.value);
-                    if (Number(e.target.value) > 200) {
-                      setSampleError("Verifique a carga acima de 200kg");
-                    } else {
-                      setSampleError("");
-                    }
-                  }}
-                  helperText="Insira a carga total em halteres ou anilhas"
-                />
-
-                <Input
-                  label="Repetições Estimadas"
-                  defaultValue="10"
-                  helperText="Intervalo sugerido de 8 a 12 reps"
-                />
-
-                <Input
-                  label="Validação com Erro"
-                  defaultValue="Carga Inválida"
-                  error="Formato numérico obrigatório"
-                />
-              </div>
-            </div>
-
-            {/* Estados de Notificação / Feedback */}
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <h3 className="text-sm font-bold uppercase tracking-wider text-text-secondary">
-                  Banners de Estado (Sucesso, Atenção e Offline)
-                </h3>
-                {( !showSuccessBanner || !showWarningBanner || !showOfflineBanner ) && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => {
-                      setShowSuccessBanner(true);
-                      setShowWarningBanner(true);
-                      setShowOfflineBanner(true);
-                    }}
-                  >
-                    Restaurar Banners
-                  </Button>
-                )}
-              </div>
-
-              {showSuccessBanner && (
-                <StatusBanner
-                  status="success"
-                  title="Série Registrada com Sucesso!"
-                  description="Carga de 34 kg registrada na nuvem. Seu novo recorde pessoal foi atualizado."
-                  onClose={() => setShowSuccessBanner(false)}
-                />
-              )}
-
-              {showWarningBanner && (
-                <StatusBanner
-                  status="warning"
-                  title="Atenção à Recuperação Muscular"
-                  description="Você treinou Peitoral há menos de 48h. Considere monitorar a escala de fadiga (RIR)."
-                  onClose={() => setShowWarningBanner(false)}
-                />
-              )}
-
-              {showOfflineBanner && (
-                <StatusBanner
-                  status="offline"
-                  title="Modo Offline Ativado"
-                  description="Suas séries serão armazenadas localmente no dispositivo e sincronizadas ao reconectar."
-                  onClose={() => setShowOfflineBanner(false)}
-                />
-              )}
-            </div>
-
-            {/* Skeletons e Carregamento Assíncrono com Shimmer */}
-            <div className="p-6 rounded-xl bg-surface-elevated border border-outline card-elevation space-y-6">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-outline/50">
-                <div>
-                  <h3 className="text-sm font-bold uppercase tracking-wider text-text-secondary">
-                    Skeletons & Shimmer (Carregamento Assíncrono)
-                  </h3>
-                  <p className="text-xs text-text-secondary mt-0.5">
-                    Placeholders com animação fluida para simular carregamento futuro de dados sem layout shifts.
-                  </p>
-                </div>
-                <Button
-                  variant={simulateLoading ? "energy" : "secondary"}
-                  size="sm"
-                  onClick={() => setSimulateLoading(!simulateLoading)}
-                  className="self-start sm:self-auto tap-effect"
+            {/* Tabs de Filtro de Seção */}
+            <div className="flex items-center gap-1 overflow-x-auto pb-1 sm:pb-0">
+              {navCategories.map((cat) => (
+                <button
+                  key={cat.id}
+                  onClick={() => setActiveTab(cat.id)}
+                  className={`px-2.5 py-1 rounded-md text-xs font-medium whitespace-nowrap transition-colors ${
+                    activeTab === cat.id
+                      ? "bg-primary text-primary-foreground shadow-xs font-semibold"
+                      : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                  }`}
                 >
-                  <Sparkles className="w-3.5 h-3.5" />
-                  <span>{simulateLoading ? "Skeletons Ativos (Clique para Desativar)" : "Simular Carregamento"}</span>
-                </Button>
-              </div>
-
-              {/* Grid de Demonstração de Skeletons */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
-                <div className="space-y-3">
-                  <span className="text-xs font-bold text-text-secondary uppercase tracking-wider block">
-                    Placeholder: Workout Card
-                  </span>
-                  <WorkoutCardSkeleton />
-                </div>
-
-                <div className="space-y-3">
-                  <span className="text-xs font-bold text-text-secondary uppercase tracking-wider block">
-                    Placeholder: Active Set Card
-                  </span>
-                  <ActiveSetCardSkeleton />
-                </div>
-              </div>
+                  {cat.label}
+                </button>
+              ))}
             </div>
-          </section>
-        )}
+          </div>
+        </div>
 
-        {/* ========================================================
-            SEÇÃO 4: COMPONENTES DE DOMÍNIO DE TREINO
-           ======================================================== */}
-        {(activeTab === "todos" || activeTab === "treino") && (
-          <section className="space-y-8 animate-in fade-in duration-300">
-            <div>
-              <div className="flex items-center gap-2">
-                <Activity className="w-5 h-5 text-camini-aqua" />
-                <h2 className="text-2xl font-bold tracking-tight text-text-primary">
-                  4. Experiência de Treino & Domínio FORÇA
-                </h2>
-              </div>
-              <p className="text-sm text-text-secondary mt-1">
-                Componentes centrais que o usuário utilizará diretamente durante a execução dos exercícios na academia.
+        {/* Conteúdo Principal do Catálogo */}
+        <main className="flex-1 w-full max-w-5xl mx-auto px-4 sm:px-6 py-8 space-y-12">
+          {/* Apresentação do Design System */}
+          <div className="space-y-4 pb-8 border-b border-border">
+            <div className="flex flex-wrap items-center gap-2">
+              <Badge variant="outline" className="text-xs font-normal">
+                Studio Admin Baseline
+              </Badge>
+              <Badge variant="secondary" className="text-xs font-normal">
+                Base UI Primitives
+              </Badge>
+              <Badge variant="secondary" className="text-xs font-normal">
+                WCAG AA Contrast
+              </Badge>
+              <Badge variant="secondary" className="text-xs font-normal">
+                Tailwind CSS v4
+              </Badge>
+            </div>
+
+            <div className="space-y-1">
+              <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">
+                Catálogo de Componentes e Design System
+              </h1>
+              <p className="text-sm text-muted-foreground max-w-3xl leading-relaxed">
+                Referência visual e técnica oficial do Camini. Todos os exemplos abaixo utilizam
+                os componentes e tokens reais do projeto com renderização nativa Base UI, sem duplicatas estáticas.
               </p>
             </div>
 
-            {/* Grid de Treino: Workout Card + Active Set Card */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
-              {/* Workout Card */}
-              <div className="space-y-2">
-                <span className="text-xs font-bold uppercase tracking-wider text-text-secondary block">
-                  Workout Card (Visão de Treino Diário)
-                </span>
-                <WorkoutCard
-                  letter="A"
-                  title="Peito, Ombros e Tríceps"
-                  focus="Foco em Hipertrofia & Força Estrita"
-                  exerciseCount={6}
-                  lastExecuted="Ontem, 19:30"
-                  estimatedMinutes={50}
-                  onStart={() => alert("Iniciando Treino A!")}
-                />
+            {/* Aviso de Dados Locais Isolados */}
+            <div className="p-3 rounded-md bg-muted/40 border border-border text-xs text-muted-foreground flex items-center gap-2">
+              <Info className="h-4 w-4 shrink-0 text-primary" />
+              <span>
+                <strong>Ambiente de Demonstração Isolado:</strong> os controles interativos abaixo operam sobre estados locais em memória, sem disparar mutações no banco de dados Supabase nem APIs de produção.
+              </span>
+            </div>
+          </div>
+
+          {/* =========================================================================
+              1. FUNDAMENTOS: TOKENS, CORES, TIPOGRAFIA E RAIOS
+             ========================================================================= */}
+          {(activeTab === "todos" || activeTab === "fundamentos") && (
+            <section className="space-y-6">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <Palette className="h-5 w-5 text-primary" />
+                  <h2 className="text-xl font-bold tracking-tight text-foreground">
+                    1. Fundamentos Visuais
+                  </h2>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  Tokens semânticos neutros adaptáveis aos modos claro e escuro.
+                </p>
               </div>
 
-              {/* Active Set Card */}
-              <div className="space-y-2">
-                <span className="text-xs font-bold uppercase tracking-wider text-camini-cobalt block">
-                  Active Set Card (Elemento Dominante em Execução)
-                </span>
-                <ActiveSetCard
-                  exerciseName="Supino Inclinado com Halteres"
-                  targetMuscles="Peitoral Superior e Tríceps"
-                  currentSet={2}
-                  totalSets={4}
-                  initialWeight={32}
-                  initialReps={8}
-                  initialRir={2}
-                  onCompleteSet={(data) => {
-                    setLastWorkoutLog(
-                      `Série concluída: ${data.weight}kg x ${data.reps} reps (RIR ${data.rir})`
-                    );
-                  }}
-                />
-                {lastWorkoutLog && (
-                  <div className="p-3 rounded-md bg-camini-aqua/10 border border-camini-aqua/30 text-camini-aqua text-xs font-bold flex items-center gap-2">
-                    <CheckCircle2 className="w-4 h-4" />
-                    <span>{lastWorkoutLog}</span>
+              {/* Grid de Cores Semânticas */}
+              <div className="space-y-3">
+                <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  Tokens Semânticos de Cor
+                </h3>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                  {colorTokens.map((c) => (
+                    <div
+                      key={c.name}
+                      className="rounded-lg border border-border bg-card p-3 shadow-xs space-y-2.5 flex flex-col justify-between"
+                    >
+                      <div
+                        className={`h-12 w-full rounded-md flex items-center justify-center font-mono text-xs font-bold shadow-xs ${c.sampleClass}`}
+                      >
+                        {c.name}
+                      </div>
+                      <div className="space-y-1">
+                        <div className="flex items-center justify-between text-xs">
+                          <span className="font-semibold text-foreground">{c.name}</span>
+                          <span className="font-mono text-[10px] text-muted-foreground">{c.varName}</span>
+                        </div>
+                        <p className="text-[11px] text-muted-foreground leading-tight">
+                          {c.description}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Escala de Tipografia */}
+              <div className="space-y-3 pt-4">
+                <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  Escala Tipográfica (Geist Sans & Geist Mono)
+                </h3>
+                <div className="rounded-lg border border-border bg-card divide-y divide-border overflow-hidden shadow-xs">
+                  <div className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <span className="text-xs font-mono text-muted-foreground w-36 shrink-0">
+                      text-2xl / font-bold
+                    </span>
+                    <h1 className="text-2xl font-bold tracking-tight text-foreground flex-1">
+                      Título Principal da Página
+                    </h1>
                   </div>
+
+                  <div className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <span className="text-xs font-mono text-muted-foreground w-36 shrink-0">
+                      text-lg / font-semibold
+                    </span>
+                    <h2 className="text-lg font-semibold tracking-tight text-foreground flex-1">
+                      Cabeçalho de Seção ou Card
+                    </h2>
+                  </div>
+
+                  <div className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <span className="text-xs font-mono text-muted-foreground w-36 shrink-0">
+                      text-sm / font-medium
+                    </span>
+                    <p className="text-sm text-foreground flex-1">
+                      Texto de leitura corporativa, rótulos de campos e células de tabela.
+                    </p>
+                  </div>
+
+                  <div className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <span className="text-xs font-mono text-muted-foreground w-36 shrink-0">
+                      text-xs / muted
+                    </span>
+                    <p className="text-xs text-muted-foreground flex-1">
+                      Legendas contextuais, metadados, breadcrumbs e instruções secundárias.
+                    </p>
+                  </div>
+
+                  <div className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <span className="text-xs font-mono text-muted-foreground w-36 shrink-0">
+                      font-mono / text-xs
+                    </span>
+                    <code className="font-mono text-xs text-foreground bg-muted px-2 py-1 rounded-md flex-1">
+                      SELECT id, professor_id, disciplina_id FROM ctc_aulas LIMIT 5;
+                    </code>
+                  </div>
+                </div>
+              </div>
+
+              {/* Border Radius Tokens */}
+              <div className="space-y-3 pt-4">
+                <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  Raios de Borda (Border Radius)
+                </h3>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                  {radiusTokens.map((r) => (
+                    <div
+                      key={r.token}
+                      className="rounded-lg border border-border bg-card p-3 shadow-xs space-y-1.5"
+                    >
+                      <div className="font-mono text-xs font-semibold text-primary">{r.token}</div>
+                      <div className="text-xs text-foreground font-medium">{r.value}</div>
+                      <div className="text-[11px] text-muted-foreground">{r.desc}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </section>
+          )}
+
+          {/* =========================================================================
+              2. AÇÕES: BUTTON VARIANTES, TAMANHOS E ESTADOS
+             ========================================================================= */}
+          {(activeTab === "todos" || activeTab === "acoes") && (
+            <section className="space-y-6">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <Sliders className="h-5 w-5 text-primary" />
+                  <h2 className="text-xl font-bold tracking-tight text-foreground">
+                    2. Ações & Botões
+                  </h2>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  Componente Button com suporte a Base UI render prop, variantes Studio e tamanhos responsivos.
+                </p>
+              </div>
+
+              {/* Variantes de Botão */}
+              <div className="rounded-lg border border-border bg-card p-5 shadow-xs space-y-4">
+                <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  Variantes de Estilo
+                </h3>
+                <div className="flex flex-wrap items-center gap-2.5">
+                  <Button variant="default">Default (Primário)</Button>
+                  <Button variant="secondary">Secondary</Button>
+                  <Button variant="outline">Outline</Button>
+                  <Button variant="destructive">Destructive</Button>
+                  <Button variant="ghost">Ghost</Button>
+                  <Button variant="link">Link Style</Button>
+                </div>
+              </div>
+
+              {/* Tamanhos de Botão */}
+              <div className="rounded-lg border border-border bg-card p-5 shadow-xs space-y-4">
+                <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  Tamanhos Disponíveis
+                </h3>
+                <div className="flex flex-wrap items-center gap-2.5">
+                  <Button size="sm">Small (h-8)</Button>
+                  <Button size="default">Default (h-9)</Button>
+                  <Button size="lg">Large (h-11)</Button>
+                  <Button size="icon" title="Ícone Normal">
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                  <Button size="icon-sm" variant="outline" title="Ícone Pequeno">
+                    <Settings className="h-3.5 w-3.5" />
+                  </Button>
+                </div>
+              </div>
+
+              {/* Estados de Interação: Loading e Disabled */}
+              <div className="rounded-lg border border-border bg-card p-5 shadow-xs space-y-4">
+                <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  Estados de Carregamento & Desabilitado
+                </h3>
+                <div className="flex flex-wrap items-center gap-3">
+                  <Button disabled>Desabilitado</Button>
+                  <Button variant="outline" disabled>
+                    Outline Desabilitado
+                  </Button>
+                  <Button
+                    onClick={handleSimulateAsync}
+                    disabled={demoLoading}
+                    className="gap-2"
+                  >
+                    {demoLoading ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        <span>Processando...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="h-4 w-4" />
+                        <span>Clique para Testar Loading</span>
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </div>
+            </section>
+          )}
+
+          {/* =========================================================================
+              3. FORMULÁRIOS: INPUTS, LABELS, TEXTAREA, SELECT, SWITCH
+             ========================================================================= */}
+          {(activeTab === "todos" || activeTab === "formularios") && (
+            <section className="space-y-6">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <Layers className="h-5 w-5 text-primary" />
+                  <h2 className="text-xl font-bold tracking-tight text-foreground">
+                    3. Controles de Formulário
+                  </h2>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  Campos de entrada com estados de foco, erro semântico, textos de ajuda e switches acessíveis.
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Inputs de Texto */}
+                <div className="rounded-lg border border-border bg-card p-5 shadow-xs space-y-4">
+                  <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                    Campos de Texto (Input)
+                  </h3>
+
+                  <div className="space-y-1.5">
+                    <Label htmlFor="demo-name" className="text-xs font-medium">
+                      Nome Completo <span className="text-destructive">*</span>
+                    </Label>
+                    <Input
+                      id="demo-name"
+                      value={demoInput}
+                      onChange={(e) => setDemoInput(e.target.value)}
+                      placeholder="Ex: Christian Pompeu"
+                    />
+                    <p className="text-[11px] text-muted-foreground">
+                      Exemplo com valor preenchido e binding de estado local.
+                    </p>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <Label htmlFor="demo-error" className="text-xs font-medium text-destructive">
+                      Campo com Erro de Validação
+                    </Label>
+                    <Input
+                      id="demo-error"
+                      defaultValue="valor_invalido"
+                      error="O formato de e-mail informado é inválido."
+                    />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <Label htmlFor="demo-disabled" className="text-xs font-medium text-muted-foreground">
+                      Campo Desabilitado
+                    </Label>
+                    <Input
+                      id="demo-disabled"
+                      disabled
+                      defaultValue="Registro bloqueado pelo sistema"
+                    />
+                  </div>
+                </div>
+
+                {/* Textarea, Switch e Select */}
+                <div className="rounded-lg border border-border bg-card p-5 shadow-xs space-y-4">
+                  <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                    Textarea, Select & Switch
+                  </h3>
+
+                  <div className="space-y-1.5">
+                    <Label htmlFor="demo-textarea" className="text-xs font-medium">
+                      Ementa / Descrição (Textarea)
+                    </Label>
+                    <Textarea
+                      id="demo-textarea"
+                      placeholder="Descreva a matéria ou observações..."
+                      defaultValue="Estudo introdutório sobre doutrina, teologia sistemática e hermenêutica bíblica."
+                      rows={3}
+                    />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <Label htmlFor="demo-select" className="text-xs font-medium">
+                      Seleção Dropdown (Select)
+                    </Label>
+                    <select
+                      id="demo-select"
+                      aria-label="Seleção de exemplo"
+                      className="w-full h-9 rounded-md border border-input bg-background px-3 py-1 text-sm text-foreground shadow-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    >
+                      <option value="1">Curso de Teologia Cristã (CTC)</option>
+                      <option value="2">Módulo RM SQL AI</option>
+                      <option value="3">Módulo FORÇA</option>
+                    </select>
+                  </div>
+
+                  <div className="pt-2 border-t border-border flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label htmlFor="demo-switch" className="text-xs font-medium cursor-pointer">
+                        Notificações Automáticas
+                      </Label>
+                      <p className="text-[11px] text-muted-foreground">
+                        Status atual: {demoSwitch ? "Ativado" : "Desativado"}
+                      </p>
+                    </div>
+                    <Switch
+                      id="demo-switch"
+                      checked={demoSwitch}
+                      onCheckedChange={setDemoSwitch}
+                    />
+                  </div>
+                </div>
+              </div>
+            </section>
+          )}
+
+          {/* =========================================================================
+              4. CONTEÚDO: CARDS, BADGES, TABELAS E SKELETONS
+             ========================================================================= */}
+          {(activeTab === "todos" || activeTab === "conteudo") && (
+            <section className="space-y-6">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 className="h-5 w-5 text-primary" />
+                  <h2 className="text-xl font-bold tracking-tight text-foreground">
+                    4. Conteúdo & Visualização de Dados
+                  </h2>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  Cards de indicadores, badges de status, tabelas padronizadas e placeholders skeleton.
+                </p>
+              </div>
+
+              {/* Badges */}
+              <div className="rounded-lg border border-border bg-card p-5 shadow-xs space-y-4">
+                <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  Pílulas & Badges de Estado
+                </h3>
+                <div className="flex flex-wrap items-center gap-2">
+                  <Badge variant="default">Default</Badge>
+                  <Badge variant="secondary">Secondary</Badge>
+                  <Badge variant="outline">Outline</Badge>
+                  <Badge variant="destructive">Destructive / Alerta</Badge>
+                  <Badge variant="outline" className="gap-1">
+                    <span className="size-1.5 rounded-full bg-emerald-500" />
+                    Ativo
+                  </Badge>
+                </div>
+              </div>
+
+              {/* Cards de Métricas Studio */}
+              <div className="space-y-3">
+                <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  Cards de Indicadores (Dashboard Baseline)
+                </h3>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <Card size="sm">
+                    <CardHeader className="flex flex-row items-center justify-between pb-2">
+                      <CardTitle className="text-xs font-medium text-muted-foreground">
+                        Professores Cadastrados
+                      </CardTitle>
+                      <Users className="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold text-foreground">10</div>
+                      <p className="text-[11px] text-muted-foreground mt-0.5">
+                        Corpo docente regular do CTC
+                      </p>
+                    </CardContent>
+                  </Card>
+
+                  <Card size="sm">
+                    <CardHeader className="flex flex-row items-center justify-between pb-2">
+                      <CardTitle className="text-xs font-medium text-muted-foreground">
+                        Disciplinas Ativas
+                      </CardTitle>
+                      <Calendar className="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold text-foreground">19</div>
+                      <p className="text-[11px] text-muted-foreground mt-0.5">
+                        Grade curricular acadêmica
+                      </p>
+                    </CardContent>
+                  </Card>
+
+                  <Card size="sm">
+                    <CardHeader className="flex flex-row items-center justify-between pb-2">
+                      <CardTitle className="text-xs font-medium text-muted-foreground">
+                        Aulas Programadas
+                      </CardTitle>
+                      <CheckCircle2 className="h-4 w-4 text-primary" />
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold text-foreground">77</div>
+                      <p className="text-[11px] text-muted-foreground mt-0.5">
+                        Cronograma sincronizado
+                      </p>
+                    </CardContent>
+                  </Card>
+                </div>
+              </div>
+
+              {/* Tabela de Demonstração */}
+              <div className="space-y-3">
+                <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  Tabela Responsiva Padronizada
+                </h3>
+                <div className="rounded-lg border border-border bg-card overflow-hidden shadow-xs">
+                  <Table>
+                    <TableHeader className="bg-muted/40">
+                      <TableRow>
+                        <TableHead className="text-xs font-semibold uppercase tracking-wider">Código</TableHead>
+                        <TableHead className="text-xs font-semibold uppercase tracking-wider">Disciplina</TableHead>
+                        <TableHead className="text-xs font-semibold uppercase tracking-wider">Docente Responsável</TableHead>
+                        <TableHead className="text-xs font-semibold uppercase tracking-wider">Carga Horária</TableHead>
+                        <TableHead className="text-right text-xs font-semibold uppercase tracking-wider">Status</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      <TableRow>
+                        <TableCell className="font-mono text-xs text-muted-foreground">CTC-01</TableCell>
+                        <TableCell className="font-medium text-foreground">Hamartiologia</TableCell>
+                        <TableCell className="text-sm text-muted-foreground">Pr. Caetano Soares</TableCell>
+                        <TableCell>
+                          <Badge variant="secondary" className="font-normal text-xs">40 horas</Badge>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <Badge variant="outline" className="text-xs text-emerald-600 dark:text-emerald-400">Ativa</Badge>
+                        </TableCell>
+                      </TableRow>
+                      <TableRow>
+                        <TableCell className="font-mono text-xs text-muted-foreground">CTC-02</TableCell>
+                        <TableCell className="font-medium text-foreground">Eclesiologia</TableCell>
+                        <TableCell className="text-sm text-muted-foreground">Christian Pompeu</TableCell>
+                        <TableCell>
+                          <Badge variant="secondary" className="font-normal text-xs">60 horas</Badge>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <Badge variant="outline" className="text-xs text-emerald-600 dark:text-emerald-400">Ativa</Badge>
+                        </TableCell>
+                      </TableRow>
+                    </TableBody>
+                  </Table>
+                </div>
+              </div>
+
+              {/* Skeletons com Shimmer */}
+              <div className="rounded-lg border border-border bg-card p-5 shadow-xs space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                    Placeholders Skeleton (Carregamento Assíncrono)
+                  </h3>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowSkeleton(!showSkeleton)}
+                    className="text-xs h-7"
+                  >
+                    {showSkeleton ? "Restaurar Conteúdo" : "Simular Shimmer"}
+                  </Button>
+                </div>
+
+                {showSkeleton ? (
+                  <div className="space-y-3">
+                    <Skeleton className="h-5 w-1/3" />
+                    <Skeleton className="h-4 w-full" />
+                    <Skeleton className="h-4 w-4/5" />
+                    <div className="flex gap-2 pt-2">
+                      <Skeleton className="h-8 w-24" />
+                      <Skeleton className="h-8 w-24" />
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-xs text-muted-foreground">
+                    Clique em &quot;Simular Shimmer&quot; para visualizar os blocos com animação de pulso neutra sem deslocamento de layout (CLS zero).
+                  </p>
                 )}
               </div>
-            </div>
+            </section>
+          )}
 
-            {/* Cronômetro de Descanso + Exercise Hero */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
-              {/* Rest Timer */}
-              <div className="space-y-2">
-                <span className="text-xs font-bold uppercase tracking-wider text-text-secondary block">
-                  Rest Timer (Progress Ring Circular SVG Fluido)
-                </span>
-                <RestTimer
-                  initialSeconds={90}
-                  onFinish={() => alert("Descanso finalizado! Hora da próxima série.")}
-                />
-              </div>
-
-              {/* Exercise Hero */}
-              <div className="space-y-2">
-                <span className="text-xs font-bold uppercase tracking-wider text-text-secondary block">
-                  Exercise Hero (Legibilidade com Gradiente Protetor)
-                </span>
-                <ExerciseHero
-                  name="Desenvolvimento Militar com Halteres"
-                  category="Deltoides & Trapézio"
-                  muscles={["Deltoide Anterior", "Deltoide Lateral", "Tríceps"]}
-                  sets="4 Séries"
-                  reps="8 a 12 Repetições"
-                  cues={[
-                    "Posicione o banco em 75° a 80° para conforto articular.",
-                    "Pés firmes no chão gerando leg drive moderado.",
-                    "Desça os halteres até a linha das orelhas mantendo cotovelos a 45°.",
-                  ]}
-                />
-              </div>
-            </div>
-
-            {/* Telemetria Flutuante e Navegação */}
-            <div className="space-y-4 pt-4 border-t border-outline/50">
-              <h3 className="text-sm font-bold uppercase tracking-wider text-text-secondary">
-                Superfícies Flutuantes (Glassmorphism de Alta Performance)
-              </h3>
-
-              <div className="p-6 rounded-xl bg-surface-elevated border border-outline card-elevation flex flex-col items-center justify-center gap-6">
-                <div className="w-full flex flex-col items-center">
-                  <span className="text-xs font-bold text-text-secondary mb-2">
-                    Floating Workout Bar (Barra Flutuante Durante o Treino)
-                  </span>
-                  <FloatingWorkoutBar
-                    currentExercise="Supino Inclinado com Halteres"
-                    currentSet="Série 2 de 4"
-                    timerFormatted="01:14"
-                    onNextAction={() => alert("Avançando para Série 3...")}
-                  />
+          {/* =========================================================================
+              5. FEEDBACK, INTERAÇÃO & MODAIS (ALERTS, DIALOGS, SHEETS, TOASTS)
+             ========================================================================= */}
+          {(activeTab === "todos" || activeTab === "feedback") && (
+            <section className="space-y-6">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <Bell className="h-5 w-5 text-primary" />
+                  <h2 className="text-xl font-bold tracking-tight text-foreground">
+                    5. Feedback, Notificações & Diálogos
+                  </h2>
                 </div>
+                <p className="text-sm text-muted-foreground">
+                  Modais com foco acessível (@base-ui/react), sheets laterais, alertas de estado e toasts interativos.
+                </p>
+              </div>
 
-                <div className="w-full flex flex-col items-center">
-                  <span className="text-xs font-bold text-text-secondary mb-2">
-                    Bottom Navigation (Navegação Principal com Indicador Pill)
-                  </span>
-                  <BottomNavigation />
+              {/* Banners e Alertas */}
+              <div className="space-y-3">
+                <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  Alertas em Linha (Alert)
+                </h3>
+                <Alert>
+                  <Info className="h-4 w-4" />
+                  <AlertTitle>Informação do Sistema</AlertTitle>
+                  <AlertDescription>
+                    As alterações realizadas no cadastro são automaticamente revalidadas no cache do servidor.
+                  </AlertDescription>
+                </Alert>
+
+                <Alert variant="destructive">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertTitle>Atenção à Integridade Referencial</AlertTitle>
+                  <AlertDescription>
+                    Registros com vínculos ativos em aulas são protegidos contra exclusão acidental via chave estrangeira RESTRICT.
+                  </AlertDescription>
+                </Alert>
+              </div>
+
+              {/* Diálogos e Modais Interativos */}
+              <div className="rounded-lg border border-border bg-card p-5 shadow-xs space-y-4">
+                <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  Modais & Diálogos Base UI
+                </h3>
+
+                <div className="flex flex-wrap items-center gap-3">
+                  {/* Dialog Normal */}
+                  <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+                    <DialogTrigger render={<Button variant="outline" className="text-xs" />}>
+                      Abrir Dialog Padrão
+                    </DialogTrigger>
+                    <DialogContent className="sm:max-w-md">
+                      <DialogHeader>
+                        <DialogTitle>Demonstração de Diálogo</DialogTitle>
+                        <DialogDescription>
+                          Exemplo de janela modal Base UI com backdrop suave e fechamento por Escape.
+                        </DialogDescription>
+                      </DialogHeader>
+                      <div className="py-2 text-sm text-muted-foreground">
+                        Este é um modal de demonstração do catálogo de componentes.
+                      </div>
+                      <DialogFooter>
+                        <Button variant="outline" onClick={() => setDialogOpen(false)}>
+                          Fechar
+                        </Button>
+                        <Button onClick={() => { setDialogOpen(false); toast.success("Ação confirmada!"); }}>
+                          Salvar Alterações
+                        </Button>
+                      </DialogFooter>
+                    </DialogContent>
+                  </Dialog>
+
+                  {/* AlertDialog Destrutivo */}
+                  <AlertDialog open={alertDialogOpen} onOpenChange={setAlertDialogOpen}>
+                    <AlertDialogTrigger render={<Button variant="destructive" className="text-xs" />}>
+                      Abrir Confirmação Destrutiva
+                    </AlertDialogTrigger>
+                    <AlertDialogContent className="sm:max-w-md">
+                      <AlertDialogHeader>
+                        <div className="mb-2 inline-flex size-10 items-center justify-center rounded-md bg-destructive/10 text-destructive">
+                          <Trash2 className="size-5" />
+                        </div>
+                        <AlertDialogTitle>Excluir Registro de Teste</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Tem certeza que deseja prosseguir com a exclusão deste item? Esta ação não pode ser desfeita.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                        <AlertDialogAction
+                          variant="destructive"
+                          onClick={() => {
+                            setAlertDialogOpen(false);
+                            toast.success("Registro excluído com sucesso (simulação).");
+                          }}
+                        >
+                          Excluir
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+
+                  {/* Sheet Lateral */}
+                  <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
+                    <SheetTrigger render={<Button variant="secondary" className="text-xs" />}>
+                      Abrir Drawer Lateral (Sheet)
+                    </SheetTrigger>
+                    <SheetContent side="right" className="sm:max-w-sm">
+                      <SheetHeader>
+                        <SheetTitle>Painel Lateral de Configurações</SheetTitle>
+                        <SheetDescription>
+                          Exemplo de gaveta deslizante para edição rápida ou navegação em dispositivos móveis.
+                        </SheetDescription>
+                      </SheetHeader>
+                      <div className="py-4 space-y-3 text-xs text-muted-foreground">
+                        <p>O componente Sheet utiliza foco controlado e fechamento com deslize suave.</p>
+                      </div>
+                      <SheetFooter>
+                        <Button variant="outline" onClick={() => setSheetOpen(false)}>
+                          Concluir
+                        </Button>
+                      </SheetFooter>
+                    </SheetContent>
+                  </Sheet>
+
+                  {/* Tooltip */}
+                  <Tooltip>
+                    <TooltipTrigger render={<Button variant="ghost" size="icon" title="Dica" />}>
+                      <Eye className="h-4 w-4" />
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      Tooltip informativo com ponta direcional
+                    </TooltipContent>
+                  </Tooltip>
                 </div>
               </div>
-            </div>
-          </section>
-        )}
-      </main>
 
-      {/* Barra de Rodapé Flutuante Fixo para Demonstração Mobile */}
-      <div className="fixed bottom-4 sm:bottom-6 inset-x-0 px-4 flex justify-center z-50 pointer-events-none">
-        <div className="pointer-events-auto">
-          <BottomNavigation />
-        </div>
+              {/* Notificações Toast via Sonner */}
+              <div className="rounded-lg border border-border bg-card p-5 shadow-xs space-y-4">
+                <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  Notificações Toast (Sonner)
+                </h3>
+                <div className="flex flex-wrap items-center gap-2.5">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => toast.success("Professor excluído com sucesso.")}
+                  >
+                    Toast de Sucesso
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() =>
+                      toast.error("Não é possível excluir: existem 14 aulas vinculadas.")
+                    }
+                  >
+                    Toast de Erro / Bloqueio
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => toast.info("Sincronização em segundo plano iniciada.")}
+                  >
+                    Toast de Informação
+                  </Button>
+                </div>
+              </div>
+            </section>
+          )}
+
+          {/* =========================================================================
+              6. NAVEGAÇÃO & LAYOUT: BREADCRUMBS, TABS E PAGINAÇÃO
+             ========================================================================= */}
+          {(activeTab === "todos" || activeTab === "navegacao") && (
+            <section className="space-y-6">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <ChevronRight className="h-5 w-5 text-primary" />
+                  <h2 className="text-xl font-bold tracking-tight text-foreground">
+                    6. Padrões de Navegação & Layout
+                  </h2>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  Estruturas consistentes de migalhas de pão, paginação de tabelas e alternância de temas.
+                </p>
+              </div>
+
+              {/* Breadcrumbs */}
+              <div className="rounded-lg border border-border bg-card p-5 shadow-xs space-y-3">
+                <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  Hierarquia de Breadcrumbs
+                </h3>
+                <nav
+                  aria-label="Breadcrumb de exemplo"
+                  className="flex items-center gap-1.5 text-xs text-muted-foreground"
+                >
+                  <span className="hover:text-foreground cursor-pointer">Painel</span>
+                  <ChevronRight className="h-3 w-3" />
+                  <span className="hover:text-foreground cursor-pointer">Gestão CTC</span>
+                  <ChevronRight className="h-3 w-3" />
+                  <span className="text-foreground font-semibold">Professores</span>
+                </nav>
+              </div>
+
+              {/* Paginação de Tabela */}
+              <div className="rounded-lg border border-border bg-card p-5 shadow-xs space-y-3">
+                <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  Controle de Paginação
+                </h3>
+                <div className="flex items-center justify-between text-xs text-muted-foreground">
+                  <span>Página 1 de 8</span>
+                  <div className="flex items-center gap-1.5">
+                    <Button variant="outline" size="sm" className="h-7 px-2 text-xs" disabled>
+                      Anterior
+                    </Button>
+                    <Button variant="outline" size="sm" className="h-7 px-2 text-xs">
+                      Próxima
+                    </Button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Alternador de Tema Compacto */}
+              <div className="rounded-lg border border-border bg-card p-5 shadow-xs space-y-3">
+                <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  Alternador de Tema Claro / Escuro
+                </h3>
+                <div className="flex items-center gap-3">
+                  <ThemeToggle />
+                  <span className="text-xs text-muted-foreground">
+                    Componente ThemeToggle integrado aos provedores `next-themes` e persistência local.
+                  </span>
+                </div>
+              </div>
+            </section>
+          )}
+        </main>
+
+        {/* Rodapé OpenDocs Padronizado */}
+        <footer className="border-t border-border py-6 px-4 sm:px-6 bg-muted/20 text-xs text-muted-foreground mt-16">
+          <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="flex items-center gap-2">
+              <span className="font-semibold text-foreground">Camini</span>
+              <span>•</span>
+              <span>Design System Studio Admin</span>
+              <span>•</span>
+              <span>Documentação Técnica de Componentes</span>
+            </div>
+
+            <div className="flex items-center gap-4">
+              <Link href="/" className="hover:text-foreground transition-colors">
+                Início
+              </Link>
+              <Link href="/dashboard" className="hover:text-foreground transition-colors">
+                Dashboard
+              </Link>
+              <Link href="/ctc/calendario" className="hover:text-foreground transition-colors">
+                Calendário CTC
+              </Link>
+            </div>
+          </div>
+        </footer>
       </div>
-    </div>
+    </TooltipProvider>
   );
 }

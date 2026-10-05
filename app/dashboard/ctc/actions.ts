@@ -54,6 +54,53 @@ export async function getCtcStats() {
 }
 
 // ==========================================
+// VÍNCULOS E DEPENDÊNCIAS (CTC)
+// ==========================================
+
+export type CtcDependencyType = "professor" | "disciplina";
+
+export async function getCtcDependencyCount({
+  type,
+  id,
+}: {
+  type: CtcDependencyType;
+  id: string;
+}): Promise<{ count: number; error?: string }> {
+  try {
+    const supabase = await createClient();
+    const column = type === "professor" ? "professor_id" : "disciplina_id";
+    const { count, error } = await supabase
+      .from("ctc_aulas")
+      .select("id", { count: "exact", head: true })
+      .eq(column, id);
+
+    if (error) {
+      console.error(`Erro ao verificar vínculos de ${type}:`, error);
+      return { count: 0, error: "Não foi possível verificar as aulas vinculadas no momento." };
+    }
+
+    return { count: count ?? 0 };
+  } catch (err) {
+    console.error(`Erro inesperado ao verificar dependências de ${type}:`, err);
+    return { count: 0, error: "Falha de comunicação ao verificar as dependências." };
+  }
+}
+
+function formatCtcDeleteError(
+  type: CtcDependencyType,
+  error: { code?: string; message?: string }
+): string {
+  // Trata especificamente a violação de integridade referencial (FK RESTRICT)
+  if (error.code === "23503") {
+    if (type === "professor") {
+      return "Não é possível excluir este professor porque existem aulas vinculadas a ele. Transfira ou remova as aulas antes de excluir.";
+    }
+    return "Não é possível excluir esta disciplina porque existem aulas vinculadas a ela. Transfira ou remova as aulas antes de excluir.";
+  }
+  return error.message || "Erro desconhecido ao tentar realizar a exclusão.";
+}
+
+// ==========================================
 // CRUD PROFESSORES
 // ==========================================
 
@@ -95,7 +142,9 @@ export async function createProfessor(formData: FormData) {
 export async function deleteProfessor(id: string) {
   const supabase = await createClient();
   const { error } = await supabase.from("ctc_professores").delete().eq("id", id);
-  if (error) return { error: error.message };
+  if (error) {
+    return { error: formatCtcDeleteError("professor", error) };
+  }
 
   revalidatePath("/dashboard/ctc/professores");
   revalidatePath("/dashboard/ctc/aulas");
@@ -144,7 +193,9 @@ export async function createDisciplina(formData: FormData) {
 export async function deleteDisciplina(id: string) {
   const supabase = await createClient();
   const { error } = await supabase.from("ctc_disciplinas").delete().eq("id", id);
-  if (error) return { error: error.message };
+  if (error) {
+    return { error: formatCtcDeleteError("disciplina", error) };
+  }
 
   revalidatePath("/dashboard/ctc/disciplinas");
   revalidatePath("/dashboard/ctc/aulas");

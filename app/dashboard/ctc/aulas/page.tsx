@@ -9,7 +9,12 @@ export const metadata = {
   description: "Programação e agendamento de aulas do Curso de Teologia Cristã.",
 };
 
-export default async function AulasPage() {
+export default async function AulasPage(props: {
+  searchParams?: Promise<{ q?: string }>;
+}) {
+  const searchParams = props.searchParams ? await props.searchParams : undefined;
+  const initialSearch = searchParams?.q || "";
+
   const [aulas, disciplinas, professores] = await Promise.all([
     getAulas(),
     getDisciplinas(),
@@ -50,6 +55,7 @@ export default async function AulasPage() {
         aulas={aulas}
         disciplinas={disciplinas}
         professores={professores}
+        initialSearch={initialSearch}
       />
     </div>
   );

@@ -1,63 +1,105 @@
-# Design System Camini (Baseline Studio Admin)
+# Design System Camini (Baseline Studio Admin & Base UI)
 
-Baseado na identidade visual do Studio Admin (arhamkhnz/next-shadcn-admin-dashboard), adaptada para os componentes Base UI do Camini.
+Consolidação oficial da linguagem visual e do catálogo de componentes do Camini, baseada na identidade neutra do **Studio Admin** (`arhamkhnz/next-shadcn-admin-dashboard`) e nos primitivos semânticos do **Base UI** (`@base-ui/react`).
 
-## 1. Tipografia e Escala
-- **Fonte Padrão (Sans):** `Geist Sans` (fallback `system-ui, -apple-system, sans-serif`).
-- **Fonte Código (Mono):** `Geist Mono` (para SQL, queries e identificadores).
-- **Hierarquia:**
-  - `h1`: `text-2xl font-bold tracking-tight` (desktop: `text-3xl font-bold tracking-tight`)
-  - `h2`: `text-lg font-semibold tracking-tight`
-  - `h3`: `text-sm font-semibold text-foreground`
-  - Corpo: `text-sm text-foreground` (linha de leitura `leading-normal`)
-  - Legendas / Metadados: `text-xs text-muted-foreground`
+A rota interativa e isolada de demonstração está disponível em `/playground`.
 
-## 2. Tokens Semânticos e Cores (Tema Neutro)
+---
 
-A paleta neutra Studio substitui gradientes expressivos e decorações no dashboard administrativo:
+## 1. Tipografia e Hierarquia de Leitura
+- **Família Sans Padrão:** `Geist Sans` (com fallback nativo `system-ui, -apple-system, sans-serif`).
+- **Família Monospaçada (Código & SQL):** `Geist Mono` (para blocos analíticos do RM SQL AI, queries e identificadores de tabela).
+- **Escala Padronizada:**
+  - `Display / Hero`: `text-3xl sm:text-4xl font-bold tracking-tight`
+  - `H1 (Páginas)`: `text-2xl sm:text-3xl font-bold tracking-tight`
+  - `H2 (Seções / Grupos)`: `text-lg font-semibold tracking-tight`
+  - `H3 (Cards / Cabeçalhos)`: `text-base font-semibold text-foreground`
+  - `Corpo / Labels`: `text-sm text-foreground` (linha de leitura `leading-normal`)
+  - `Legendas / Metadados`: `text-xs text-muted-foreground`
+  - `Código inline`: `font-mono text-xs bg-muted px-1.5 py-0.5 rounded-md`
 
-| Token | Modo Claro (OKLCH) | Modo Escuro (OKLCH) | Descrição |
+---
+
+## 2. Tokens Semânticos e Paleta Neutra
+
+Todas as cores operam sobre variáveis de tema neutras e acessíveis (WCAG AA), dispensando gradientes arbitrários no sistema administrativo:
+
+| Token | Modo Claro (OKLCH / HEX) | Modo Escuro (OKLCH / HEX) | Uso Semântico |
 | :--- | :--- | :--- | :--- |
-| `--background` | `oklch(1 0 0)` (#ffffff) | `oklch(0.145 0 0)` (#18181b) | Fundo da aplicação |
-| `--foreground` | `oklch(0.145 0 0)` (#18181b) | `oklch(0.985 0 0)` (#fafafa) | Texto principal |
-| `--card` | `oklch(1 0 0)` (#ffffff) | `oklch(0.205 0 0)` (#27272a) | Superfície de cartões |
-| `--card-foreground` | `oklch(0.145 0 0)` | `oklch(0.985 0 0)` | Texto em cartões |
-| `--popover` | `oklch(1 0 0)` | `oklch(0.205 0 0)` | Diálogos e menus flutuantes |
-| `--primary` | `oklch(0.205 0 0)` | `oklch(0.922 0 0)` | Botões de ação primária |
+| `--background` | `oklch(1 0 0)` (#ffffff) | `oklch(0.145 0 0)` (#18181b) | Fundo base de viewport |
+| `--foreground` | `oklch(0.145 0 0)` (#18181b) | `oklch(0.985 0 0)` (#fafafa) | Tipografia dominante |
+| `--card` | `oklch(1 0 0)` (#ffffff) | `oklch(0.205 0 0)` (#27272a) | Superfície de cartões e seções |
+| `--card-foreground` | `oklch(0.145 0 0)` | `oklch(0.985 0 0)` | Texto interno de cartões |
+| `--popover` | `oklch(1 0 0)` | `oklch(0.205 0 0)` | Menus, diálogos e tooltips |
+| `--primary` | `oklch(0.205 0 0)` | `oklch(0.922 0 0)` | Ações primárias (alto contraste) |
 | `--primary-foreground`| `oklch(0.985 0 0)` | `oklch(0.205 0 0)` | Texto sobre botão primário |
-| `--secondary` | `oklch(0.97 0 0)` | `oklch(0.269 0 0)` | Ações secundárias |
-| `--muted` | `oklch(0.97 0 0)` | `oklch(0.269 0 0)` | Fundos atenuados |
-| `--muted-foreground` | `oklch(0.556 0 0)` | `oklch(0.708 0 0)` | Textos secundários |
-| `--border` | `oklch(0.922 0 0)` | `oklch(1 0 0 / 10%)` | Bordas e divisores |
-| `--input` | `oklch(0.922 0 0)` | `oklch(1 0 0 / 15%)` | Bordas de campos de entrada |
-| `--ring` | `oklch(0.708 0 0)` | `oklch(0.556 0 0)` | Anel de foco |
-| `--destructive` | `oklch(0.577 0.245 27.325)` | `oklch(0.704 0.191 22.216)` | Ações de exclusão e perigo |
-| `--sidebar` | `oklch(0.985 0 0)` | `oklch(0.205 0 0)` | Fundo da sidebar |
-| `--sidebar-border` | `oklch(0.922 0 0)` | `oklch(1 0 0 / 10%)` | Borda lateral da barra |
+| `--secondary` | `oklch(0.97 0 0)` | `oklch(0.269 0 0)` | Ações de apoio e superfícies suaves |
+| `--muted` | `oklch(0.97 0 0)` | `oklch(0.269 0 0)` | Fundos sutis e estados desabilitados |
+| `--muted-foreground` | `oklch(0.556 0 0)` | `oklch(0.708 0 0)` | Subtítulos e metadados contextuais |
+| `--border` | `oklch(0.922 0 0)` | `oklch(1 0 0 / 10%)` | Divisores, bordas de tabela e cards |
+| `--input` | `oklch(0.922 0 0)` | `oklch(1 0 0 / 15%)` | Contorno neutro de inputs e selects |
+| `--ring` | `oklch(0.708 0 0)` | `oklch(0.556 0 0)` | Anel de foco visível em teclado |
+| `--destructive` | `oklch(0.577 0.245 27.325)` | `oklch(0.704 0.191 22.216)` | Ações destrutivas e alertas |
 
-## 3. Dimensões, Espaçamento e Raios
+---
+
+## 3. Raios, Elevações e Espaçamentos
 - **Raio Base (`--radius`):** `0.625rem` (10px).
-- **Largura da Sidebar:**
-  - Expandida: `16rem` (~272px).
-  - Ícone / Recolhida: `3rem` (48px).
-  - Mobile (Sheet): `18rem`.
-- **Altura do Header:** `48px` (`h-12`) no desktop, fixo e compacto.
-- **Altura dos Controles:**
-  - Botão default: `36px` (`h-9`), `px-4 py-2 text-sm`.
-  - Botão sm: `32px` (`h-8`), `px-3 py-1 text-xs`.
-  - Botão lg: `44px` (`h-11`), `px-6 py-2.5 text-base`.
-  - Input: `36px` (`h-9`), `px-3 py-1 text-sm`.
+  - `--radius-sm`: `6px` (badges compactos, tags).
+  - `--radius-md`: `8px` (inputs, botões padrão, controles).
+  - `--radius-lg`: `10px` (cards de métricas, contêineres).
+  - `--radius-xl`: `14px` (modais, diálogos e gavetas laterais).
+- **Alturas dos Controles:**
+  - Botão default / Input / Select: `h-9` (36px).
+  - Botão sm / Ações de tabela: `h-8` (32px).
+  - Botão lg: `h-11` (44px).
+  - Touch Target Mobile Mínimo: `≥ 44px` (em mobile views e abas do app FORÇA).
+- **Header:**
+  - Administrativo (`DashboardHeader`): `h-12` (48px), fixo com breadcrumbs contextuais.
+  - Público (`Navbar` OpenDocs): `h-14` (56px) com links diretos aos módulos.
 
-## 4. Primitivos e Variantes de Componentes
-- **Button:**
-  - `default`: Neutro de alto contraste (`bg-primary text-primary-foreground`).
-  - `outline`: Borda sutil neutra (`border border-input bg-background`).
-  - `secondary`: Superfície neutra atenuada (`bg-secondary text-secondary-foreground`).
-  - `destructive`: Vermelho semântico para confirmações de deleção.
-  - `ghost`: Transparente para triggers de ícones e navegações em listas.
-- **Dialog & Sheet:** Abertura com animação leve e backdrop suave (`bg-black/40` com blur leve), fechamento com tecla Escape e clique fora, gerenciamento de foco nativo do `@base-ui/react`.
-- **Table:** Cabeçalhos em `text-xs font-medium text-muted-foreground uppercase tracking-wider`, linhas com hover suave (`hover:bg-muted/50`), scroll horizontal em telas estreitas sem transbordar a página.
-- **AlertDialog:** Modal destrutivo dedicado para confirmação de exclusão (Professores, Disciplinas, Aulas).
+---
 
-## 5. Compatibilidade Transitória (Fases B, C, D)
-- As classes utilitárias legadas (`.bg-gradient-camini`, `.card-elevation`, `.tap-effect`) e variantes como `energy`, `effort`, `coral` são preservadas em `app/globals.css` e no `button.tsx` para não quebrar módulos ainda não reformulados (FORÇA, RM SQL AI, Playground).
+## 4. Primitivos Base UI e Convenções de Composição
+
+O projeto adota `@base-ui/react` como fundação de acessibilidade. Em vez da prop `asChild` tradicional do Radix, os componentes usam a prop `render`:
+
+```tsx
+// Padrão Base UI com Link do Next.js
+<Button
+  variant="outline"
+  size="sm"
+  render={<Link href="/dashboard/ctc" />}
+>
+  Área Administrativa
+</Button>
+```
+
+### Componentes Consolidados:
+1. **Button:**
+   - Variantes: `default`, `secondary`, `outline`, `destructive`, `ghost`, `link`.
+   - Suporte a spinner `Loader2` e estado `disabled`.
+2. **Badge / Chip:**
+   - Variantes: `default`, `secondary`, `outline`, `destructive`.
+3. **Input & Textarea:**
+   - Variantes neutras integradas com `Label` e estados de erro acessíveis (`border-destructive`).
+4. **Switch:**
+   - Alternador tátil acessível Base UI (`SwitchPrimitive.Root`).
+5. **Dialog & Sheet:**
+   - Gestão de foco automático, fechamento via Escape e clique no backdrop.
+6. **AlertDialog:**
+   - Confirmações destrutivas com tratamento de dependência referencial (prevenção prévia de exclusão de professores/disciplinas com aulas vinculadas).
+7. **Table:**
+   - Tabelas neutras de alta densidade com paginação e toolbar de busca em tempo real.
+8. **Toast:**
+   - Notificações transitórias integradas via `sonner` (`toast.success`, `toast.error`, `toast.info`).
+9. **Skeleton:**
+   - Animação de pulso neutra com dimensionamento correspondente ao conteúdo real, garantindo CLS zero.
+
+---
+
+## 5. Rota do Catálogo (`/playground`)
+A rota `/playground` atua como catálogo vivo de componentes:
+- Não efetua mutações no banco de dados.
+- Apresenta todas as variantes reais e estados suportados.
+- Permite validação de contraste e responsividade em múltiplos viewports (375px, 768px, 1280px e 1440px).

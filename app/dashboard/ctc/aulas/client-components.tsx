@@ -303,15 +303,32 @@ export function AulasList({
   aulas,
   disciplinas,
   professores,
+  initialSearch = "",
 }: {
   aulas: Aula[];
   disciplinas: Disciplina[];
   professores: Professor[];
+  initialSearch?: string;
 }) {
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useState(() => {
+    if (initialSearch) return initialSearch;
+    if (typeof window !== "undefined") {
+      const q = new URLSearchParams(window.location.search).get("q");
+      if (q) return q;
+    }
+    return "";
+  });
+  const [prevInitialSearch, setPrevInitialSearch] = useState(initialSearch);
   const [filterDisciplina, setFilterDisciplina] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 10;
+
+  // Ajusta estado caso a prop initialSearch mude durante a navegação
+  if (initialSearch !== prevInitialSearch) {
+    setPrevInitialSearch(initialSearch);
+    setSearch(initialSearch);
+    setCurrentPage(1);
+  }
 
   const filtered = aulas.filter((aula) => {
     const term = search.toLowerCase().trim();

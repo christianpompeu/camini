@@ -3,7 +3,6 @@
 import React, { useState, useTransition } from "react";
 import { 
   Plus, 
-  Trash2, 
   Loader2, 
   Search, 
   BookOpen, 
@@ -23,17 +22,6 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
-import {
   Table,
   TableBody,
   TableCell,
@@ -43,6 +31,7 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { createDisciplina, deleteDisciplina, type Disciplina } from "../actions";
+import { DeleteWithDependencyCheckDialog } from "../delete-dependency-dialog";
 
 // =========================================================================
 // Dialog de Criação de Disciplina
@@ -159,82 +148,25 @@ export function NovaDisciplinaDialog({ onCreated }: { onCreated?: () => void }) 
 }
 
 // =========================================================================
-// Diálogo de Exclusão de Disciplina
+// Diálogo de Exclusão de Disciplina com Verificação Prévia de Vínculos
 // =========================================================================
 export function DeleteDisciplinaDialog({
   id,
   nome,
+  onDeleted,
 }: {
   id: string;
   nome: string;
+  onDeleted?: (id: string) => void;
 }) {
-  const [open, setOpen] = useState(false);
-  const [isPending, startTransition] = useTransition();
-  const [error, setError] = useState<string | null>(null);
-
-  const handleDelete = () => {
-    setError(null);
-    startTransition(async () => {
-      const res = await deleteDisciplina(id);
-      if (res.error) {
-        setError(res.error);
-      } else {
-        setOpen(false);
-      }
-    });
-  };
-
   return (
-    <AlertDialog open={open} onOpenChange={setOpen}>
-      <AlertDialogTrigger
-        render={
-          <Button
-            variant="ghost"
-            size="icon-sm"
-            className="text-muted-foreground hover:text-destructive hover:bg-destructive/10"
-            title={`Excluir ${nome}`}
-          />
-        }
-      >
-        <Trash2 className="h-4 w-4" />
-      </AlertDialogTrigger>
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>Excluir Disciplina</AlertDialogTitle>
-          <AlertDialogDescription>
-            Tem certeza que deseja remover a disciplina{" "}
-            <strong className="text-foreground">{nome}</strong>? Esta ação excluirá a disciplina da grade e pode impactar o cronograma de aulas.
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-
-        {error && (
-          <div className="p-3 bg-destructive/10 text-destructive text-sm rounded-md border border-destructive/20">
-            {error}
-          </div>
-        )}
-
-        <AlertDialogFooter>
-          <AlertDialogCancel disabled={isPending}>Cancelar</AlertDialogCancel>
-          <AlertDialogAction
-            variant="destructive"
-            onClick={(e) => {
-              e.preventDefault();
-              handleDelete();
-            }}
-            disabled={isPending}
-          >
-            {isPending ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Excluindo...
-              </>
-            ) : (
-              "Confirmar Exclusão"
-            )}
-          </AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
+    <DeleteWithDependencyCheckDialog
+      id={id}
+      name={nome}
+      type="disciplina"
+      onDelete={deleteDisciplina}
+      onDeleted={onDeleted}
+    />
   );
 }
 
@@ -246,11 +178,18 @@ export function DisciplinasList({
 }: {
   disciplinas: Disciplina[];
 }) {
+  const [deletedIds, setDeletedIds] = useState<string[]>([]);
   const [search, setSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 10;
 
-  const filtered = disciplinas.filter((d) => {
+  const handleDeleted = (deletedId: string) => {
+    setDeletedIds((prev) => [...prev, deletedId]);
+  };
+
+  const visibleDisciplinas = disciplinas.filter((d) => !deletedIds.includes(d.id));
+
+  const filtered = visibleDisciplinas.filter((d) => {
     const term = search.toLowerCase().trim();
     if (!term) return true;
     return (
@@ -297,11 +236,11 @@ export function DisciplinasList({
         <div className="text-xs text-muted-foreground sm:text-right">
           {search ? (
             <span>
-              Encontradas: <strong className="text-foreground">{filtered.length}</strong> de {disciplinas.length}
+              Encontradas: <strong className="text-foreground">{filtered.length}</strong> de {visibleDisciplinas.length}
             </span>
           ) : (
             <span>
-              Total: <strong className="text-foreground">{disciplinas.length}</strong> {disciplinas.length === 1 ? "disciplina" : "disciplinas"}
+              Total: <strong className="text-foreground">{visibleDisciplinas.length}</strong> {visibleDisciplinas.length === 1 ? "disciplina" : "disciplinas"}
             </span>
           )}
         </div>
@@ -384,7 +323,11 @@ export function DisciplinasList({
                       )}
                     </TableCell>
                     <TableCell className="text-right">
-                      <DeleteDisciplinaDialog id={disc.id} nome={disc.nome} />
+                      <DeleteDisciplinaDialog
+                        id={disc.id}
+                        nome={disc.nome}
+                        onDeleted={handleDeleted}
+                      />
                     </TableCell>
                   </TableRow>
                 ))}
