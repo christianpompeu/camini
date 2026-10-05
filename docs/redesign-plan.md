@@ -29,14 +29,15 @@
     - Tabela shadcn com datas e horários em pt-BR ("às"), badges de duração e cálculo de término.
     - Exclusão com `AlertDialog`.
   - [x] Auditoria de Segurança: Remoção de qualquer bypass temporário em `lib/supabase/middleware.ts`. O acesso a rotas `/dashboard/**` exige estritamente sessão autenticada (`supabase.auth.getUser()`).
-- [ ] **Fase B: RM SQL AI** (Aguardando solicitação explícita)
+- [ ] **Fase B: Home Pública** (Em andamento / Parcial)
+  - Integração OpenDocs para composição e navegação pública.
+  - Cards de serviço, conteúdo real, sem necessidade de blog neste momento.
+- [ ] **Fase C: RM SQL AI**
   - Novo sistema visual para chat com assistente, editor SQL monoespaçado, histórico de execuções e grid tabular de resultados.
-- [ ] **Fase C: FORÇA**
+- [ ] **Fase D: FORÇA**
   - Adaptação visual ao Studio Admin, preservando offline/PWA, cronômetro, séries e registros de treino.
-- [ ] **Fase D: Site, blog e conteúdo público**
-  - Integração OpenDocs para documentação e blog, unificado com a identidade visual do Studio.
-- [ ] **Fase E: Design system e consolidação**
-  - Catálogo de componentes em `/playground`, consolidação final de tokens e revisão cross-módulo.
+- [ ] **Fase E: Blog, documentação, design system e demais páginas**
+  - Catálogo de componentes em `/playground`, consolidação final de tokens, blog e revisão cross-módulo.
 
 ## 2. Matriz de Rotas Administrativas e Autenticação (Fase A)
 
