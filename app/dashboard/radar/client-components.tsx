@@ -18,16 +18,28 @@ type FilaClientProps = {
 
 export function FilaRadarClient({ edicoes, filaAcoes }: FilaClientProps) {
   const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState<"all" | "candidate" | "published" | "rejected" | "archived">("all");
+  const [showTests, setShowTests] = useState(false);
+  
   const [selectedEdicao, setSelectedEdicao] = useState<RadarEdition | null>(null);
   const [actionType, setActionType] = useState<"aprovar" | "rejeitar" | "arquivar" | null>(null);
   const [motivo, setMotivo] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const filtered = edicoes.filter(
-    (e) =>
-      e.titulo.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      e.identificador.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filtered = edicoes.filter((e) => {
+    // Busca
+    const matchesSearch = e.titulo.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                          e.identificador.toLowerCase().includes(searchTerm.toLowerCase());
+    if (!matchesSearch) return false;
+
+    // Filtro Testes
+    if (!showTests && e.is_test) return false;
+
+    // Filtro Status
+    if (statusFilter !== "all" && e.status !== statusFilter) return false;
+
+    return true;
+  });
 
   const pendingAcoes = filaAcoes.filter((a) => a.status === "pendente");
 
@@ -76,14 +88,38 @@ export function FilaRadarClient({ edicoes, filaAcoes }: FilaClientProps) {
             </div>
           </CardHeader>
           <CardContent className="p-4 space-y-4">
-            <div className="relative w-full">
-              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Buscar por título ou ID..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-9 h-9"
-              />
+            <div className="flex flex-col sm:flex-row gap-3">
+              <div className="relative flex-1">
+                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Buscar por título ou ID..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-9 h-9 text-sm"
+                />
+              </div>
+              <div className="flex items-center gap-3">
+                <select 
+                  className="h-9 px-3 py-1 text-sm rounded-md border border-input bg-background"
+                  value={statusFilter}
+                  onChange={(e) => setStatusFilter(e.target.value as "all" | "candidate" | "published" | "rejected" | "archived")}
+                >
+                  <option value="all">Todas as edições</option>
+                  <option value="candidate">Candidatas</option>
+                  <option value="published">Publicadas</option>
+                  <option value="rejected">Rejeitadas</option>
+                  <option value="archived">Arquivadas</option>
+                </select>
+                <label className="flex items-center gap-2 text-sm text-foreground cursor-pointer select-none border border-input h-9 px-3 rounded-md bg-background hover:bg-muted/50 transition-colors">
+                  <input 
+                    type="checkbox" 
+                    checked={showTests} 
+                    onChange={(e) => setShowTests(e.target.checked)}
+                    className="rounded border-gray-300 text-primary focus:ring-primary h-3.5 w-3.5"
+                  />
+                  Mostrar testes
+                </label>
+              </div>
             </div>
 
             <div className="space-y-2">
@@ -96,51 +132,64 @@ export function FilaRadarClient({ edicoes, filaAcoes }: FilaClientProps) {
                 filtered.map((edicao) => {
                   const pendingAction = getPendingActionForEdition(edicao.id);
                   const isLocked = !!pendingAction;
+                  const canApprove = edicao.status === 'candidate' && !isLocked;
+                  const canReject = edicao.status === 'candidate' && !isLocked;
+                  const canArchive = (edicao.status === 'published' || edicao.status === 'rejected') && !isLocked;
 
                   return (
                     <div
                       key={edicao.id}
-                      className="p-4 rounded-lg border border-border bg-background hover:bg-muted/30 transition-colors flex flex-col sm:flex-row gap-4 justify-between"
+                      className="p-4 rounded-lg border border-border bg-background hover:bg-muted/30 transition-colors flex flex-col gap-3 justify-between"
                     >
-                      <div className="space-y-1.5 flex-1 min-w-0">
-                        <div className="flex items-center gap-2">
-                          <span className="font-semibold text-sm text-foreground truncate">
-                            {edicao.titulo}
-                          </span>
-                          <Badge variant="outline" className="text-[10px] font-normal px-1.5 h-5">
-                            Nº {edicao.numero}
-                          </Badge>
-                          <Badge 
-                            variant="secondary" 
-                            className={`text-[10px] font-normal px-1.5 h-5 capitalize ${
-                              edicao.status === 'candidate' ? 'bg-amber-100 text-amber-800' :
-                              edicao.status === 'approved' ? 'bg-green-100 text-green-800' : ''
-                            }`}
-                          >
-                            {edicao.status}
-                          </Badge>
-                        </div>
-                        <p className="text-xs text-muted-foreground line-clamp-2">
-                          {edicao.resumo || "Sem resumo disponível."}
-                        </p>
-                        <div className="text-[10px] text-muted-foreground/70 flex gap-3 pt-1">
-                          <span>ID: {edicao.identificador}</span>
-                          <span>Atualizado: {new Date(edicao.updated_at).toLocaleDateString("pt-BR")}</span>
-                        </div>
-                      </div>
-
-                      <div className="flex sm:flex-col gap-2 shrink-0 justify-center">
-                        {isLocked ? (
-                          <div className="flex items-center gap-1.5 text-xs text-amber-600 bg-amber-50 px-2.5 py-1.5 rounded border border-amber-200">
-                            <Clock className="h-3.5 w-3.5" />
-                            Ação "{pendingAction.acao}" na fila...
+                      <div className="flex flex-col sm:flex-row gap-4 justify-between items-start">
+                        <div className="space-y-1.5 flex-1 min-w-0">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <span className="font-semibold text-sm text-foreground">
+                              {edicao.titulo}
+                            </span>
+                            <Badge variant="outline" className="text-[10px] font-normal px-1.5 h-5">
+                              Nº {edicao.numero}
+                            </Badge>
+                            <Badge 
+                              variant="secondary" 
+                              className={`text-[10px] font-normal px-1.5 h-5 capitalize ${
+                                edicao.status === 'candidate' ? 'bg-amber-100 text-amber-800 border-amber-200' :
+                                edicao.status === 'published' ? 'bg-green-100 text-green-800 border-green-200' : 
+                                edicao.status === 'rejected' ? 'bg-red-100 text-red-800 border-red-200' : ''
+                              }`}
+                            >
+                              {edicao.status}
+                            </Badge>
+                            {edicao.is_test && (
+                              <Badge variant="outline" className="text-[10px] font-normal px-1.5 h-5 bg-purple-50 text-purple-700 border-purple-200">
+                                Teste
+                              </Badge>
+                            )}
                           </div>
-                        ) : (
-                          <>
+                          <p className="text-xs text-muted-foreground line-clamp-2">
+                            {edicao.resumo || "Sem resumo disponível."}
+                          </p>
+                          <div className="text-[10px] text-muted-foreground flex gap-3 pt-1">
+                            <span className="font-mono bg-muted/50 px-1.5 py-0.5 rounded">ID: {edicao.identificador}</span>
+                            <span className="flex items-center">Criado: {new Date(edicao.created_at).toLocaleDateString("pt-BR")}</span>
+                          </div>
+                        </div>
+
+                        <div className="flex sm:flex-col gap-2 shrink-0 w-full sm:w-auto">
+                          {isLocked && (
+                            <div className="flex items-center gap-1.5 text-xs font-medium text-amber-600 bg-amber-50 px-2.5 py-1.5 rounded border border-amber-200 mb-1 w-full sm:w-auto justify-center">
+                              <Clock className="h-3.5 w-3.5 animate-pulse" />
+                              {pendingAction.acao === 'aprovar' ? 'Aprovação pendente' :
+                               pendingAction.acao === 'rejeitar' ? 'Rejeição pendente' :
+                               'Arquivamento pendente'}
+                            </div>
+                          )}
+                          <div className="flex gap-2 w-full sm:w-auto">
                             <Button
                               size="sm"
                               variant="outline"
-                              className="h-8 text-xs gap-1 hover:bg-green-50 hover:text-green-700 hover:border-green-200"
+                              disabled={!canApprove}
+                              className="h-8 text-xs gap-1 flex-1 sm:flex-auto hover:bg-green-50 hover:text-green-700 hover:border-green-200"
                               onClick={() => handleActionClick(edicao, "aprovar")}
                             >
                               <CheckCircle2 className="h-3.5 w-3.5" />
@@ -149,7 +198,8 @@ export function FilaRadarClient({ edicoes, filaAcoes }: FilaClientProps) {
                             <Button
                               size="sm"
                               variant="outline"
-                              className="h-8 text-xs gap-1 hover:bg-red-50 hover:text-red-700 hover:border-red-200"
+                              disabled={!canReject}
+                              className="h-8 text-xs gap-1 flex-1 sm:flex-auto hover:bg-red-50 hover:text-red-700 hover:border-red-200"
                               onClick={() => handleActionClick(edicao, "rejeitar")}
                             >
                               <XCircle className="h-3.5 w-3.5" />
@@ -158,14 +208,15 @@ export function FilaRadarClient({ edicoes, filaAcoes }: FilaClientProps) {
                             <Button
                               size="sm"
                               variant="ghost"
-                              className="h-8 text-xs gap-1 text-muted-foreground"
+                              disabled={!canArchive}
+                              className="h-8 text-xs gap-1 flex-1 sm:flex-auto text-muted-foreground"
                               onClick={() => handleActionClick(edicao, "arquivar")}
                             >
                               <Archive className="h-3.5 w-3.5" />
                               Arquivar
                             </Button>
-                          </>
-                        )}
+                          </div>
+                        </div>
                       </div>
                     </div>
                   );

@@ -17,14 +17,12 @@ export type RadarAdminAcao = {
 // Precisamos do tipo de edicao, podemos importar do lib
 import type { RadarEdition } from "@/lib/radar/types";
 
-export async function getEdicoesParaRevisao() {
+export async function getAdminRadarEditions() {
   const supabase = await createClient();
   
-  // Pega edições pendentes de revisão (ex: candidate) ou que possam ser arquivadas
   const { data, error } = await supabase
     .from("radar_edicoes")
     .select("*")
-    .in("status", ["candidate", "approved", "rejected"]) // status que o admin pode agir
     .order("created_at", { ascending: false });
 
   if (error) {

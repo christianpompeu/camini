@@ -2,7 +2,7 @@ import React from "react";
 import { Radio, Users, CheckCircle2, Clock } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Link from "next/link";
-import { getEdicoesParaRevisao, getFilaAcoes } from "./actions";
+import { getAdminRadarEditions, getFilaAcoes } from "./actions";
 import { getAssinantes } from "./assinantes/actions";
 import { FilaRadarClient } from "./client-components";
 
@@ -13,7 +13,7 @@ export const metadata = {
 
 export default async function RadarDashboardPage() {
   const [edicoes, filaAcoes, assinantes] = await Promise.all([
-    getEdicoesParaRevisao(),
+    getAdminRadarEditions(),
     getFilaAcoes(),
     getAssinantes()
   ]);
