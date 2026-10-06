@@ -104,3 +104,30 @@ export async function deleteUserPermission(id: string) {
   revalidatePath("/dashboard/permissoes");
   return { success: true };
 }
+
+export type PublicRoute = {
+  route_path: string;
+  is_public: boolean;
+};
+
+export async function getPublicRoutes() {
+  const supabase = await createClient();
+  const { data, error } = await supabase.from("public_routes").select("*");
+  if (error) {
+    console.error("Erro ao buscar public_routes:", error.message);
+    return [];
+  }
+  return data as PublicRoute[];
+}
+
+export async function togglePublicRoute(routePath: string, isPublic: boolean) {
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("public_routes")
+    .upsert({ route_path: routePath, is_public: isPublic }, { onConflict: "route_path" });
+  
+  if (error) return { error: error.message };
+
+  revalidatePath("/dashboard/permissoes");
+  return { success: true };
+}

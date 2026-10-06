@@ -1,6 +1,6 @@
 import React from "react";
 import { ShieldCheck } from "lucide-react";
-import { getPermissions } from "./actions";
+import { getPermissions, getPublicRoutes } from "./actions";
 import { PermissoesClient } from "./client-components";
 
 export const metadata = {
@@ -10,9 +10,15 @@ export const metadata = {
 
 export default async function PermissoesPage() {
   const permissions = await getPermissions();
+  const publicRoutesData = await getPublicRoutes();
 
   const superAdmins = permissions.filter((p) => p.is_super_admin);
   const regularUsers = permissions.filter((p) => !p.is_super_admin);
+
+  const isPublic = (path: string) => {
+    const pr = publicRoutesData.find(r => r.route_path === path);
+    return pr ? pr.is_public : false;
+  };
 
   // Mapear rotas para visualizacao.
   const appRoutes = [
@@ -20,42 +26,49 @@ export default async function PermissoesPage() {
       id: "/dashboard/radar",
       name: "Gestão do Radar Tributário",
       path: "/dashboard/radar",
+      is_public: isPublic("/dashboard/radar"),
       users: permissions.filter((p) => p.allowed_routes?.includes("/dashboard/radar")),
     },
     {
       id: "/dashboard/ctc",
       name: "Gestão do CTC",
       path: "/dashboard/ctc",
+      is_public: isPublic("/dashboard/ctc"),
       users: permissions.filter((p) => p.allowed_routes?.includes("/dashboard/ctc")),
     },
     {
       id: "/dashboard/permissoes",
       name: "Controle de Permissões",
       path: "/dashboard/permissoes",
+      is_public: isPublic("/dashboard/permissoes"),
       users: permissions.filter((p) => p.allowed_routes?.includes("/dashboard/permissoes")),
     },
     {
       id: "/dashboard/ajustes",
       name: "Ajustes do Sistema",
       path: "/dashboard/ajustes",
+      is_public: isPublic("/dashboard/ajustes"),
       users: permissions.filter((p) => p.allowed_routes?.includes("/dashboard/ajustes")),
     },
     {
       id: "/totvs-rm",
       name: "RM SQL AI",
       path: "/totvs-rm",
+      is_public: isPublic("/totvs-rm"),
       users: permissions.filter((p) => p.allowed_routes?.includes("/totvs-rm")),
     },
     {
       id: "/forca",
       name: "App FORÇA",
       path: "/forca",
+      is_public: isPublic("/forca"),
       users: permissions.filter((p) => p.allowed_routes?.includes("/forca")),
     },
     {
       id: "/playground",
       name: "Design System",
       path: "/playground",
+      is_public: isPublic("/playground"),
       users: permissions.filter((p) => p.allowed_routes?.includes("/playground")),
     },
   ];

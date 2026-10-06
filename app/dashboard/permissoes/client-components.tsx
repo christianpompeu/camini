@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Trash2, Key, Users, Plus, X } from "lucide-react";
-import { addPermission, removeSuperAdmin, removeRoute, deleteUserPermission, type AppPermission } from "./actions";
+import { addPermission, removeSuperAdmin, removeRoute, deleteUserPermission, togglePublicRoute, type AppPermission } from "./actions";
 import { toast } from "sonner";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
@@ -17,6 +17,7 @@ type PermissoesClientProps = {
     id: string;
     name: string;
     path: string;
+    is_public: boolean;
     users: AppPermission[];
   }[];
 };
@@ -74,6 +75,17 @@ export function PermissoesClient({ superAdmins, appRoutes }: PermissoesClientPro
       toast.error(result.error);
     } else {
       toast.success("Acesso à rota removido.");
+    }
+    setIsSubmitting(false);
+  };
+
+  const handleTogglePublic = async (routePath: string, isPublic: boolean) => {
+    setIsSubmitting(true);
+    const result = await togglePublicRoute(routePath, isPublic);
+    if (result.error) {
+      toast.error(result.error);
+    } else {
+      toast.success(isPublic ? "Rota agora é pública." : "Rota agora é restrita.");
     }
     setIsSubmitting(false);
   };
@@ -153,7 +165,13 @@ export function PermissoesClient({ superAdmins, appRoutes }: PermissoesClientPro
               
               <div className="flex items-center gap-2">
                 <Label htmlFor={`public-${route.id}`} className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground cursor-pointer">Acesso Público</Label>
-                <Switch id={`public-${route.id}`} disabled className="data-[state=checked]:bg-primary scale-75 origin-right" />
+                <Switch 
+                  id={`public-${route.id}`} 
+                  disabled={isSubmitting} 
+                  checked={route.is_public}
+                  onCheckedChange={(checked) => handleTogglePublic(route.path, checked)}
+                  className="data-[state=checked]:bg-primary scale-75 origin-right" 
+                />
               </div>
             </CardHeader>
             <CardContent className="p-5 space-y-5">
