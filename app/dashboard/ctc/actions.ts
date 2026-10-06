@@ -22,15 +22,40 @@ export type Disciplina = {
   created_at: string;
 };
 
+export type SituacaoAula =
+  | "Planejada"
+  | "A confirmar"
+  | "Confirmada"
+  | "Realizada"
+  | "Reprogramada"
+  | "Cancelada"
+  | "Sem aula"
+  | "Feriado";
+
+export type TipoOcorrenciaAula =
+  | "Aula"
+  | "Sem aula"
+  | "Feriado"
+  | "Atividade especial"
+  | "A confirmar";
+
+export type ModalidadeAula = "Presencial" | "Remoto";
+
 export type Aula = {
   id: string;
-  disciplina_id: string;
+  disciplina_id: string | null;
   professor_id: string;
   data_hora: string;
   duracao_minutos: number;
   created_at: string;
+  data_hora_fim?: string | null;
+  modalidade?: string | null;
+  situacao?: SituacaoAula;
+  tipo_ocorrencia?: TipoOcorrenciaAula;
+  motivo?: string | null;
+  observacoes?: string | null;
   // Joins
-  disciplina?: Disciplina;
+  disciplina?: Disciplina | null;
   professor?: Professor;
 };
 
@@ -271,48 +296,195 @@ export async function getAulas() {
 }
 
 export async function createAula(formData: FormData) {
-  const disciplina_id = formData.get("disciplina_id") as string;
-  const professor_id = formData.get("professor_id") as string;
+  const tipo_ocorrencia = (formData.get("tipo_ocorrencia") as TipoOcorrenciaAula) || "Aula";
   const data_hora = formData.get("data_hora") as string;
   const duracao_str = formData.get("duracao_minutos") as string;
+  const duracao_minutos = duracao_str ? parseInt(duracao_str) : 60;
+  const modalidade = (formData.get("modalidade") as string) || "Presencial";
+  const motivoRaw = (formData.get("motivo") as string)?.trim() || null;
+  const observacoes = (formData.get("observacoes") as string)?.trim() || null;
+  const rawDisciplinaId = (formData.get("disciplina_id") as string)?.trim() || null;
+  const rawProfessorId = (formData.get("professor_id") as string)?.trim() || null;
 
-  if (!disciplina_id || !professor_id || !data_hora) {
-    return { error: "Preencha todos os campos obrigatórios." };
+  if (!data_hora) {
+    return { error: "A data e horário de início são obrigatórios." };
+  }
+
+  let situacao: SituacaoAula = "Planejada";
+  let disciplina_id: string | null = null;
+  let motivo: string | null = motivoRaw;
+
+  if (tipo_ocorrencia === "Aula") {
+    situacao = "Planejada";
+    if (!rawDisciplinaId) {
+      return { error: "Para registrar uma aula, selecione a disciplina." };
+    }
+    if (!rawProfessorId) {
+      return { error: "Para registrar uma aula, selecione o professor responsável." };
+    }
+    disciplina_id = rawDisciplinaId;
+  } else if (tipo_ocorrencia === "Sem aula") {
+    situacao = "Sem aula";
+    disciplina_id = null;
+    motivo = motivoRaw || "Sem aula";
+  } else if (tipo_ocorrencia === "Feriado") {
+    situacao = "Feriado";
+    disciplina_id = null;
+    motivo = motivoRaw || "Feriado";
+  } else if (tipo_ocorrencia === "A confirmar") {
+    situacao = "A confirmar";
+    disciplina_id = rawDisciplinaId;
+    motivo = motivoRaw || "A confirmar";
+  } else if (tipo_ocorrencia === "Atividade especial") {
+    situacao = "Planejada";
+    disciplina_id = rawDisciplinaId;
+    if (!motivoRaw) {
+      return { error: "Informe o motivo ou descrição da atividade especial." };
+    }
+    motivo = motivoRaw;
   }
 
   const supabase = await createClient();
+
+  // professor_id é NOT NULL no schema do banco
+  let professor_id = rawProfessorId;
+  if (!professor_id) {
+    // Buscar fallback default de professor (primeiro professor cadastrado)
+    const { data: defaultProf } = await supabase
+      .from("ctc_professores")
+      .select("id")
+      .order("created_at", { ascending: true })
+      .limit(1)
+      .maybeSingle();
+
+    if (defaultProf?.id) {
+      professor_id = defaultProf.id;
+    } else {
+      return { error: "Nenhum professor disponível para vincular ao registro." };
+    }
+  }
+
+  // Calcular data_hora_fim se possível
+  let data_hora_fim: string | null = null;
+  try {
+    const d = new Date(data_hora);
+    if (!isNaN(d.getTime())) {
+      data_hora_fim = new Date(d.getTime() + duracao_minutos * 60000).toISOString();
+    }
+  } catch {}
+
   const { error } = await supabase.from("ctc_aulas").insert({
+    tipo_ocorrencia,
+    situacao,
     disciplina_id,
     professor_id,
     data_hora,
-    duracao_minutos: duracao_str ? parseInt(duracao_str) : 60,
+    duracao_minutos,
+    data_hora_fim,
+    modalidade: tipo_ocorrencia === "Sem aula" || tipo_ocorrencia === "Feriado" ? (modalidade || "Presencial") : modalidade,
+    motivo,
+    observacoes,
   });
 
   if (error) return { error: error.message };
 
   revalidatePath("/dashboard/ctc/aulas");
-  revalidatePath("/ctc/calendario"); // Caso exista página pública
+  revalidatePath("/ctc/calendario");
   return { success: true };
 }
 
 export async function updateAula(id: string, formData: FormData) {
-  const disciplina_id = formData.get("disciplina_id") as string;
-  const professor_id = formData.get("professor_id") as string;
+  const tipo_ocorrencia = (formData.get("tipo_ocorrencia") as TipoOcorrenciaAula) || "Aula";
   const data_hora = formData.get("data_hora") as string;
   const duracao_str = formData.get("duracao_minutos") as string;
+  const duracao_minutos = duracao_str ? parseInt(duracao_str) : 60;
+  const modalidade = (formData.get("modalidade") as string) || "Presencial";
+  const motivoRaw = (formData.get("motivo") as string)?.trim() || null;
+  const observacoes = (formData.get("observacoes") as string)?.trim() || null;
+  const rawDisciplinaId = (formData.get("disciplina_id") as string)?.trim() || null;
+  const rawProfessorId = (formData.get("professor_id") as string)?.trim() || null;
 
-  if (!disciplina_id || !professor_id || !data_hora) {
-    return { error: "Preencha todos os campos obrigatórios." };
+  if (!data_hora) {
+    return { error: "A data e horário de início são obrigatórios." };
   }
 
   const supabase = await createClient();
+
+  const { data: currentAula } = await supabase
+    .from("ctc_aulas")
+    .select("*")
+    .eq("id", id)
+    .single();
+
+  let situacao: SituacaoAula = "Planejada";
+  let disciplina_id: string | null = null;
+  let motivo: string | null = motivoRaw;
+
+  if (tipo_ocorrencia === "Aula") {
+    // Se estava em "Sem aula" ou "Feriado", volta para "Planejada". Caso contrário, preserva
+    if (
+      currentAula?.situacao &&
+      !["Sem aula", "Feriado"].includes(currentAula.situacao)
+    ) {
+      situacao = currentAula.situacao as SituacaoAula;
+    } else {
+      situacao = "Planejada";
+    }
+    if (!rawDisciplinaId) {
+      return { error: "Para aulas normais, a disciplina é obrigatória." };
+    }
+    disciplina_id = rawDisciplinaId;
+  } else if (tipo_ocorrencia === "Sem aula") {
+    situacao = "Sem aula";
+    disciplina_id = null; // Limpa a disciplina obrigatoriamente
+    motivo = motivoRaw || "Sem aula";
+  } else if (tipo_ocorrencia === "Feriado") {
+    situacao = "Feriado";
+    disciplina_id = null; // Limpa a disciplina obrigatoriamente
+    motivo = motivoRaw || "Feriado";
+  } else if (tipo_ocorrencia === "A confirmar") {
+    situacao = "A confirmar";
+    disciplina_id = rawDisciplinaId;
+    motivo = motivoRaw || "A confirmar";
+  } else if (tipo_ocorrencia === "Atividade especial") {
+    situacao = (currentAula?.situacao && !["Sem aula", "Feriado"].includes(currentAula.situacao))
+      ? currentAula.situacao as SituacaoAula
+      : "Planejada";
+    disciplina_id = rawDisciplinaId;
+    if (!motivoRaw) {
+      return { error: "Informe o motivo ou descrição da atividade especial." };
+    }
+    motivo = motivoRaw;
+  }
+
+  // Preservar ou atualizar professor_id (NOT NULL no schema)
+  const professor_id = rawProfessorId || currentAula?.professor_id;
+  if (!professor_id) {
+    return { error: "Professor não encontrado para a aula." };
+  }
+
+  // Calcular data_hora_fim se possível
+  let data_hora_fim: string | null = null;
+  try {
+    const d = new Date(data_hora);
+    if (!isNaN(d.getTime())) {
+      data_hora_fim = new Date(d.getTime() + duracao_minutos * 60000).toISOString();
+    }
+  } catch {}
+
   const { error } = await supabase
     .from("ctc_aulas")
     .update({
+      tipo_ocorrencia,
+      situacao,
       disciplina_id,
       professor_id,
       data_hora,
-      duracao_minutos: duracao_str ? parseInt(duracao_str) : 60,
+      duracao_minutos,
+      data_hora_fim,
+      modalidade: tipo_ocorrencia === "Sem aula" || tipo_ocorrencia === "Feriado" ? (currentAula?.modalidade || "Presencial") : modalidade,
+      motivo,
+      observacoes,
     })
     .eq("id", id);
 

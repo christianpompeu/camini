@@ -9,6 +9,7 @@ import {
   X,
   CheckCircle2,
   CalendarDays,
+  Sparkles,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -46,7 +47,19 @@ export function CalendarioPublicoList({
       const term = search.toLowerCase().trim();
       const discNome = aula.disciplina?.nome?.toLowerCase() || "";
       const profNome = aula.professor?.nome?.toLowerCase() || "";
-      if (!discNome.includes(term) && !profNome.includes(term)) {
+      const motivo = aula.motivo?.toLowerCase() || "";
+      const observacoes = aula.observacoes?.toLowerCase() || "";
+      const tipo = aula.tipo_ocorrencia?.toLowerCase() || "";
+      const situacao = aula.situacao?.toLowerCase() || "";
+
+      if (
+        !discNome.includes(term) &&
+        !profNome.includes(term) &&
+        !motivo.includes(term) &&
+        !observacoes.includes(term) &&
+        !tipo.includes(term) &&
+        !situacao.includes(term)
+      ) {
         return false;
       }
     }
@@ -116,7 +129,7 @@ export function CalendarioPublicoList({
           <div className="relative flex-1">
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Buscar por disciplina ou professor..."
+              placeholder="Buscar por disciplina, docente, feriado ou motivo..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="pl-9 h-9 text-sm"
@@ -181,7 +194,7 @@ export function CalendarioPublicoList({
 
           <div className="text-muted-foreground sm:text-right">
             Exibindo <strong className="text-foreground">{filtered.length}</strong> de{" "}
-            {aulas.length} {aulas.length === 1 ? "aula programada" : "aulas programadas"}
+            {aulas.length} {aulas.length === 1 ? "sessão registrada" : "sessões registradas"}
           </div>
         </div>
       </div>
@@ -191,7 +204,7 @@ export function CalendarioPublicoList({
         <div className="rounded-lg border border-border bg-card p-12 text-center shadow-xs">
           <CalendarDays className="h-10 w-10 text-muted-foreground/40 mx-auto mb-3" />
           <h3 className="text-base font-semibold text-foreground">
-            Nenhuma aula encontrada
+            Nenhuma sessão encontrada
           </h3>
           <p className="text-sm text-muted-foreground mt-1 max-w-sm mx-auto">
             {search || selectedDisciplina || timeFilter !== "todas"
@@ -244,7 +257,209 @@ export function CalendarioPublicoList({
                   {dateAulas.map((aula) => {
                     const aulaDate = new Date(aula.data_hora);
                     const isPast = aulaDate < now;
+                    const tipo = aula.tipo_ocorrencia || (
+                      aula.situacao === "Sem aula" ? "Sem aula" : 
+                      aula.situacao === "Feriado" ? "Feriado" : 
+                      aula.situacao === "A confirmar" ? "A confirmar" : "Aula"
+                    );
+                    const isSemAula = tipo === "Sem aula" || aula.situacao === "Sem aula";
+                    const isFeriado = tipo === "Feriado" || aula.situacao === "Feriado";
+                    const isAConfirmar = tipo === "A confirmar" || aula.situacao === "A confirmar";
+                    const isAtividadeEspecial = tipo === "Atividade especial";
 
+                    // ==========================================
+                    // CARD: SEM AULA
+                    // ==========================================
+                    if (isSemAula) {
+                      return (
+                        <div
+                          key={aula.id}
+                          className={`rounded-lg border bg-card p-4 transition-all shadow-xs border-destructive/30 bg-destructive/5 hover:border-destructive/50 ${
+                            isPast ? "opacity-80" : ""
+                          }`}
+                        >
+                          <div className="flex items-start justify-between gap-2 mb-2">
+                            <div className="flex items-center gap-1.5 text-xs text-muted-foreground font-medium">
+                              <Clock className="h-3.5 w-3.5 text-destructive shrink-0" />
+                              <span>{formatHorario(aula.data_hora, aula.duracao_minutos)}</span>
+                            </div>
+                            <Badge
+                              variant="destructive"
+                              className="text-[10px] font-bold uppercase tracking-wider py-0 px-1.5 h-4.5"
+                            >
+                              Sem aula
+                            </Badge>
+                          </div>
+
+                          <div className="space-y-1 mb-3">
+                            <h3 className="text-base font-semibold text-foreground tracking-tight leading-snug">
+                              {aula.motivo && aula.motivo !== "Sem aula" ? aula.motivo : "Sem aula programada"}
+                            </h3>
+                            <p className="text-xs text-muted-foreground line-clamp-2">
+                              {aula.observacoes || "Nesta data não haverá aula na programação acadêmica."}
+                            </p>
+                          </div>
+
+                          <div className="flex items-center justify-between pt-2 border-t border-border/50 text-xs">
+                            <span className="text-xs text-muted-foreground italic">
+                              Recesso / Sem sessão
+                            </span>
+                            <Badge variant="outline" className="text-[10px] text-destructive border-destructive/30">
+                              Sem aula
+                            </Badge>
+                          </div>
+                        </div>
+                      );
+                    }
+
+                    // ==========================================
+                    // CARD: FERIADO
+                    // ==========================================
+                    if (isFeriado) {
+                      return (
+                        <div
+                          key={aula.id}
+                          className={`rounded-lg border bg-card p-4 transition-all shadow-xs border-amber-500/30 bg-amber-500/5 hover:border-amber-500/50 ${
+                            isPast ? "opacity-80" : ""
+                          }`}
+                        >
+                          <div className="flex items-start justify-between gap-2 mb-2">
+                            <div className="flex items-center gap-1.5 text-xs text-muted-foreground font-medium">
+                              <Clock className="h-3.5 w-3.5 text-amber-500 shrink-0" />
+                              <span>{formatHorario(aula.data_hora, aula.duracao_minutos)}</span>
+                            </div>
+                            <Badge
+                              variant="warning"
+                              className="text-[10px] font-bold uppercase tracking-wider py-0 px-1.5 h-4.5"
+                            >
+                              Feriado
+                            </Badge>
+                          </div>
+
+                          <div className="space-y-1 mb-3">
+                            <h3 className="text-base font-semibold text-foreground tracking-tight leading-snug">
+                              {aula.motivo || "Feriado"}
+                            </h3>
+                            <p className="text-xs text-muted-foreground line-clamp-2">
+                              {aula.observacoes || "Feriado — sem atividades acadêmicas nesta data."}
+                            </p>
+                          </div>
+
+                          <div className="flex items-center justify-between pt-2 border-t border-border/50 text-xs">
+                            <span className="text-xs text-muted-foreground italic">
+                              Feriado acadêmico
+                            </span>
+                            <Badge variant="outline" className="text-[10px] text-amber-500 border-amber-500/30">
+                              Feriado
+                            </Badge>
+                          </div>
+                        </div>
+                      );
+                    }
+
+                    // ==========================================
+                    // CARD: A CONFIRMAR
+                    // ==========================================
+                    if (isAConfirmar) {
+                      return (
+                        <div
+                          key={aula.id}
+                          className={`rounded-lg border border-dashed border-border bg-card p-4 transition-all shadow-xs hover:border-primary/40 ${
+                            isPast ? "opacity-80" : ""
+                          }`}
+                        >
+                          <div className="flex items-start justify-between gap-2 mb-2">
+                            <div className="flex items-center gap-1.5 text-xs text-muted-foreground font-medium">
+                              <Clock className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                              <span>{formatHorario(aula.data_hora, aula.duracao_minutos)}</span>
+                            </div>
+                            <Badge
+                              variant="outline"
+                              className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground border-dashed py-0 px-1.5 h-4.5"
+                            >
+                              A confirmar
+                            </Badge>
+                          </div>
+
+                          <div className="space-y-1 mb-3">
+                            <h3 className="text-base font-semibold text-foreground tracking-tight leading-snug">
+                              {aula.disciplina?.nome || aula.motivo || "Definição pendente"}
+                            </h3>
+                            <p className="text-xs text-muted-foreground line-clamp-2">
+                              {aula.observacoes || "Data reservada na grade acadêmica; aguardando confirmação da coordenação."}
+                            </p>
+                          </div>
+
+                          <div className="flex items-center justify-between pt-2 border-t border-border/50 text-xs">
+                            <div className="flex items-center gap-1.5 text-muted-foreground text-xs italic">
+                              <User className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                              <span>{aula.professor?.nome || "Docente a definir"}</span>
+                            </div>
+                            <Badge variant="secondary" className="text-[10px]">
+                              Pendente
+                            </Badge>
+                          </div>
+                        </div>
+                      );
+                    }
+
+                    // ==========================================
+                    // CARD: ATIVIDADE ESPECIAL
+                    // ==========================================
+                    if (isAtividadeEspecial) {
+                      return (
+                        <div
+                          key={aula.id}
+                          className={`rounded-lg border bg-card p-4 transition-all shadow-xs border-primary/20 bg-primary/5 hover:border-primary/40 ${
+                            isPast ? "opacity-80" : ""
+                          }`}
+                        >
+                          <div className="flex items-start justify-between gap-2 mb-2">
+                            <div className="flex items-center gap-1.5 text-xs text-muted-foreground font-medium">
+                              <Clock className="h-3.5 w-3.5 text-primary shrink-0" />
+                              <span>{formatHorario(aula.data_hora, aula.duracao_minutos)}</span>
+                            </div>
+                            <Badge
+                              variant="secondary"
+                              className="text-[10px] font-bold uppercase tracking-wider py-0 px-1.5 h-4.5"
+                            >
+                              Atividade Especial
+                            </Badge>
+                          </div>
+
+                          <div className="space-y-1 mb-3">
+                            <h3 className="text-base font-semibold text-foreground tracking-tight leading-snug flex items-center gap-1.5">
+                              <Sparkles className="h-4 w-4 text-primary shrink-0" />
+                              <span>{aula.motivo || aula.disciplina?.nome || "Atividade Especial"}</span>
+                            </h3>
+                            {aula.disciplina?.nome && aula.motivo && (
+                              <p className="text-xs font-medium text-foreground/80">
+                                Disciplina: {aula.disciplina.nome}
+                              </p>
+                            )}
+                            {aula.observacoes && (
+                              <p className="text-xs text-muted-foreground line-clamp-2">
+                                {aula.observacoes}
+                              </p>
+                            )}
+                          </div>
+
+                          <div className="flex items-center justify-between pt-2 border-t border-border/50 text-xs">
+                            <div className="flex items-center gap-1.5 text-foreground/80 font-medium">
+                              <User className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                              <span>{aula.professor?.nome || "Docente responsável"}</span>
+                            </div>
+                            <Badge variant="outline" className="text-[10px] text-primary border-primary/30">
+                              Programada
+                            </Badge>
+                          </div>
+                        </div>
+                      );
+                    }
+
+                    // ==========================================
+                    // CARD PADRÃO: AULA REGULAR
+                    // ==========================================
                     return (
                       <div
                         key={aula.id}
@@ -273,6 +488,11 @@ export function CalendarioPublicoList({
                           {aula.disciplina?.descricao && (
                             <p className="text-xs text-muted-foreground line-clamp-2">
                               {aula.disciplina.descricao}
+                            </p>
+                          )}
+                          {aula.observacoes && (
+                            <p className="text-xs text-muted-foreground line-clamp-1 italic">
+                              Obs: {aula.observacoes}
                             </p>
                           )}
                         </div>
