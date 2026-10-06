@@ -91,6 +91,7 @@ export default function NotFound() {
           <div className="flex flex-wrap items-center justify-center gap-2.5 pt-2">
             <Button
               variant="default"
+              nativeButton={false}
               render={<Link href="/" />}
               className="gap-2 text-xs"
             >
@@ -100,6 +101,7 @@ export default function NotFound() {
 
             <Button
               variant="outline"
+              nativeButton={false}
               render={<Link href="/dashboard" />}
               className="gap-2 text-xs"
             >
