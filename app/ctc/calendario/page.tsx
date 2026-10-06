@@ -62,6 +62,7 @@ export default async function CalendarioPublicoPage() {
                 variant="outline"
                 size="sm"
                 className="gap-1.5 text-xs"
+                nativeButton={false}
                 render={
                   <Link href="/dashboard/ctc" />
                 }
