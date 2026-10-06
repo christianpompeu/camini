@@ -13,7 +13,9 @@ import {
   ChevronRight,
   Globe,
   Palette,
-  Radio
+  Radio,
+  Settings,
+  ShieldCheck
 } from "lucide-react";
 import { 
   Sidebar,
@@ -44,13 +46,18 @@ export function AppSidebar() {
   };
 
   const isCtcActive = pathname.startsWith("/dashboard/ctc") || pathname.startsWith("/ctc");
+  const isRadarActive = pathname.startsWith("/dashboard/radar") || pathname.startsWith("/radar");
   const [prevPathname, setPrevPathname] = useState(pathname);
   const [ctcOpen, setCtcOpen] = useState(isCtcActive);
+  const [radarOpen, setRadarOpen] = useState(isRadarActive);
 
   if (prevPathname !== pathname) {
     setPrevPathname(pathname);
     if (isCtcActive) {
       setCtcOpen(true);
+    }
+    if (isRadarActive) {
+      setRadarOpen(true);
     }
   }
 
@@ -165,6 +172,59 @@ export function AppSidebar() {
                 </CollapsibleContent>
               </SidebarMenuItem>
             </Collapsible>
+
+            {/* MÓDULO RADAR */}
+            <Collapsible
+              open={radarOpen}
+              onOpenChange={setRadarOpen}
+              className="group/collapsible"
+            >
+              <SidebarMenuItem>
+                <CollapsibleTrigger
+                  render={
+                    <SidebarMenuButton
+                      isActive={isRadarActive}
+                      tooltip="Gestão Radar"
+                    >
+                      <Radio className="size-4" />
+                      <span>Gestão Radar</span>
+                      <ChevronRight className={`ml-auto size-4 transition-transform duration-200 ${radarOpen ? "rotate-90" : ""}`} />
+                    </SidebarMenuButton>
+                  }
+                />
+                <CollapsibleContent>
+                  <SidebarMenuSub>
+                    <SidebarMenuSubItem>
+                      <SidebarMenuSubButton
+                        render={<Link href="/dashboard/radar" onClick={closeMobile} />}
+                        isActive={pathname === "/dashboard/radar"}
+                      >
+                        <span>Visão Geral</span>
+                      </SidebarMenuSubButton>
+                    </SidebarMenuSubItem>
+                    <SidebarMenuSubItem>
+                      <SidebarMenuSubButton
+                        render={<Link href="/dashboard/radar/assinantes" onClick={closeMobile} />}
+                        isActive={pathname === "/dashboard/radar/assinantes"}
+                      >
+                        <span>Assinantes</span>
+                      </SidebarMenuSubButton>
+                    </SidebarMenuSubItem>
+                    <SidebarMenuSubItem>
+                      <SidebarMenuSubButton
+                        render={<Link href="/radar" onClick={closeMobile} />}
+                        isActive={pathname === "/radar"}
+                      >
+                        <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                          <Globe className="size-3" />
+                          Portal Público
+                        </span>
+                      </SidebarMenuSubButton>
+                    </SidebarMenuSubItem>
+                  </SidebarMenuSub>
+                </CollapsibleContent>
+              </SidebarMenuItem>
+            </Collapsible>
           </SidebarMenu>
         </SidebarGroup>
 
@@ -172,16 +232,6 @@ export function AppSidebar() {
         <SidebarGroup>
           <SidebarGroupLabel>Aplicações</SidebarGroupLabel>
           <SidebarMenu>
-            <SidebarMenuItem>
-              <SidebarMenuButton
-                render={<Link href="/radar" onClick={closeMobile} />}
-                isActive={pathname.startsWith("/radar")}
-                tooltip="Radar Tributário"
-              >
-                <Radio className="size-4" />
-                <span>Radar Tributário</span>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
             <SidebarMenuItem>
               <SidebarMenuButton
                 render={<Link href="/totvs-rm" onClick={closeMobile} />}
@@ -210,6 +260,33 @@ export function AppSidebar() {
               >
                 <Palette className="size-4" />
                 <span>Design System</span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarMenu>
+        </SidebarGroup>
+
+        {/* ADMINISTRAÇÃO */}
+        <SidebarGroup>
+          <SidebarGroupLabel>Administração</SidebarGroupLabel>
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                render={<Link href="/dashboard/permissoes" onClick={closeMobile} />}
+                isActive={pathname.startsWith("/dashboard/permissoes")}
+                tooltip="Controle de Permissões"
+              >
+                <ShieldCheck className="size-4" />
+                <span>Permissões</span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                render={<Link href="/dashboard/ajustes" onClick={closeMobile} />}
+                isActive={pathname.startsWith("/dashboard/ajustes")}
+                tooltip="Ajustes do Sistema"
+              >
+                <Settings className="size-4" />
+                <span>Ajustes</span>
               </SidebarMenuButton>
             </SidebarMenuItem>
           </SidebarMenu>
