@@ -21,7 +21,7 @@ import { ActiveSetCard } from "@/components/workout/active-set-card";
 import { RestTimer } from "@/components/workout/rest-timer";
 import { ExerciseHero } from "@/components/workout/exercise-hero";
 import { BottomNavigation, NavItem } from "@/components/workout/bottom-navigation";
-import { useWorkoutStore } from "@/store/useWorkoutStore";
+import { useWorkoutStore, SetRecord } from "@/store/useWorkoutStore";
 
 interface WorkoutDef {
   letter: "A" | "B" | "C";
@@ -33,7 +33,7 @@ interface WorkoutDef {
   exercises: string[];
 }
 
-const WORKOUT_PROGRAM: WorkoutDef[] = [
+const DEMO_WORKOUT_PROGRAM: WorkoutDef[] = [
   {
     letter: "A",
     title: "Peito, Ombros e Tríceps",
@@ -87,6 +87,8 @@ const WORKOUT_PROGRAM: WorkoutDef[] = [
 
 export default function ForcaAppPage() {
   const [activeTab, setActiveTab] = useState<NavItem["id"]>("treinos");
+  const [editingSetId, setEditingSetId] = useState<string | null>(null);
+  
   const {
     hasHydrated,
     activeWorkout,
@@ -97,6 +99,8 @@ export default function ForcaAppPage() {
     discardWorkout,
     startTimer,
     updateDraft,
+    updateSet,
+    deleteSet,
   } = useWorkoutStore();
 
   const handleStartWorkoutSession = (workout: WorkoutDef) => {
@@ -105,8 +109,13 @@ export default function ForcaAppPage() {
   };
 
   const handleCompleteSet = ({ weight, reps, rir, isWarmup }: { weight: number, reps: number, rir: number, isWarmup: boolean }) => {
-    logSet({ weight, reps, rir, type: isWarmup ? "warmup" : "work" });
-    startTimer(90);
+    if (editingSetId) {
+      updateSet(editingSetId, { weight, reps, rir, type: isWarmup ? "warmup" : "work" });
+      setEditingSetId(null);
+    } else {
+      logSet({ weight, reps, rir, type: isWarmup ? "warmup" : "work" });
+      startTimer(90);
+    }
   };
 
   const currentExerciseIndex = activeWorkout?.activeExerciseIndex || 0;
@@ -165,11 +174,11 @@ export default function ForcaAppPage() {
                 <div className="flex items-center gap-2 text-muted-foreground mb-1">
                   <Dumbbell className="w-4 h-4 text-primary" />
                   <span className="text-xs font-bold uppercase tracking-wider">
-                    Plano de Treino Atual
+                    Catálogo Demonstrativo
                   </span>
                 </div>
                 <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-foreground">
-                  Divisões do Ciclo
+                  Fichas de Treino Base
                 </h1>
               </div>
 
@@ -183,7 +192,7 @@ export default function ForcaAppPage() {
             {/* Grid dos Cards de Treino (Apenas se não houver treino ativo) */}
             {!activeWorkout && (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-                {WORKOUT_PROGRAM.map((workout) => (
+                {DEMO_WORKOUT_PROGRAM.map((workout) => (
                   <WorkoutCard
                     key={workout.letter}
                     letter={workout.letter}
@@ -240,19 +249,61 @@ export default function ForcaAppPage() {
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
                   {/* Coluna Principal: Registro de Cargas e Séries */}
                   <div className="lg:col-span-7 space-y-4">
-                    <ActiveSetCard
-                      key={`set-${currentExerciseIndex}-${currentSetNumber}`} // Força re-render limpo a cada nova série/exercício
-                      exerciseName={currentExercise?.exerciseName}
-                      targetMuscles={currentExercise?.targetMuscles}
-                      currentSet={currentSetNumber}
-                      totalSets={currentExercise?.expectedSets || 4}
-                      weight={currentDraft.weight}
-                      reps={currentDraft.reps}
-                      rir={currentDraft.rir}
-                      isWarmup={currentDraft.isWarmup}
-                      onDraftChange={updateDraft}
-                      onCompleteSet={handleCompleteSet}
-                    />
+                    {/* Lista de Séries Concluídas (Permite Correção) */}
+                    {currentExercise && currentExercise.sets.length > 0 && (
+                      <div className="space-y-2 mb-6">
+                        <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground ml-1">Séries Registradas</h3>
+                        {currentExercise.sets.map((setRecord, idx) => (
+                          <div key={setRecord.id} className="flex items-center justify-between p-3 rounded-xl border border-border bg-muted/10">
+                            <div className="flex items-center gap-3">
+                              <Badge variant="outline" className="w-16 justify-center">Série {idx + 1}</Badge>
+                              <span className="text-sm font-semibold">{setRecord.weight} kg x {setRecord.reps} reps</span>
+                              {setRecord.type === "warmup" && <Badge variant="secondary" className="text-[10px]">Aquec</Badge>}
+                            </div>
+                            <div className="flex gap-2">
+                              <Button variant="ghost" size="sm" className="h-8 text-xs" onClick={() => setEditingSetId(setRecord.id)}>
+                                Corrigir
+                              </Button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Formulário da Série Ativa ou Em Edição */}
+                    {editingSetId ? (() => {
+                      const setToEdit = currentExercise?.sets.find(s => s.id === editingSetId);
+                      if (!setToEdit) return null;
+                      return (
+                        <ActiveSetCard
+                          key={`edit-${editingSetId}`}
+                          exerciseName={`${currentExercise?.exerciseName} (Editando)`}
+                          targetMuscles={currentExercise?.targetMuscles}
+                          currentSet={currentExercise!.sets.findIndex(s => s.id === editingSetId) + 1}
+                          totalSets={currentExercise?.expectedSets || 4}
+                          weight={setToEdit.weight}
+                          reps={setToEdit.reps}
+                          rir={setToEdit.rir}
+                          isWarmup={setToEdit.type === "warmup"}
+                          onDraftChange={() => {}} // Não atualiza draft ao editar
+                          onCompleteSet={handleCompleteSet}
+                        />
+                      );
+                    })() : (
+                      <ActiveSetCard
+                        key={`set-${currentExerciseIndex}-${currentSetNumber}`} // Força re-render limpo a cada nova série/exercício
+                        exerciseName={currentExercise?.exerciseName}
+                        targetMuscles={currentExercise?.targetMuscles}
+                        currentSet={currentSetNumber}
+                        totalSets={currentExercise?.expectedSets || 4}
+                        weight={currentDraft.weight}
+                        reps={currentDraft.reps}
+                        rir={currentDraft.rir}
+                        isWarmup={currentDraft.isWarmup}
+                        onDraftChange={updateDraft}
+                        onCompleteSet={handleCompleteSet}
+                      />
+                    )}
 
                     {/* Botão de Avançar Exercício */}
                     <div className="flex items-center justify-between p-4 rounded-xl border border-border bg-card">
@@ -262,23 +313,40 @@ export default function ForcaAppPage() {
                           {activeWorkout.exercises[currentExerciseIndex + 1]?.exerciseName || "Conclusão do Treino"}
                         </span>
                       </div>
-                      <Button
-                        variant="default"
-                        size="sm"
-                        onClick={() => {
-                          if (currentExerciseIndex < activeWorkout.exercises.length - 1) {
-                            nextExercise();
-                          } else {
-                            finishWorkout(false); // finish completo
-                          }
-                        }}
-                        className="gap-1.5 h-9 font-semibold"
-                      >
-                        <span>{currentExerciseIndex < activeWorkout.exercises.length - 1 ? "Próximo Exercício" : "Finalizar Treino"}</span>
-                        <ChevronRight className="w-4 h-4" />
-                      </Button>
+                        <div className="flex flex-col gap-2">
+                          <Button
+                            variant="default"
+                            size="sm"
+                            onClick={() => {
+                              if (currentExerciseIndex < activeWorkout.exercises.length - 1) {
+                                nextExercise();
+                              } else {
+                                finishWorkout(false); // finish completo
+                              }
+                            }}
+                            className="gap-1.5 h-9 font-semibold"
+                          >
+                            <span>{currentExerciseIndex < activeWorkout.exercises.length - 1 ? "Próximo Exercício" : "Finalizar Treino"}</span>
+                            <ChevronRight className="w-4 h-4" />
+                          </Button>
+
+                          {currentExerciseIndex < activeWorkout.exercises.length - 1 && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => {
+                                if (window.confirm("Deseja finalizar o treino antecipadamente? O histórico será salvo.")) {
+                                  finishWorkout(true);
+                                }
+                              }}
+                              className="text-xs text-muted-foreground underline underline-offset-2"
+                            >
+                              Finalizar Incompleto
+                            </Button>
+                          )}
+                        </div>
+                      </div>
                     </div>
-                  </div>
 
                   {/* Coluna Secundária: Descanso com Temporizador */}
                   <div className="lg:col-span-5 space-y-4">

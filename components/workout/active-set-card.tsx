@@ -43,6 +43,7 @@ export function ActiveSetCard({
   };
 
   const handleComplete = () => {
+    if (isCompleted) return;
     setIsCompleted(true);
     if (onCompleteSet) {
       onCompleteSet({ weight, reps, rir, isWarmup });
