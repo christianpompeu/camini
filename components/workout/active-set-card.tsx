@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { Check, Flame, RotateCcw, Plus, Minus } from "lucide-react";
+import { Check, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { NumberStepper } from "@/components/forca/number-stepper";
@@ -12,10 +12,11 @@ export interface ActiveSetCardProps {
   targetMuscles?: string;
   currentSet?: number;
   totalSets?: number;
-  initialWeight?: number;
-  initialReps?: number;
-  initialRir?: number;
-  initialIsWarmup?: boolean;
+  weight?: number;
+  reps?: number;
+  rir?: number;
+  isWarmup?: boolean;
+  onDraftChange?: (draft: { weight: number; reps: number; rir: number; isWarmup: boolean }) => void;
   onCompleteSet?: (data: { weight: number; reps: number; rir: number; isWarmup: boolean }) => void;
   className?: string;
 }
@@ -25,18 +26,21 @@ export function ActiveSetCard({
   targetMuscles = "Peitoral Superior & Deltoide Anterior",
   currentSet = 2,
   totalSets = 4,
-  initialWeight = 32,
-  initialReps = 8,
-  initialRir = 2,
-  initialIsWarmup = false,
+  weight = 32,
+  reps = 8,
+  rir = 2,
+  isWarmup = false,
+  onDraftChange,
   onCompleteSet,
   className = "",
 }: ActiveSetCardProps) {
-  const [weight, setWeight] = useState(initialWeight);
-  const [reps, setReps] = useState(initialReps);
-  const [rir, setRir] = useState(initialRir);
-  const [isWarmup, setIsWarmup] = useState(initialIsWarmup);
   const [isCompleted, setIsCompleted] = useState(false);
+
+  const handleUpdate = (updates: Partial<{ weight: number; reps: number; rir: number; isWarmup: boolean }>) => {
+    if (onDraftChange) {
+      onDraftChange({ weight, reps, rir, isWarmup, ...updates });
+    }
+  };
 
   const handleComplete = () => {
     setIsCompleted(true);
@@ -86,8 +90,8 @@ export function ActiveSetCard({
               label="Carga"
               value={weight}
               unit="kg"
-              onDecrement={() => setWeight((w) => Math.max(0, w - 2))}
-              onIncrement={() => setWeight((w) => w + 2)}
+              onDecrement={() => handleUpdate({ weight: Math.max(0, weight - 2) })}
+              onIncrement={() => handleUpdate({ weight: weight + 2 })}
             />
           </div>
 
@@ -97,8 +101,8 @@ export function ActiveSetCard({
               label="Repetições"
               value={reps}
               unit="reps"
-              onDecrement={() => setReps((r) => Math.max(1, r - 1))}
-              onIncrement={() => setReps((r) => r + 1)}
+              onDecrement={() => handleUpdate({ reps: Math.max(1, reps - 1) })}
+              onIncrement={() => handleUpdate({ reps: reps + 1 })}
             />
           </div>
         </div>
@@ -108,7 +112,7 @@ export function ActiveSetCard({
           <div className="flex items-center justify-between px-1">
             <span className="text-sm font-semibold text-foreground">Série de Aquecimento?</span>
             <button
-              onClick={() => setIsWarmup(!isWarmup)}
+              onClick={() => handleUpdate({ isWarmup: !isWarmup })}
               className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-slate-900 focus:ring-offset-2 ${
                 isWarmup ? "bg-amber-500" : "bg-slate-200 dark:bg-slate-700"
               }`}
@@ -125,7 +129,7 @@ export function ActiveSetCard({
           {!isWarmup && (
             <RirSelector
               value={rir}
-              onChange={setRir}
+              onChange={(newRir) => handleUpdate({ rir: newRir })}
             />
           )}
         </div>

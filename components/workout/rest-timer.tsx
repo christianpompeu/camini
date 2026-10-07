@@ -9,61 +9,76 @@ export interface RestTimerProps {
 }
 
 export function RestTimer({ className = "" }: RestTimerProps) {
-  const { restTimer, startTimer, stopTimer, addTime } = useWorkoutStore();
-  const [timeLeft, setTimeLeft] = useState(restTimer.durationSeconds);
+  const { restTimer, startTimer, pauseTimer, resumeTimer, skipTimer, addTime, recalculateTimer } = useWorkoutStore();
+  const [timeLeft, setTimeLeft] = useState(restTimer.durationMs);
 
-  // Calcula o tempo restante baseado no timestamp
   useEffect(() => {
-    if (!restTimer.isActive || !restTimer.startTime) {
-      setTimeLeft(restTimer.durationSeconds);
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        recalculateTimer();
+      }
+    };
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () => document.removeEventListener("visibilitychange", handleVisibilityChange);
+  }, [recalculateTimer]);
+
+  useEffect(() => {
+    if (restTimer.status === "idle" || restTimer.status === "finished") {
+      setTimeLeft(restTimer.status === "finished" ? 0 : restTimer.durationMs);
       return;
     }
 
-    const calculateTime = () => {
-      const elapsed = Math.floor((Date.now() - restTimer.startTime!) / 1000);
-      const remaining = Math.max(0, restTimer.durationSeconds - elapsed);
-      setTimeLeft(remaining);
+    if (restTimer.status === "paused" && restTimer.remainingMsWhenPaused !== null) {
+      setTimeLeft(restTimer.remainingMsWhenPaused);
+      return;
+    }
 
-      if (remaining <= 0) {
-        stopTimer(); // Auto-stop when reaching 0
-      }
-    };
+    if (restTimer.status === "running" && restTimer.endsAt) {
+      const calculateTime = () => {
+        const remaining = Math.max(0, restTimer.endsAt! - Date.now());
+        setTimeLeft(remaining);
+        if (remaining <= 0) {
+          recalculateTimer();
+        }
+      };
 
-    // Atualiza a tela a cada segundo (apenas visual, a fonte da verdade é o Date.now())
-    calculateTime();
-    const interval = setInterval(calculateTime, 1000);
-    
-    return () => clearInterval(interval);
-  }, [restTimer.isActive, restTimer.startTime, restTimer.durationSeconds, stopTimer]);
+      calculateTime();
+      const interval = setInterval(calculateTime, 100);
+      return () => clearInterval(interval);
+    }
+  }, [restTimer.status, restTimer.endsAt, restTimer.remainingMsWhenPaused, restTimer.durationMs, recalculateTimer]);
 
   const toggleActive = () => {
-    if (restTimer.isActive) {
-      stopTimer();
+    if (restTimer.status === "running") {
+      pauseTimer();
+    } else if (restTimer.status === "paused") {
+      resumeTimer();
     } else {
-      startTimer(timeLeft > 0 ? timeLeft : 90);
+      startTimer(timeLeft > 0 ? Math.ceil(timeLeft / 1000) : 90);
     }
   };
 
-  const resetTimer = () => {
-    stopTimer();
-    startTimer(90); // Default 90s
-    setTimeout(() => stopTimer(), 10); // Start and stop immediately to reset to 90
-  };
-
-  const minutes = Math.floor(timeLeft / 60);
-  const seconds = timeLeft % 60;
+  const totalSeconds = Math.ceil(timeLeft / 1000);
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
   const formattedTime = `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
 
-  const progress = restTimer.durationSeconds > 0 
-    ? (restTimer.durationSeconds - timeLeft) / restTimer.durationSeconds 
+  const progress = restTimer.durationMs > 0 
+    ? (restTimer.durationMs - timeLeft) / restTimer.durationMs 
     : 0;
+
+  // Adapt state string for TimerCard which expects "Ativo" | "Pausado" (or we pass it loosely if typing allows)
+  let statusText: "Ativo" | "Pausado" | "Concluído" | "Ocioso" = "Ocioso";
+  if (restTimer.status === "running") statusText = "Ativo";
+  else if (restTimer.status === "paused") statusText = "Pausado";
+  else if (restTimer.status === "finished") statusText = "Concluído";
 
   return (
     <TimerCard
       timeRemaining={formattedTime}
-      status={restTimer.isActive ? "Ativo" : "Pausado"}
+      status={statusText as any}
       progress={progress}
-      onReset={resetTimer}
+      onReset={() => skipTimer()} // Pular encerra
       onToggle={toggleActive}
       onAdd30s={() => addTime(30)}
       className={className}

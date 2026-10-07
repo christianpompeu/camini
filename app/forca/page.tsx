@@ -3,14 +3,11 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import {
-  Play,
   ArrowLeft,
   Dumbbell,
-  Clock,
   TrendingUp,
   History,
   BookOpen,
-  Calendar,
   CheckCircle2,
   ChevronRight,
   RotateCcw,
@@ -91,13 +88,15 @@ const WORKOUT_PROGRAM: WorkoutDef[] = [
 export default function ForcaAppPage() {
   const [activeTab, setActiveTab] = useState<NavItem["id"]>("treinos");
   const {
+    hasHydrated,
     activeWorkout,
     startWorkout,
     logSet,
     nextExercise,
     finishWorkout,
-    resetWorkout,
+    discardWorkout,
     startTimer,
+    updateDraft,
   } = useWorkoutStore();
 
   const handleStartWorkoutSession = (workout: WorkoutDef) => {
@@ -106,7 +105,7 @@ export default function ForcaAppPage() {
   };
 
   const handleCompleteSet = ({ weight, reps, rir, isWarmup }: { weight: number, reps: number, rir: number, isWarmup: boolean }) => {
-    logSet(weight, reps, rir, isWarmup);
+    logSet({ weight, reps, rir, type: isWarmup ? "warmup" : "work" });
     startTimer(90);
   };
 
@@ -114,6 +113,16 @@ export default function ForcaAppPage() {
   const currentExercise = activeWorkout?.exercises[currentExerciseIndex];
   const currentSetNumber = (currentExercise?.sets?.length || 0) + 1;
   const isSessionCompleted = activeWorkout?.isCompleted;
+
+  const lastSet = currentExercise?.sets?.length ? currentExercise.sets[currentExercise.sets.length - 1] : null;
+  const currentDraft = currentExercise?.draft || {
+    weight: lastSet ? lastSet.weight : 30,
+    reps: lastSet ? (lastSet.reps || 10) : 10,
+    rir: 2,
+    isWarmup: currentSetNumber === 1,
+  };
+
+  if (!hasHydrated) return null; // Hydration step before render
 
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col pb-28">
@@ -214,11 +223,15 @@ export default function ForcaAppPage() {
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={resetWorkout}
-                    className="gap-1.5 text-xs h-9"
+                    onClick={() => {
+                      if (window.confirm("Deseja realmente descartar o progresso desta sessão?")) {
+                        discardWorkout();
+                      }
+                    }}
+                    className="gap-1.5 text-xs h-9 text-destructive border-destructive/20 hover:bg-destructive/10"
                   >
                     <RotateCcw className="w-3.5 h-3.5" />
-                    Reiniciar Sessão
+                    Descartar Sessão
                   </Button>
                 </div>
               </div>
@@ -233,10 +246,11 @@ export default function ForcaAppPage() {
                       targetMuscles={currentExercise?.targetMuscles}
                       currentSet={currentSetNumber}
                       totalSets={currentExercise?.expectedSets || 4}
-                      initialWeight={currentExercise?.sets.length ? currentExercise.sets[currentExercise.sets.length - 1].weight : 30} // Sugere a carga da última série
-                      initialReps={currentExercise?.sets.length ? currentExercise.sets[currentExercise.sets.length - 1].reps : 10}
-                      initialRir={2}
-                      initialIsWarmup={currentSetNumber === 1}
+                      weight={currentDraft.weight}
+                      reps={currentDraft.reps}
+                      rir={currentDraft.rir}
+                      isWarmup={currentDraft.isWarmup}
+                      onDraftChange={updateDraft}
                       onCompleteSet={handleCompleteSet}
                     />
 
@@ -255,7 +269,7 @@ export default function ForcaAppPage() {
                           if (currentExerciseIndex < activeWorkout.exercises.length - 1) {
                             nextExercise();
                           } else {
-                            finishWorkout();
+                            finishWorkout(false); // finish completo
                           }
                         }}
                         className="gap-1.5 h-9 font-semibold"
@@ -314,7 +328,7 @@ export default function ForcaAppPage() {
                       Treino Finalizado!
                     </h3>
                     <p className="text-sm text-muted-foreground max-w-md mx-auto">
-                      Excelente trabalho. Todas as séries e exercícios foram executados com foco pleno.
+                      Sessão salva com sucesso. Você já pode visualizar o resumo ou voltar ao Início.
                     </p>
                   </div>
                 </div>
@@ -391,60 +405,9 @@ export default function ForcaAppPage() {
             </div>
 
             <div className="space-y-3">
-              {[
-                {
-                  workout: "Treino A",
-                  title: "Peito, Ombros e Tríceps",
-                  date: "Ontem, 19:30",
-                  duration: "48 min",
-                  status: "Concluído",
-                },
-                {
-                  workout: "Treino B",
-                  title: "Costas e Bíceps",
-                  date: "Há 3 dias",
-                  duration: "52 min",
-                  status: "Concluído",
-                },
-                {
-                  workout: "Treino C",
-                  title: "Pernas Completo",
-                  date: "Há 5 dias",
-                  duration: "58 min",
-                  status: "Concluído",
-                },
-              ].map((item, idx) => (
-                <div
-                  key={idx}
-                  className="p-4 sm:p-5 rounded-xl border border-border bg-card flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-lg bg-primary/10 text-primary font-bold flex items-center justify-center shrink-0">
-                      {item.workout.replace("Treino ", "")}
-                    </div>
-                    <div>
-                      <h4 className="text-sm font-bold text-foreground">
-                        {item.workout} — {item.title}
-                      </h4>
-                      <div className="flex items-center gap-3 text-xs text-muted-foreground mt-0.5">
-                        <span className="flex items-center gap-1">
-                          <Calendar className="w-3.5 h-3.5" />
-                          {item.date}
-                        </span>
-                        <span>•</span>
-                        <span className="flex items-center gap-1">
-                          <Clock className="w-3.5 h-3.5" />
-                          {item.duration}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <Badge variant="secondary" className="w-fit text-xs font-semibold">
-                    {item.status}
-                  </Badge>
-                </div>
-              ))}
+              <div className="p-8 text-center rounded-xl border border-border bg-muted/20">
+                <p className="text-sm text-muted-foreground">Você ainda não completou nenhum treino. Inicie sua primeira sessão!</p>
+              </div>
             </div>
           </div>
         )}
@@ -467,39 +430,9 @@ export default function ForcaAppPage() {
               </p>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="p-5 rounded-xl border border-border bg-card space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                    Supino Inclinado com Halteres
-                  </span>
-                  <Badge variant="default" className="text-xs font-bold">
-                    +4 kg esta semana
-                  </Badge>
-                </div>
-                <div className="flex items-baseline gap-2 pt-2">
-                  <span className="text-3xl font-black text-foreground font-mono">
-                    34 kg
-                  </span>
-                  <span className="text-xs text-muted-foreground">por halter • 8 reps (RIR 1)</span>
-                </div>
-              </div>
-
-              <div className="p-5 rounded-xl border border-border bg-card space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                    Agachamento Livre
-                  </span>
-                  <Badge variant="secondary" className="text-xs font-bold">
-                    +5 kg esta semana
-                  </Badge>
-                </div>
-                <div className="flex items-baseline gap-2 pt-2">
-                  <span className="text-3xl font-black text-foreground font-mono">
-                    110 kg
-                  </span>
-                  <span className="text-xs text-muted-foreground">carga total • 6 reps (RIR 2)</span>
-                </div>
+            <div className="grid grid-cols-1 gap-4">
+              <div className="p-8 text-center rounded-xl border border-border bg-muted/20">
+                <p className="text-sm text-muted-foreground">Grave sessões para visualizar seus gráficos de progressão de carga.</p>
               </div>
             </div>
           </div>

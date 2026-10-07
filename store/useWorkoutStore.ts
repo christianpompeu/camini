@@ -1,20 +1,52 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 
+export type MeasurementType = "reps" | "duration" | "distance";
+export type LoadConvention = "total" | "per_implement" | "additional" | "bodyweight";
+
+export interface ExerciseDefinition {
+  id: string;
+  name: string;
+  measurementType: MeasurementType;
+  loadConvention: LoadConvention;
+  targetMuscles: string;
+}
+
 export interface SetRecord {
   id: string;
-  weight: number;
-  reps: number;
-  rir: number;
-  isWarmup: boolean;
+  type: "warmup" | "work";
+  weight: number; // zero is valid
+  reps?: number;
+  durationSeconds?: number;
+  distanceMeters?: number;
+  rir?: number; // 0, 1, 2, 3, 4+ or undefined
   completedAt: number;
 }
 
-export interface ExerciseSession {
+// Em progresso, mantemos os valores parciais.
+export interface SetDraft {
+  weight: number;
+  reps?: number;
+  durationSeconds?: number;
+  distanceMeters?: number;
+  rir?: number;
+  isWarmup: boolean;
+}
+
+export interface SessionExercise {
+  definitionId: string;
   exerciseName: string;
+  measurementType: MeasurementType;
+  loadConvention: LoadConvention;
   targetMuscles: string;
   expectedSets: number;
   sets: SetRecord[];
+  draft?: SetDraft; // preserva digitado não concluído
+}
+
+export interface WorkoutVersionSnapshot {
+  versionId: string;
+  // Outros metadados do snapshot
 }
 
 export interface WorkoutSession {
@@ -22,52 +54,71 @@ export interface WorkoutSession {
   letter: string;
   title: string;
   startTime: number;
+  endedAt?: number;
   activeExerciseIndex: number;
-  exercises: ExerciseSession[];
+  exercises: SessionExercise[];
   isCompleted: boolean;
 }
 
 export interface RestTimerState {
-  isActive: boolean;
-  startTime: number | null; // Timestamp (Date.now())
-  durationSeconds: number;
+  status: "idle" | "running" | "paused" | "finished";
+  endsAt: number | null; // Data limite em milissegundos
+  remainingMsWhenPaused: number | null;
+  durationMs: number;
 }
 
 interface WorkoutStore {
-  // Estado
+  hasHydrated: boolean;
+  setHasHydrated: (state: boolean) => void;
+
   activeWorkout: WorkoutSession | null;
   restTimer: RestTimerState;
   completedWorkouts: WorkoutSession[];
 
-  // Ações do Treino
-  startWorkout: (workoutDef: any) => void;
-  logSet: (weight: number, reps: number, rir: number, isWarmup: boolean) => void;
+  startWorkout: (workoutDef: { letter: string; title: string; focus: string; exercises: string[] }) => void;
+  logSet: (set: Partial<SetRecord> & { type: "warmup" | "work", weight: number }) => void;
+  updateSet: (setId: string, updates: Partial<SetRecord>) => void;
+  deleteSet: (setId: string) => void;
+  updateDraft: (draft: SetDraft) => void;
+  
   nextExercise: () => void;
-  finishWorkout: () => void;
-  resetWorkout: () => void;
+  finishWorkout: (isPartial?: boolean) => void;
+  discardWorkout: () => void;
 
-  // Ações do Temporizador
+  // Controle de Tempo
   startTimer: (durationSeconds?: number) => void;
-  stopTimer: () => void;
+  pauseTimer: () => void;
+  resumeTimer: () => void;
+  skipTimer: () => void;
+  resetTimer: () => void;
   addTime: (seconds: number) => void;
+  recalculateTimer: () => void;
 }
 
 export const useWorkoutStore = create<WorkoutStore>()(
   persist(
     (set, get) => ({
+      hasHydrated: false,
+      setHasHydrated: (state) => set({ hasHydrated: state }),
+
       activeWorkout: null,
       completedWorkouts: [],
       restTimer: {
-        isActive: false,
-        startTime: null,
-        durationSeconds: 90,
+        status: "idle",
+        endsAt: null,
+        remainingMsWhenPaused: null,
+        durationMs: 90000,
       },
 
-      startWorkout: (workoutDef) => {
-        const exercises: ExerciseSession[] = workoutDef.exercises.map((exName: string) => ({
+      startWorkout: (workoutDef: { letter: string; title: string; focus: string; exercises: string[] }) => {
+        // Mapeamento simplificado da ficha.
+        const exercises: SessionExercise[] = workoutDef.exercises.map((exName: string, idx: number) => ({
+          definitionId: `ex-${idx}`,
           exerciseName: exName,
-          targetMuscles: workoutDef.focus, // Simplificação
-          expectedSets: 4, // Padrão
+          measurementType: "reps" as MeasurementType,
+          loadConvention: "total" as LoadConvention,
+          targetMuscles: workoutDef.focus,
+          expectedSets: 4,
           sets: [],
         }));
 
@@ -81,23 +132,32 @@ export const useWorkoutStore = create<WorkoutStore>()(
             exercises,
             isCompleted: false,
           },
-          restTimer: { isActive: false, startTime: null, durationSeconds: 90 },
+          restTimer: { status: "idle", endsAt: null, remainingMsWhenPaused: null, durationMs: 90000 },
         });
       },
 
-      logSet: (weight, reps, rir, isWarmup) => {
+      logSet: (setRecord) => {
         const { activeWorkout } = get();
-        if (!activeWorkout || weight <= 0 || reps <= 0) return;
-
+        // Não rejeita weight <= 0. Zero é válido para bodyweight, por exemplo.
+        // Apenas recusa valores não numéricos.
+        if (!activeWorkout || Number.isNaN(setRecord.weight)) return;
+        
+        // Verifica as medidas obrigatórias do tipo
         const currentExIndex = activeWorkout.activeExerciseIndex;
         const currentExercise = activeWorkout.exercises[currentExIndex];
 
+        if (currentExercise.measurementType === "reps" && (!setRecord.reps || setRecord.reps <= 0)) return;
+        if (currentExercise.measurementType === "duration" && (!setRecord.durationSeconds || setRecord.durationSeconds <= 0)) return;
+        if (currentExercise.measurementType === "distance" && (!setRecord.distanceMeters || setRecord.distanceMeters <= 0)) return;
+
         const newSet: SetRecord = {
           id: Date.now().toString(),
-          weight,
-          reps,
-          rir,
-          isWarmup,
+          type: setRecord.type,
+          weight: setRecord.weight,
+          reps: setRecord.reps,
+          durationSeconds: setRecord.durationSeconds,
+          distanceMeters: setRecord.distanceMeters,
+          rir: setRecord.rir,
           completedAt: Date.now(),
         };
 
@@ -105,6 +165,7 @@ export const useWorkoutStore = create<WorkoutStore>()(
         updatedExercises[currentExIndex] = {
           ...currentExercise,
           sets: [...currentExercise.sets, newSet],
+          draft: undefined, // limpa rascunho
         };
 
         set({
@@ -113,6 +174,46 @@ export const useWorkoutStore = create<WorkoutStore>()(
             exercises: updatedExercises,
           },
         });
+      },
+
+      updateSet: (setId, updates) => {
+        const { activeWorkout } = get();
+        if (!activeWorkout) return;
+        
+        const currentExIndex = activeWorkout.activeExerciseIndex;
+        const currentExercise = activeWorkout.exercises[currentExIndex];
+
+        const updatedSets = currentExercise.sets.map(s => s.id === setId ? { ...s, ...updates } : s);
+        const updatedExercises = [...activeWorkout.exercises];
+        updatedExercises[currentExIndex] = { ...currentExercise, sets: updatedSets };
+
+        set({ activeWorkout: { ...activeWorkout, exercises: updatedExercises } });
+      },
+
+      deleteSet: (setId) => {
+        const { activeWorkout } = get();
+        if (!activeWorkout) return;
+        
+        const currentExIndex = activeWorkout.activeExerciseIndex;
+        const currentExercise = activeWorkout.exercises[currentExIndex];
+
+        const updatedSets = currentExercise.sets.filter(s => s.id !== setId);
+        const updatedExercises = [...activeWorkout.exercises];
+        updatedExercises[currentExIndex] = { ...currentExercise, sets: updatedSets };
+
+        set({ activeWorkout: { ...activeWorkout, exercises: updatedExercises } });
+      },
+
+      updateDraft: (draft) => {
+        const { activeWorkout } = get();
+        if (!activeWorkout) return;
+        
+        const currentExIndex = activeWorkout.activeExerciseIndex;
+        const currentExercise = activeWorkout.exercises[currentExIndex];
+
+        const updatedExercises = [...activeWorkout.exercises];
+        updatedExercises[currentExIndex] = { ...currentExercise, draft };
+        set({ activeWorkout: { ...activeWorkout, exercises: updatedExercises } });
       },
 
       nextExercise: () => {
@@ -125,71 +226,156 @@ export const useWorkoutStore = create<WorkoutStore>()(
               ...activeWorkout,
               activeExerciseIndex: activeWorkout.activeExerciseIndex + 1,
             },
-            restTimer: { isActive: false, startTime: null, durationSeconds: 90 },
+            restTimer: { status: "idle", endsAt: null, remainingMsWhenPaused: null, durationMs: 90000 },
           });
         }
       },
 
-      finishWorkout: () => {
+      finishWorkout: (isPartial = false) => {
         const { activeWorkout, completedWorkouts } = get();
         if (!activeWorkout) return;
 
-        const finished = { ...activeWorkout, isCompleted: true };
+        const finished = { 
+          ...activeWorkout, 
+          isCompleted: !isPartial, 
+          endedAt: Date.now() 
+        };
         set({
           activeWorkout: null,
-          restTimer: { isActive: false, startTime: null, durationSeconds: 90 },
+          restTimer: { status: "idle", endsAt: null, remainingMsWhenPaused: null, durationMs: 90000 },
           completedWorkouts: [finished, ...completedWorkouts],
         });
       },
 
-      resetWorkout: () => {
-        const { activeWorkout } = get();
-        if (!activeWorkout) return;
-        
-        // Limpa todas as séries e reseta o índice
-        const resetExercises = activeWorkout.exercises.map(ex => ({ ...ex, sets: [] }));
+      discardWorkout: () => {
+        // Exige confirmação na UI antes de chamar.
         set({
-          activeWorkout: {
-            ...activeWorkout,
-            activeExerciseIndex: 0,
-            exercises: resetExercises,
-          },
-          restTimer: { isActive: false, startTime: null, durationSeconds: 90 },
+          activeWorkout: null,
+          restTimer: { status: "idle", endsAt: null, remainingMsWhenPaused: null, durationMs: 90000 },
         });
       },
 
       startTimer: (durationSeconds = 90) => {
+        const durationMs = durationSeconds * 1000;
+        set({
+          restTimer: {
+            status: "running",
+            endsAt: Date.now() + durationMs,
+            remainingMsWhenPaused: null,
+            durationMs,
+          },
+        });
+      },
+
+      pauseTimer: () => {
+        const { restTimer } = get();
+        if (restTimer.status !== "running" || !restTimer.endsAt) return;
+        
+        const remainingMs = Math.max(0, restTimer.endsAt - Date.now());
+        set({
+          restTimer: {
+            ...restTimer,
+            status: "paused",
+            remainingMsWhenPaused: remainingMs,
+            endsAt: null,
+          }
+        });
+      },
+
+      resumeTimer: () => {
+        const { restTimer } = get();
+        if (restTimer.status !== "paused" || restTimer.remainingMsWhenPaused === null) return;
+        
+        set({
+          restTimer: {
+            ...restTimer,
+            status: "running",
+            endsAt: Date.now() + restTimer.remainingMsWhenPaused,
+            remainingMsWhenPaused: null,
+          }
+        });
+      },
+
+      skipTimer: () => {
         set((state) => ({
           restTimer: {
-            isActive: true,
-            startTime: Date.now(),
-            durationSeconds,
+            ...state.restTimer,
+            status: "finished",
+            endsAt: Date.now(),
+            remainingMsWhenPaused: null,
           },
         }));
       },
 
-      stopTimer: () => {
+      resetTimer: () => {
         set((state) => ({
           restTimer: {
-            ...state.restTimer,
-            isActive: false,
-            startTime: null,
+            status: "idle",
+            endsAt: null,
+            remainingMsWhenPaused: null,
+            durationMs: state.restTimer.durationMs,
           },
         }));
       },
 
       addTime: (seconds) => {
-        set((state) => ({
-          restTimer: {
-            ...state.restTimer,
-            durationSeconds: state.restTimer.durationSeconds + seconds,
-          },
-        }));
+        const ms = seconds * 1000;
+        const { restTimer } = get();
+        
+        if (restTimer.status === "running" && restTimer.endsAt) {
+          set({ restTimer: { ...restTimer, endsAt: restTimer.endsAt + ms }});
+        } else if (restTimer.status === "paused" && restTimer.remainingMsWhenPaused !== null) {
+          set({ restTimer: { ...restTimer, remainingMsWhenPaused: restTimer.remainingMsWhenPaused + ms }});
+        } else if (restTimer.status === "finished") {
+          // Volta a rodar adicionando ao tempo atual
+          set({ restTimer: { ...restTimer, status: "running", endsAt: Date.now() + ms }});
+        }
+      },
+
+      recalculateTimer: () => {
+        // UI can call this on visibilitychange to trigger state updates if it reached zero
+        const { restTimer } = get();
+        if (restTimer.status === "running" && restTimer.endsAt && Date.now() >= restTimer.endsAt) {
+          set({ restTimer: { ...restTimer, status: "finished" }});
+        }
       },
     }),
     {
       name: "camini-workout-storage",
       storage: createJSONStorage(() => localStorage),
+      version: 1, // introduz schemaVersion validada
+      migrate: (persistedState: unknown, version: number) => {
+        if (version === 0) {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const state = persistedState as any;
+          // Migração de estado legado para versão 1
+          if (state.activeWorkout) {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            state.activeWorkout.exercises = state.activeWorkout.exercises.map((ex: any) => ({
+              ...ex,
+              definitionId: ex.definitionId || 'legacy',
+              measurementType: 'reps',
+              loadConvention: 'total',
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              sets: ex.sets.map((s: any) => ({
+                ...s,
+                type: s.isWarmup ? "warmup" : "work",
+                // Remover isWarmup em favor de type no modelo novo, se preferir
+              }))
+            }));
+          }
+          if (state.restTimer) {
+             state.restTimer.status = state.restTimer.isActive ? "running" : "idle";
+             state.restTimer.endsAt = state.restTimer.startTime ? state.restTimer.startTime + (state.restTimer.durationSeconds * 1000) : null;
+             state.restTimer.durationMs = (state.restTimer.durationSeconds || 90) * 1000;
+          }
+          return state;
+        }
+        return persistedState;
+      },
+      onRehydrateStorage: () => (state) => {
+        state?.setHasHydrated(true);
+      },
     }
   )
 );
