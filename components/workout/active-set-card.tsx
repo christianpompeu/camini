@@ -15,7 +15,8 @@ export interface ActiveSetCardProps {
   initialWeight?: number;
   initialReps?: number;
   initialRir?: number;
-  onCompleteSet?: (data: { weight: number; reps: number; rir: number }) => void;
+  initialIsWarmup?: boolean;
+  onCompleteSet?: (data: { weight: number; reps: number; rir: number; isWarmup: boolean }) => void;
   className?: string;
 }
 
@@ -27,18 +28,20 @@ export function ActiveSetCard({
   initialWeight = 32,
   initialReps = 8,
   initialRir = 2,
+  initialIsWarmup = false,
   onCompleteSet,
   className = "",
 }: ActiveSetCardProps) {
   const [weight, setWeight] = useState(initialWeight);
   const [reps, setReps] = useState(initialReps);
   const [rir, setRir] = useState(initialRir);
+  const [isWarmup, setIsWarmup] = useState(initialIsWarmup);
   const [isCompleted, setIsCompleted] = useState(false);
 
   const handleComplete = () => {
     setIsCompleted(true);
     if (onCompleteSet) {
-      onCompleteSet({ weight, reps, rir });
+      onCompleteSet({ weight, reps, rir, isWarmup });
     }
   };
 
@@ -100,11 +103,32 @@ export function ActiveSetCard({
           </div>
         </div>
 
-        {/* Seletor RIR (Reps in Reserve / Esforço) */}
-        <RirSelector
-          value={rir}
-          onChange={setRir}
-        />
+        {/* Tipo de Série & Seletor RIR */}
+        <div className="space-y-4">
+          <div className="flex items-center justify-between px-1">
+            <span className="text-sm font-semibold text-foreground">Série de Aquecimento?</span>
+            <button
+              onClick={() => setIsWarmup(!isWarmup)}
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-slate-900 focus:ring-offset-2 ${
+                isWarmup ? "bg-amber-500" : "bg-slate-200 dark:bg-slate-700"
+              }`}
+              aria-pressed={isWarmup}
+            >
+              <span
+                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                  isWarmup ? "translate-x-6" : "translate-x-1"
+                }`}
+              />
+            </button>
+          </div>
+
+          {!isWarmup && (
+            <RirSelector
+              value={rir}
+              onChange={setRir}
+            />
+          )}
+        </div>
 
         {/* Ação Concluir Série */}
         <div className="pt-1">

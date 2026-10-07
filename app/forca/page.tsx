@@ -24,6 +24,7 @@ import { ActiveSetCard } from "@/components/workout/active-set-card";
 import { RestTimer } from "@/components/workout/rest-timer";
 import { ExerciseHero } from "@/components/workout/exercise-hero";
 import { BottomNavigation, NavItem } from "@/components/workout/bottom-navigation";
+import { useWorkoutStore } from "@/store/useWorkoutStore";
 
 interface WorkoutDef {
   letter: "A" | "B" | "C";
@@ -89,24 +90,30 @@ const WORKOUT_PROGRAM: WorkoutDef[] = [
 
 export default function ForcaAppPage() {
   const [activeTab, setActiveTab] = useState<NavItem["id"]>("treinos");
-  const [selectedWorkout, setSelectedWorkout] = useState<WorkoutDef>(WORKOUT_PROGRAM[0]);
-  const [activeExerciseIndex, setActiveExerciseIndex] = useState(0);
-  const [sessionCompleted, setSessionCompleted] = useState(false);
+  const {
+    activeWorkout,
+    startWorkout,
+    logSet,
+    nextExercise,
+    finishWorkout,
+    resetWorkout,
+    startTimer,
+  } = useWorkoutStore();
 
-  const startWorkoutSession = (workout: WorkoutDef) => {
-    setSelectedWorkout(workout);
-    setActiveExerciseIndex(0);
-    setSessionCompleted(false);
+  const handleStartWorkoutSession = (workout: WorkoutDef) => {
+    startWorkout(workout);
     setActiveTab("treinos");
   };
 
-  const handleNextExercise = () => {
-    if (activeExerciseIndex < selectedWorkout.exercises.length - 1) {
-      setActiveExerciseIndex((prev) => prev + 1);
-    } else {
-      setSessionCompleted(true);
-    }
+  const handleCompleteSet = ({ weight, reps, rir, isWarmup }: { weight: number, reps: number, rir: number, isWarmup: boolean }) => {
+    logSet(weight, reps, rir, isWarmup);
+    startTimer(90);
   };
+
+  const currentExerciseIndex = activeWorkout?.activeExerciseIndex || 0;
+  const currentExercise = activeWorkout?.exercises[currentExerciseIndex];
+  const currentSetNumber = (currentExercise?.sets?.length || 0) + 1;
+  const isSessionCompleted = activeWorkout?.isCompleted;
 
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col pb-28">
@@ -129,10 +136,12 @@ export default function ForcaAppPage() {
           </div>
 
           <div className="flex items-center gap-2">
-            <Badge variant="outline" className="text-[11px] gap-1.5 hidden sm:flex">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-              Treino Ativo: Treino {selectedWorkout.letter}
-            </Badge>
+            {activeWorkout && !isSessionCompleted && (
+              <Badge variant="outline" className="text-[11px] gap-1.5 hidden sm:flex">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                Treino Ativo: Treino {activeWorkout.letter}
+              </Badge>
+            )}
           </div>
         </div>
       </div>
@@ -162,50 +171,41 @@ export default function ForcaAppPage() {
               </div>
             </div>
 
-            {/* Grid dos Cards de Treino */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
-              {WORKOUT_PROGRAM.map((workout) => {
-                const isSelected = selectedWorkout.letter === workout.letter;
-                return (
-                  <div key={workout.letter} className="relative">
-                    <WorkoutCard
-                      letter={workout.letter}
-                      title={workout.title}
-                      focus={workout.focus}
-                      exerciseCount={workout.exerciseCount}
-                      lastExecuted={workout.lastExecuted}
-                      estimatedMinutes={workout.estimatedMinutes}
-                      onStart={() => startWorkoutSession(workout)}
-                      className={isSelected ? "ring-2 ring-primary" : ""}
-                    />
-                    {isSelected && (
-                      <div className="absolute -top-2.5 right-4 z-10">
-                        <Badge variant="default" className="text-[10px] px-2 py-0.5 font-bold">
-                          Em Foco
-                        </Badge>
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
+            {/* Grid dos Cards de Treino (Apenas se não houver treino ativo) */}
+            {!activeWorkout && (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+                {WORKOUT_PROGRAM.map((workout) => (
+                  <WorkoutCard
+                    key={workout.letter}
+                    letter={workout.letter}
+                    title={workout.title}
+                    focus={workout.focus}
+                    exerciseCount={workout.exerciseCount}
+                    lastExecuted={workout.lastExecuted}
+                    estimatedMinutes={workout.estimatedMinutes}
+                    onStart={() => handleStartWorkoutSession(workout)}
+                  />
+                ))}
+              </div>
+            )}
 
             {/* Sessão em Andamento do Treino Selecionado */}
+            {activeWorkout && (
             <div className="pt-4 border-t border-border space-y-6">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                 <div>
                   <div className="flex items-center gap-2">
                     <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground">
-                      Sessão Ativa: Treino {selectedWorkout.letter}
+                      Sessão Ativa: Treino {activeWorkout.letter}
                     </h2>
                     <Badge variant="secondary" className="font-semibold text-xs">
-                      {selectedWorkout.title}
+                      {activeWorkout.title}
                     </Badge>
                   </div>
                   <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
-                    Exercício {activeExerciseIndex + 1} de {selectedWorkout.exercises.length}:{" "}
+                    Exercício {currentExerciseIndex + 1} de {activeWorkout.exercises.length}:{" "}
                     <strong className="text-foreground">
-                      {selectedWorkout.exercises[activeExerciseIndex]}
+                      {currentExercise?.exerciseName}
                     </strong>
                   </p>
                 </div>
@@ -214,10 +214,7 @@ export default function ForcaAppPage() {
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => {
-                      setActiveExerciseIndex(0);
-                      setSessionCompleted(false);
-                    }}
+                    onClick={resetWorkout}
                     className="gap-1.5 text-xs h-9"
                   >
                     <RotateCcw className="w-3.5 h-3.5" />
@@ -226,18 +223,21 @@ export default function ForcaAppPage() {
                 </div>
               </div>
 
-              {!sessionCompleted ? (
+              {!isSessionCompleted ? (
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
                   {/* Coluna Principal: Registro de Cargas e Séries */}
                   <div className="lg:col-span-7 space-y-4">
                     <ActiveSetCard
-                      exerciseName={selectedWorkout.exercises[activeExerciseIndex]}
-                      targetMuscles={selectedWorkout.focus}
-                      currentSet={2}
-                      totalSets={4}
-                      initialWeight={activeExerciseIndex === 0 ? 34 : 28}
-                      initialReps={activeExerciseIndex === 0 ? 8 : 10}
-                      initialRir={1}
+                      key={`set-${currentExerciseIndex}-${currentSetNumber}`} // Força re-render limpo a cada nova série/exercício
+                      exerciseName={currentExercise?.exerciseName}
+                      targetMuscles={currentExercise?.targetMuscles}
+                      currentSet={currentSetNumber}
+                      totalSets={currentExercise?.expectedSets || 4}
+                      initialWeight={currentExercise?.sets.length ? currentExercise.sets[currentExercise.sets.length - 1].weight : 30} // Sugere a carga da última série
+                      initialReps={currentExercise?.sets.length ? currentExercise.sets[currentExercise.sets.length - 1].reps : 10}
+                      initialRir={2}
+                      initialIsWarmup={currentSetNumber === 1}
+                      onCompleteSet={handleCompleteSet}
                     />
 
                     {/* Botão de Avançar Exercício */}
@@ -245,16 +245,22 @@ export default function ForcaAppPage() {
                       <div className="text-xs text-muted-foreground">
                         <span>Próximo exercício: </span>
                         <span className="font-semibold text-foreground">
-                          {selectedWorkout.exercises[activeExerciseIndex + 1] || "Conclusão do Treino"}
+                          {activeWorkout.exercises[currentExerciseIndex + 1]?.exerciseName || "Conclusão do Treino"}
                         </span>
                       </div>
                       <Button
                         variant="default"
                         size="sm"
-                        onClick={handleNextExercise}
+                        onClick={() => {
+                          if (currentExerciseIndex < activeWorkout.exercises.length - 1) {
+                            nextExercise();
+                          } else {
+                            finishWorkout();
+                          }
+                        }}
                         className="gap-1.5 h-9 font-semibold"
                       >
-                        <span>Próximo Exercício</span>
+                        <span>{currentExerciseIndex < activeWorkout.exercises.length - 1 ? "Próximo Exercício" : "Finalizar Treino"}</span>
                         <ChevronRight className="w-4 h-4" />
                       </Button>
                     </div>
@@ -262,34 +268,33 @@ export default function ForcaAppPage() {
 
                   {/* Coluna Secundária: Descanso com Temporizador */}
                   <div className="lg:col-span-5 space-y-4">
-                    <RestTimer initialSeconds={90} />
+                    <RestTimer />
 
                     {/* Lista Rápida dos Exercícios da Sessão */}
                     <div className="p-4 rounded-xl border border-border bg-card space-y-3">
                       <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                        Sequência do Treino {selectedWorkout.letter}
+                        Sequência do Treino {activeWorkout.letter}
                       </h3>
                       <ul className="space-y-1.5 text-xs">
-                        {selectedWorkout.exercises.map((name, idx) => {
-                          const isCurrent = idx === activeExerciseIndex;
-                          const isDone = idx < activeExerciseIndex;
+                        {activeWorkout.exercises.map((ex, idx) => {
+                          const isCurrent = idx === currentExerciseIndex;
+                          const isDone = idx < currentExerciseIndex;
                           return (
                             <li
-                              key={name}
-                              onClick={() => setActiveExerciseIndex(idx)}
-                              className={`p-2.5 rounded-lg flex items-center justify-between cursor-pointer transition-colors ${
+                              key={ex.exerciseName}
+                              className={`p-2.5 rounded-lg flex items-center justify-between transition-colors ${
                                 isCurrent
                                   ? "bg-primary text-primary-foreground font-semibold"
                                   : isDone
-                                  ? "text-muted-foreground line-through hover:bg-muted/50"
-                                  : "text-foreground hover:bg-muted/50"
+                                  ? "text-muted-foreground line-through bg-muted/30"
+                                  : "text-foreground bg-muted/10"
                               }`}
                             >
                               <div className="flex items-center gap-2 truncate mr-2">
                                 <span className="font-mono text-[11px] opacity-70">
                                   #{idx + 1}
                                 </span>
-                                <span className="truncate">{name}</span>
+                                <span className="truncate">{ex.exerciseName}</span>
                               </div>
                               {isDone && <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />}
                             </li>
@@ -306,26 +311,16 @@ export default function ForcaAppPage() {
                   </div>
                   <div className="space-y-1">
                     <h3 className="text-2xl font-bold tracking-tight text-foreground">
-                      Treino {selectedWorkout.letter} Finalizado!
+                      Treino Finalizado!
                     </h3>
                     <p className="text-sm text-muted-foreground max-w-md mx-auto">
                       Excelente trabalho. Todas as séries e exercícios foram executados com foco pleno.
                     </p>
                   </div>
-                  <Button
-                    variant="default"
-                    onClick={() => {
-                      setActiveExerciseIndex(0);
-                      setSessionCompleted(false);
-                    }}
-                    className="gap-2"
-                  >
-                    <Play className="w-4 h-4 fill-current" />
-                    Iniciar Novo Treino
-                  </Button>
                 </div>
               )}
             </div>
+            )}
           </div>
         )}
 

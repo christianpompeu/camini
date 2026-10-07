@@ -1,68 +1,67 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { TimerCard } from "@/components/forca/timer-card";
+import { useWorkoutStore } from "@/store/useWorkoutStore";
 
 export interface RestTimerProps {
-  initialSeconds?: number;
-  onFinish?: () => void;
   className?: string;
 }
 
-export function RestTimer({
-  initialSeconds = 90,
-  onFinish,
-  className = "",
-}: RestTimerProps) {
-  const [totalSeconds, setTotalSeconds] = useState(initialSeconds);
-  const [timeLeft, setTimeLeft] = useState(initialSeconds);
-  const [isActive, setIsActive] = useState(false);
-  const onFinishRef = useRef(onFinish);
+export function RestTimer({ className = "" }: RestTimerProps) {
+  const { restTimer, startTimer, stopTimer, addTime } = useWorkoutStore();
+  const [timeLeft, setTimeLeft] = useState(restTimer.durationSeconds);
 
+  // Calcula o tempo restante baseado no timestamp
   useEffect(() => {
-    onFinishRef.current = onFinish;
-  }, [onFinish]);
+    if (!restTimer.isActive || !restTimer.startTime) {
+      setTimeLeft(restTimer.durationSeconds);
+      return;
+    }
 
-  useEffect(() => {
-    if (!isActive) return;
+    const calculateTime = () => {
+      const elapsed = Math.floor((Date.now() - restTimer.startTime!) / 1000);
+      const remaining = Math.max(0, restTimer.durationSeconds - elapsed);
+      setTimeLeft(remaining);
 
-    const interval = setInterval(() => {
-      setTimeLeft((prev) => {
-        if (prev <= 1) {
-          clearInterval(interval);
-          setIsActive(false);
-          onFinishRef.current?.();
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
+      if (remaining <= 0) {
+        stopTimer(); // Auto-stop when reaching 0
+      }
+    };
 
+    // Atualiza a tela a cada segundo (apenas visual, a fonte da verdade é o Date.now())
+    calculateTime();
+    const interval = setInterval(calculateTime, 1000);
+    
     return () => clearInterval(interval);
-  }, [isActive]);
+  }, [restTimer.isActive, restTimer.startTime, restTimer.durationSeconds, stopTimer]);
 
-  const toggleActive = () => setIsActive((prev) => !prev);
-
-  const resetTimer = () => {
-    setIsActive(false);
-    setTimeLeft(totalSeconds);
+  const toggleActive = () => {
+    if (restTimer.isActive) {
+      stopTimer();
+    } else {
+      startTimer(timeLeft > 0 ? timeLeft : 90);
+    }
   };
 
-  const addTime = (secs: number) => {
-    setTimeLeft((prev) => prev + secs);
-    setTotalSeconds((prev) => Math.max(prev, timeLeft + secs));
+  const resetTimer = () => {
+    stopTimer();
+    startTimer(90); // Default 90s
+    setTimeout(() => stopTimer(), 10); // Start and stop immediately to reset to 90
   };
 
   const minutes = Math.floor(timeLeft / 60);
   const seconds = timeLeft % 60;
   const formattedTime = `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
 
-  const progress = totalSeconds > 0 ? (totalSeconds - timeLeft) / totalSeconds : 0;
+  const progress = restTimer.durationSeconds > 0 
+    ? (restTimer.durationSeconds - timeLeft) / restTimer.durationSeconds 
+    : 0;
 
   return (
     <TimerCard
       timeRemaining={formattedTime}
-      status={isActive ? "Ativo" : "Pausado"}
+      status={restTimer.isActive ? "Ativo" : "Pausado"}
       progress={progress}
       onReset={resetTimer}
       onToggle={toggleActive}
@@ -71,3 +70,4 @@ export function RestTimer({
     />
   );
 }
+

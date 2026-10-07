@@ -38,11 +38,11 @@ export function WorkoutCard({
               <div className="w-11 h-11 rounded-lg bg-primary text-primary-foreground flex items-center justify-center font-bold text-lg shrink-0 shadow-sm">
                 <span>{letter}</span>
               </div>
-              <div className="min-w-0">
-                <h3 className="text-base sm:text-lg font-bold text-foreground tracking-tight truncate">
+              <div className="min-w-0 flex-1">
+                <h3 className="text-base sm:text-lg font-bold text-foreground tracking-tight leading-tight">
                   {title}
                 </h3>
-                <p className="text-xs sm:text-sm font-medium text-muted-foreground mt-0.5 line-clamp-1">
+                <p className="text-xs sm:text-sm font-medium text-muted-foreground mt-1 line-clamp-2 leading-relaxed">
                   {focus}
                 </p>
               </div>
