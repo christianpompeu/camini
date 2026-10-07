@@ -19,6 +19,8 @@ export interface ActiveSetCardProps {
   onDraftChange?: (draft: { weight: number; reps: number; rir: number; isWarmup: boolean }) => void;
   onCompleteSet?: (data: { weight: number; reps: number; rir: number; isWarmup: boolean }) => void;
   className?: string;
+  measurementType?: "reps" | "duration" | "distance";
+  loadConvention?: "total" | "per_implement" | "additional" | "bodyweight";
 }
 
 export function ActiveSetCard({
@@ -33,6 +35,8 @@ export function ActiveSetCard({
   onDraftChange,
   onCompleteSet,
   className = "",
+  measurementType = "reps",
+  loadConvention = "total",
 }: ActiveSetCardProps) {
   const [isCompleted, setIsCompleted] = useState(false);
 
@@ -84,26 +88,28 @@ export function ActiveSetCard({
 
       {/* Grid de Métricas Principais - Otimizado para Leitura Rápida */}
       <div className="p-5 sm:p-6 space-y-5">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className={`grid grid-cols-1 ${loadConvention !== "bodyweight" ? "sm:grid-cols-2" : ""} gap-4`}>
           {/* Carga */}
-          <div className="p-4 rounded-lg bg-muted/30 border border-border flex flex-col items-center justify-center">
-            <NumberStepper
-              label="Carga"
-              value={weight}
-              unit="kg"
-              onDecrement={() => handleUpdate({ weight: Math.max(0, weight - 2) })}
-              onIncrement={() => handleUpdate({ weight: weight + 2 })}
-            />
-          </div>
+          {loadConvention !== "bodyweight" && (
+            <div className="p-4 rounded-lg bg-muted/30 border border-border flex flex-col items-center justify-center">
+              <NumberStepper
+                label={loadConvention === "per_implement" ? "Carga (Halter)" : loadConvention === "additional" ? "Carga Adicional" : "Carga Total"}
+                value={weight}
+                unit="kg"
+                onDecrement={() => handleUpdate({ weight: Math.max(0, weight - 1) })}
+                onIncrement={() => handleUpdate({ weight: weight + 1 })}
+              />
+            </div>
+          )}
 
-          {/* Repetições */}
+          {/* Repetições, Duração ou Distância */}
           <div className="p-4 rounded-lg bg-muted/30 border border-border flex flex-col items-center justify-center">
             <NumberStepper
-              label="Repetições"
+              label={measurementType === "duration" ? "Tempo" : measurementType === "distance" ? "Distância" : "Repetições"}
               value={reps}
-              unit="reps"
-              onDecrement={() => handleUpdate({ reps: Math.max(1, reps - 1) })}
-              onIncrement={() => handleUpdate({ reps: reps + 1 })}
+              unit={measurementType === "duration" ? "seg" : measurementType === "distance" ? "m" : "reps"}
+              onDecrement={() => handleUpdate({ reps: Math.max(1, measurementType === "duration" ? reps - 5 : measurementType === "distance" ? reps - 10 : reps - 1) })}
+              onIncrement={() => handleUpdate({ reps: measurementType === "duration" ? reps + 5 : measurementType === "distance" ? reps + 10 : reps + 1 })}
             />
           </div>
         </div>

@@ -23,64 +23,98 @@ import { ExerciseHero } from "@/components/workout/exercise-hero";
 import { BottomNavigation, NavItem } from "@/components/workout/bottom-navigation";
 import { useWorkoutStore } from "@/store/useWorkoutStore";
 
+export interface WorkoutExerciseDef {
+  name: string;
+  measurementType: "reps" | "duration" | "distance";
+  loadConvention: "total" | "per_implement" | "additional" | "bodyweight";
+  expectedSets: number;
+  targetMuscles: string;
+}
+
 interface WorkoutDef {
-  letter: "A" | "B" | "C";
+  letter: "A" | "B" | "C" | "D" | "E";
   title: string;
   focus: string;
   exerciseCount: number;
   lastExecuted: string;
   estimatedMinutes: number;
-  exercises: string[];
+  exercises: WorkoutExerciseDef[];
 }
 
-const DEMO_WORKOUT_PROGRAM: WorkoutDef[] = [
+const WORKOUT_PROGRAM: WorkoutDef[] = [
   {
     letter: "A",
-    title: "Peito, Ombros e Tríceps",
-    focus: "Hipertrofia & Força Estrita",
-    exerciseCount: 6,
-    lastExecuted: "Ontem, 19:30",
-    estimatedMinutes: 50,
+    title: "Pernas e Core",
+    focus: "Quadríceps, Glúteos, Posteriores",
+    exerciseCount: 5,
+    lastExecuted: "Segunda-feira",
+    estimatedMinutes: 45,
     exercises: [
-      "Supino Inclinado com Halteres",
-      "Supino Reto com Barra",
-      "Desenvolvimento Militar com Halteres",
-      "Elevação Lateral na Polia",
-      "Tríceps Testa com Barra W",
-      "Tríceps Corda na Polia",
+      { name: "Agachamento Goblet", measurementType: "reps", loadConvention: "total", expectedSets: 4, targetMuscles: "Quadríceps" },
+      { name: "Stiff/Levantamento Romeno com barra", measurementType: "reps", loadConvention: "total", expectedSets: 3, targetMuscles: "Posteriores da Coxa" },
+      { name: "Avanço reverso", measurementType: "reps", loadConvention: "total", expectedSets: 3, targetMuscles: "Quadríceps e Glúteos" },
+      { name: "Panturrilha em pé", measurementType: "reps", loadConvention: "total", expectedSets: 3, targetMuscles: "Panturrilhas" },
+      { name: "Prancha", measurementType: "duration", loadConvention: "bodyweight", expectedSets: 2, targetMuscles: "Core" },
     ],
   },
   {
     letter: "B",
-    title: "Costas e Bíceps",
-    focus: "Densidade Dorsal & Puxadas",
-    exerciseCount: 6,
-    lastExecuted: "Há 3 dias",
-    estimatedMinutes: 55,
+    title: "Empurrar",
+    focus: "Peito, Ombros, Tríceps",
+    exerciseCount: 5,
+    lastExecuted: "Ontem",
+    estimatedMinutes: 45,
     exercises: [
-      "Puxada Frontal Aberta",
-      "Remada Curvada com Barra",
-      "Remada Baixa no Triângulo",
-      "Crucifixo Invertido",
-      "Rosca Direta com Barra W",
-      "Rosca Martelo com Halteres",
+      { name: "Supino no chão com halteres", measurementType: "reps", loadConvention: "per_implement", expectedSets: 4, targetMuscles: "Peitoral" },
+      { name: "Desenvolvimento militar em pé com barra", measurementType: "reps", loadConvention: "total", expectedSets: 3, targetMuscles: "Ombros" },
+      { name: "Flexão de braços", measurementType: "reps", loadConvention: "bodyweight", expectedSets: 3, targetMuscles: "Peitoral e Tríceps" },
+      { name: "Elevação lateral com halteres", measurementType: "reps", loadConvention: "per_implement", expectedSets: 2, targetMuscles: "Deltoide Lateral" },
+      { name: "Prancha", measurementType: "duration", loadConvention: "bodyweight", expectedSets: 2, targetMuscles: "Core" },
     ],
   },
   {
     letter: "C",
-    title: "Pernas Completo",
-    focus: "Quadríceps, Isquiotibiais & Panturrilhas",
-    exerciseCount: 7,
-    lastExecuted: "Há 5 dias",
-    estimatedMinutes: 60,
+    title: "Puxar",
+    focus: "Costas, Bíceps",
+    exerciseCount: 5,
+    lastExecuted: "Há 4 dias",
+    estimatedMinutes: 50,
     exercises: [
-      "Agachamento Livre com Barra",
-      "Leg Press 45°",
-      "Cadeira Extensora",
-      "Mesa Flexora",
-      "Stiff com Halteres",
-      "Elevação Pélvica",
-      "Panturrilha no Smith",
+      { name: "Levantamento terra com barra", measurementType: "reps", loadConvention: "total", expectedSets: 3, targetMuscles: "Costas e Posteriores" },
+      { name: "Remada curvada com barra", measurementType: "reps", loadConvention: "total", expectedSets: 3, targetMuscles: "Dorsais" },
+      { name: "Remada unilateral com halter", measurementType: "reps", loadConvention: "per_implement", expectedSets: 3, targetMuscles: "Dorsais" },
+      { name: "Crucifixo inverso inclinado com halteres", measurementType: "reps", loadConvention: "per_implement", expectedSets: 2, targetMuscles: "Deltoide Posterior" },
+      { name: "Rosca direta com barra", measurementType: "reps", loadConvention: "total", expectedSets: 2, targetMuscles: "Bíceps" },
+    ],
+  },
+  {
+    letter: "D",
+    title: "Full Body",
+    focus: "Técnico e Moderado",
+    exerciseCount: 5,
+    lastExecuted: "-",
+    estimatedMinutes: 45,
+    exercises: [
+      { name: "Agachamento Goblet", measurementType: "reps", loadConvention: "total", expectedSets: 3, targetMuscles: "Quadríceps" },
+      { name: "Supino no chão com halteres", measurementType: "reps", loadConvention: "per_implement", expectedSets: 3, targetMuscles: "Peitoral" },
+      { name: "Remada curvada com barra", measurementType: "reps", loadConvention: "total", expectedSets: 3, targetMuscles: "Dorsais" },
+      { name: "Elevação lateral com halteres", measurementType: "reps", loadConvention: "per_implement", expectedSets: 2, targetMuscles: "Deltoide Lateral" },
+      { name: "Panturrilha em pé", measurementType: "reps", loadConvention: "total", expectedSets: 2, targetMuscles: "Panturrilhas" },
+    ],
+  },
+  {
+    letter: "E",
+    title: "Complementar",
+    focus: "Acessórios e Core",
+    exerciseCount: 5,
+    lastExecuted: "-",
+    estimatedMinutes: 40,
+    exercises: [
+      { name: "Desenvolvimento com halteres", measurementType: "reps", loadConvention: "per_implement", expectedSets: 3, targetMuscles: "Ombros" },
+      { name: "Remada unilateral com halter", measurementType: "reps", loadConvention: "per_implement", expectedSets: 3, targetMuscles: "Dorsais" },
+      { name: "Stiff/Levantamento Romeno com barra", measurementType: "reps", loadConvention: "total", expectedSets: 3, targetMuscles: "Posteriores da Coxa" },
+      { name: "Crucifixo inverso inclinado com halteres", measurementType: "reps", loadConvention: "per_implement", expectedSets: 2, targetMuscles: "Deltoide Posterior" },
+      { name: "Farmer's Walk", measurementType: "distance", loadConvention: "per_implement", expectedSets: 2, targetMuscles: "Core e Pegada" },
     ],
   },
 ];
@@ -173,11 +207,11 @@ export default function ForcaAppPage() {
                 <div className="flex items-center gap-2 text-muted-foreground mb-1">
                   <Dumbbell className="w-4 h-4 text-primary" />
                   <span className="text-xs font-bold uppercase tracking-wider">
-                    Catálogo Demonstrativo
+                    Programa Atual
                   </span>
                 </div>
                 <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-foreground">
-                  Fichas de Treino Base
+                  Fichas de Treino A-E
                 </h1>
               </div>
 
@@ -191,7 +225,7 @@ export default function ForcaAppPage() {
             {/* Grid dos Cards de Treino (Apenas se não houver treino ativo) */}
             {!activeWorkout && (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-                {DEMO_WORKOUT_PROGRAM.map((workout) => (
+                {WORKOUT_PROGRAM.map((workout) => (
                   <WorkoutCard
                     key={workout.letter}
                     letter={workout.letter}
@@ -256,7 +290,12 @@ export default function ForcaAppPage() {
                           <div key={setRecord.id} className="flex items-center justify-between p-3 rounded-xl border border-border bg-muted/10">
                             <div className="flex items-center gap-3">
                               <Badge variant="outline" className="w-16 justify-center">Série {idx + 1}</Badge>
-                              <span className="text-sm font-semibold">{setRecord.weight} kg x {setRecord.reps} reps</span>
+                              <span className="text-sm font-semibold">
+                                {currentExercise.loadConvention !== "bodyweight" ? `${setRecord.weight} kg x ` : ""}
+                                {currentExercise.measurementType === "duration" ? `${setRecord.reps} seg` : 
+                                 currentExercise.measurementType === "distance" ? `${setRecord.reps} m` : 
+                                 `${setRecord.reps} reps`}
+                              </span>
                               {setRecord.type === "warmup" && <Badge variant="secondary" className="text-[10px]">Aquec</Badge>}
                             </div>
                             <div className="flex gap-2">
@@ -284,6 +323,8 @@ export default function ForcaAppPage() {
                           reps={setToEdit.reps}
                           rir={setToEdit.rir}
                           isWarmup={setToEdit.type === "warmup"}
+                          measurementType={currentExercise?.measurementType || "reps"}
+                          loadConvention={currentExercise?.loadConvention || "total"}
                           onDraftChange={() => {}} // Não atualiza draft ao editar
                           onCompleteSet={handleCompleteSet}
                         />
@@ -299,6 +340,8 @@ export default function ForcaAppPage() {
                         reps={currentDraft.reps}
                         rir={currentDraft.rir}
                         isWarmup={currentDraft.isWarmup}
+                        measurementType={currentExercise?.measurementType || "reps"}
+                        loadConvention={currentExercise?.loadConvention || "total"}
                         onDraftChange={updateDraft}
                         onCompleteSet={handleCompleteSet}
                       />

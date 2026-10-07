@@ -75,7 +75,7 @@ interface WorkoutStore {
   restTimer: RestTimerState;
   completedWorkouts: WorkoutSession[];
 
-  startWorkout: (workoutDef: { letter: string; title: string; focus: string; exercises: string[] }) => void;
+  startWorkout: (workoutDef: { letter: string; title: string; focus: string; exercises: Array<{ name: string, measurementType: MeasurementType, loadConvention: LoadConvention, expectedSets: number, targetMuscles: string }> }) => void;
   logSet: (set: Partial<SetRecord> & { type: "warmup" | "work", weight: number }) => void;
   updateSet: (setId: string, updates: Partial<SetRecord>) => void;
   deleteSet: (setId: string) => void;
@@ -110,15 +110,14 @@ export const useWorkoutStore = create<WorkoutStore>()(
         durationMs: 90000,
       },
 
-      startWorkout: (workoutDef: { letter: string; title: string; focus: string; exercises: string[] }) => {
-        // Mapeamento simplificado da ficha.
-        const exercises: SessionExercise[] = workoutDef.exercises.map((exName: string, idx: number) => ({
+      startWorkout: (workoutDef: { letter: string; title: string; focus: string; exercises: Array<{ name: string, measurementType: MeasurementType, loadConvention: LoadConvention, expectedSets: number, targetMuscles: string }> }) => {
+        const exercises: SessionExercise[] = workoutDef.exercises.map((ex, idx) => ({
           definitionId: `ex-${idx}`,
-          exerciseName: exName,
-          measurementType: "reps" as MeasurementType,
-          loadConvention: "total" as LoadConvention,
-          targetMuscles: workoutDef.focus,
-          expectedSets: 4,
+          exerciseName: ex.name,
+          measurementType: ex.measurementType,
+          loadConvention: ex.loadConvention,
+          targetMuscles: ex.targetMuscles || workoutDef.focus,
+          expectedSets: ex.expectedSets,
           sets: [],
         }));
 
