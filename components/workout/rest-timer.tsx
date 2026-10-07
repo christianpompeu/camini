@@ -24,6 +24,7 @@ export function RestTimer({ className = "" }: RestTimerProps) {
 
   useEffect(() => {
     if (restTimer.status === "idle" || restTimer.status === "finished") {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setTimeLeft(restTimer.status === "finished" ? 0 : restTimer.durationMs);
       return;
     }
@@ -76,7 +77,7 @@ export function RestTimer({ className = "" }: RestTimerProps) {
   return (
     <TimerCard
       timeRemaining={formattedTime}
-      status={statusText as any}
+      status={statusText as "Ativo" | "Pausado"}
       progress={progress}
       onReset={() => skipTimer()} // Pular encerra
       onToggle={toggleActive}

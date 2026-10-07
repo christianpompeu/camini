@@ -24,6 +24,7 @@ import { BottomNavigation, NavItem } from "@/components/workout/bottom-navigatio
 import { useWorkoutStore } from "@/store/useWorkoutStore";
 
 export interface WorkoutExerciseDef {
+  id: string;
   name: string;
   measurementType: "reps" | "duration" | "distance";
   loadConvention: "total" | "per_implement" | "additional" | "bodyweight";
@@ -50,11 +51,11 @@ const WORKOUT_PROGRAM: WorkoutDef[] = [
     lastExecuted: "Segunda-feira",
     estimatedMinutes: 45,
     exercises: [
-      { name: "Agachamento Goblet", measurementType: "reps", loadConvention: "total", expectedSets: 4, targetMuscles: "Quadríceps" },
-      { name: "Stiff/Levantamento Romeno com barra", measurementType: "reps", loadConvention: "total", expectedSets: 3, targetMuscles: "Posteriores da Coxa" },
-      { name: "Avanço reverso", measurementType: "reps", loadConvention: "total", expectedSets: 3, targetMuscles: "Quadríceps e Glúteos" },
-      { name: "Panturrilha em pé", measurementType: "reps", loadConvention: "total", expectedSets: 3, targetMuscles: "Panturrilhas" },
-      { name: "Prancha", measurementType: "duration", loadConvention: "bodyweight", expectedSets: 2, targetMuscles: "Core" },
+      { id: "agachamento_goblet", name: "Agachamento Goblet", measurementType: "reps", loadConvention: "total", expectedSets: 4, targetMuscles: "Quadríceps" },
+      { id: "stiff_levantamento_romeno_com_barra", name: "Stiff/Levantamento Romeno com barra", measurementType: "reps", loadConvention: "total", expectedSets: 3, targetMuscles: "Posteriores da Coxa" },
+      { id: "avanco_reverso", name: "Avanço reverso", measurementType: "reps", loadConvention: "total", expectedSets: 3, targetMuscles: "Quadríceps e Glúteos" },
+      { id: "panturrilha_em_pe", name: "Panturrilha em pé", measurementType: "reps", loadConvention: "total", expectedSets: 3, targetMuscles: "Panturrilhas" },
+      { id: "prancha", name: "Prancha", measurementType: "duration", loadConvention: "bodyweight", expectedSets: 2, targetMuscles: "Core" },
     ],
   },
   {
@@ -65,11 +66,11 @@ const WORKOUT_PROGRAM: WorkoutDef[] = [
     lastExecuted: "Ontem",
     estimatedMinutes: 45,
     exercises: [
-      { name: "Supino no chão com halteres", measurementType: "reps", loadConvention: "per_implement", expectedSets: 4, targetMuscles: "Peitoral" },
-      { name: "Desenvolvimento militar em pé com barra", measurementType: "reps", loadConvention: "total", expectedSets: 3, targetMuscles: "Ombros" },
-      { name: "Flexão de braços", measurementType: "reps", loadConvention: "bodyweight", expectedSets: 3, targetMuscles: "Peitoral e Tríceps" },
-      { name: "Elevação lateral com halteres", measurementType: "reps", loadConvention: "per_implement", expectedSets: 2, targetMuscles: "Deltoide Lateral" },
-      { name: "Prancha", measurementType: "duration", loadConvention: "bodyweight", expectedSets: 2, targetMuscles: "Core" },
+      { id: "supino_no_chao_com_halteres", name: "Supino no chão com halteres", measurementType: "reps", loadConvention: "per_implement", expectedSets: 4, targetMuscles: "Peitoral" },
+      { id: "desenvolvimento_militar_com_barra", name: "Desenvolvimento militar em pé com barra", measurementType: "reps", loadConvention: "total", expectedSets: 3, targetMuscles: "Ombros" },
+      { id: "flexao_de_bracos", name: "Flexão de braços", measurementType: "reps", loadConvention: "bodyweight", expectedSets: 3, targetMuscles: "Peitoral e Tríceps" },
+      { id: "elevacao_lateral_com_halteres", name: "Elevação lateral com halteres", measurementType: "reps", loadConvention: "per_implement", expectedSets: 2, targetMuscles: "Deltoide Lateral" },
+      { id: "prancha", name: "Prancha", measurementType: "duration", loadConvention: "bodyweight", expectedSets: 2, targetMuscles: "Core" },
     ],
   },
   {
@@ -80,11 +81,11 @@ const WORKOUT_PROGRAM: WorkoutDef[] = [
     lastExecuted: "Há 4 dias",
     estimatedMinutes: 50,
     exercises: [
-      { name: "Levantamento terra com barra", measurementType: "reps", loadConvention: "total", expectedSets: 3, targetMuscles: "Costas e Posteriores" },
-      { name: "Remada curvada com barra", measurementType: "reps", loadConvention: "total", expectedSets: 3, targetMuscles: "Dorsais" },
-      { name: "Remada unilateral com halter", measurementType: "reps", loadConvention: "per_implement", expectedSets: 3, targetMuscles: "Dorsais" },
-      { name: "Crucifixo inverso inclinado com halteres", measurementType: "reps", loadConvention: "per_implement", expectedSets: 2, targetMuscles: "Deltoide Posterior" },
-      { name: "Rosca direta com barra", measurementType: "reps", loadConvention: "total", expectedSets: 2, targetMuscles: "Bíceps" },
+      { id: "levantamento_terra_com_barra", name: "Levantamento terra com barra", measurementType: "reps", loadConvention: "total", expectedSets: 3, targetMuscles: "Costas e Posteriores" },
+      { id: "remada_curvada_com_barra", name: "Remada curvada com barra", measurementType: "reps", loadConvention: "total", expectedSets: 3, targetMuscles: "Dorsais" },
+      { id: "remada_unilateral_com_halter", name: "Remada unilateral com halter", measurementType: "reps", loadConvention: "per_implement", expectedSets: 3, targetMuscles: "Dorsais" },
+      { id: "crucifixo_inverso_inclinado_com_halteres", name: "Crucifixo inverso inclinado com halteres", measurementType: "reps", loadConvention: "per_implement", expectedSets: 2, targetMuscles: "Deltoide Posterior" },
+      { id: "rosca_direta_com_barra", name: "Rosca direta com barra", measurementType: "reps", loadConvention: "total", expectedSets: 2, targetMuscles: "Bíceps" },
     ],
   },
   {
@@ -95,11 +96,11 @@ const WORKOUT_PROGRAM: WorkoutDef[] = [
     lastExecuted: "-",
     estimatedMinutes: 45,
     exercises: [
-      { name: "Agachamento Goblet", measurementType: "reps", loadConvention: "total", expectedSets: 3, targetMuscles: "Quadríceps" },
-      { name: "Supino no chão com halteres", measurementType: "reps", loadConvention: "per_implement", expectedSets: 3, targetMuscles: "Peitoral" },
-      { name: "Remada curvada com barra", measurementType: "reps", loadConvention: "total", expectedSets: 3, targetMuscles: "Dorsais" },
-      { name: "Elevação lateral com halteres", measurementType: "reps", loadConvention: "per_implement", expectedSets: 2, targetMuscles: "Deltoide Lateral" },
-      { name: "Panturrilha em pé", measurementType: "reps", loadConvention: "total", expectedSets: 2, targetMuscles: "Panturrilhas" },
+      { id: "agachamento_goblet", name: "Agachamento Goblet", measurementType: "reps", loadConvention: "total", expectedSets: 3, targetMuscles: "Quadríceps" },
+      { id: "supino_no_chao_com_halteres", name: "Supino no chão com halteres", measurementType: "reps", loadConvention: "per_implement", expectedSets: 3, targetMuscles: "Peitoral" },
+      { id: "remada_curvada_com_barra", name: "Remada curvada com barra", measurementType: "reps", loadConvention: "total", expectedSets: 3, targetMuscles: "Dorsais" },
+      { id: "elevacao_lateral_com_halteres", name: "Elevação lateral com halteres", measurementType: "reps", loadConvention: "per_implement", expectedSets: 2, targetMuscles: "Deltoide Lateral" },
+      { id: "panturrilha_em_pe", name: "Panturrilha em pé", measurementType: "reps", loadConvention: "total", expectedSets: 2, targetMuscles: "Panturrilhas" },
     ],
   },
   {
@@ -110,11 +111,11 @@ const WORKOUT_PROGRAM: WorkoutDef[] = [
     lastExecuted: "-",
     estimatedMinutes: 40,
     exercises: [
-      { name: "Desenvolvimento com halteres", measurementType: "reps", loadConvention: "per_implement", expectedSets: 3, targetMuscles: "Ombros" },
-      { name: "Remada unilateral com halter", measurementType: "reps", loadConvention: "per_implement", expectedSets: 3, targetMuscles: "Dorsais" },
-      { name: "Stiff/Levantamento Romeno com barra", measurementType: "reps", loadConvention: "total", expectedSets: 3, targetMuscles: "Posteriores da Coxa" },
-      { name: "Crucifixo inverso inclinado com halteres", measurementType: "reps", loadConvention: "per_implement", expectedSets: 2, targetMuscles: "Deltoide Posterior" },
-      { name: "Farmer's Walk", measurementType: "distance", loadConvention: "per_implement", expectedSets: 2, targetMuscles: "Core e Pegada" },
+      { id: "desenvolvimento_com_halteres", name: "Desenvolvimento com halteres", measurementType: "reps", loadConvention: "per_implement", expectedSets: 3, targetMuscles: "Ombros" },
+      { id: "remada_unilateral_com_halter", name: "Remada unilateral com halter", measurementType: "reps", loadConvention: "per_implement", expectedSets: 3, targetMuscles: "Dorsais" },
+      { id: "stiff_levantamento_romeno_com_barra", name: "Stiff/Levantamento Romeno com barra", measurementType: "reps", loadConvention: "total", expectedSets: 3, targetMuscles: "Posteriores da Coxa" },
+      { id: "crucifixo_inverso_inclinado_com_halteres", name: "Crucifixo inverso inclinado com halteres", measurementType: "reps", loadConvention: "per_implement", expectedSets: 2, targetMuscles: "Deltoide Posterior" },
+      { id: "farmers_walk", name: "Farmer's Walk", measurementType: "distance", loadConvention: "per_implement", expectedSets: 2, targetMuscles: "Core e Pegada" },
     ],
   },
 ];
@@ -282,6 +283,17 @@ export default function ForcaAppPage() {
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
                   {/* Coluna Principal: Registro de Cargas e Séries */}
                   <div className="lg:col-span-7 space-y-4">
+                    {currentExercise && (
+                      <ExerciseHero
+                        exerciseId={currentExercise.definitionId}
+                        name={currentExercise.exerciseName}
+                        category={currentExercise.targetMuscles}
+                        sets={`${currentExercise.expectedSets} Séries`}
+                        reps="Conforme Prescrição"
+                        className="mb-4"
+                      />
+                    )}
+
                     {/* Lista de Séries Concluídas (Permite Correção) */}
                     {currentExercise && currentExercise.sets.length > 0 && (
                       <div className="space-y-2 mb-6">
@@ -466,32 +478,14 @@ export default function ForcaAppPage() {
               </p>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <ExerciseHero
-                name="Supino Reto com Barra"
-                category="Peitoral & Tríceps"
-                muscles={["Peitoral Maior", "Deltoide Anterior", "Tríceps Braquial"]}
-                sets="4 Séries"
-                reps="6 a 10 Repetições"
-                cues={[
-                  "Escápulas retraídas e deprimidas durante todo o movimento.",
-                  "Trajetória da barra ligeiramente em arco até a linha dos mamilos.",
-                  "Pausa controlada de 1 segundo no ponto de maior contração.",
-                ]}
-              />
-
-              <ExerciseHero
-                name="Supino Inclinado com Halteres"
-                category="Peitoral Superior"
-                muscles={["Peitoral Clavicular", "Deltoide Anterior", "Tríceps"]}
-                sets="4 Séries"
-                reps="8 a 12 Repetições"
-                cues={[
-                  "Banco regulado entre 30° e 45° de inclinação.",
-                  "Cotovelos em ângulo de ~60° com o tronco, sem abrir excessivamente.",
-                  "Controle a descida em 2 segundos sem tocar os halteres no topo.",
-                ]}
-              />
+            <div className="grid grid-cols-1 gap-6">
+              <div className="p-12 text-center border border-border rounded-xl bg-muted/10 text-muted-foreground flex flex-col items-center">
+                <Dumbbell className="w-10 h-10 mb-3 opacity-50" />
+                <h3 className="font-semibold text-foreground mb-1">Catálogo de Exercícios</h3>
+                <p className="text-xs max-w-sm">
+                  O guia completo de execução e vídeos estará disponível em atualizações futuras.
+                </p>
+              </div>
             </div>
           </div>
         )}

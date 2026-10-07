@@ -75,7 +75,7 @@ interface WorkoutStore {
   restTimer: RestTimerState;
   completedWorkouts: WorkoutSession[];
 
-  startWorkout: (workoutDef: { letter: string; title: string; focus: string; exercises: Array<{ name: string, measurementType: MeasurementType, loadConvention: LoadConvention, expectedSets: number, targetMuscles: string }> }) => void;
+  startWorkout: (workoutDef: { letter: string; title: string; focus: string; exercises: Array<{ id: string, name: string, measurementType: MeasurementType, loadConvention: LoadConvention, expectedSets: number, targetMuscles: string }> }) => void;
   logSet: (set: Partial<SetRecord> & { type: "warmup" | "work", weight: number }) => void;
   updateSet: (setId: string, updates: Partial<SetRecord>) => void;
   deleteSet: (setId: string) => void;
@@ -110,9 +110,9 @@ export const useWorkoutStore = create<WorkoutStore>()(
         durationMs: 90000,
       },
 
-      startWorkout: (workoutDef: { letter: string; title: string; focus: string; exercises: Array<{ name: string, measurementType: MeasurementType, loadConvention: LoadConvention, expectedSets: number, targetMuscles: string }> }) => {
-        const exercises: SessionExercise[] = workoutDef.exercises.map((ex, idx) => ({
-          definitionId: `ex-${idx}`,
+      startWorkout: (workoutDef: { letter: string; title: string; focus: string; exercises: Array<{ id: string, name: string, measurementType: MeasurementType, loadConvention: LoadConvention, expectedSets: number, targetMuscles: string }> }) => {
+        const exercises: SessionExercise[] = workoutDef.exercises.map((ex) => ({
+          definitionId: ex.id,
           exerciseName: ex.name,
           measurementType: ex.measurementType,
           loadConvention: ex.loadConvention,

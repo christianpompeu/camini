@@ -4,7 +4,11 @@ import React from "react";
 import { Dumbbell, Info, Layers, Repeat } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
+import Image from "next/image";
+import { Dialog, DialogContent, DialogTrigger, DialogTitle } from "@/components/ui/dialog";
+
 export interface ExerciseHeroProps {
+  exerciseId?: string;
   name?: string;
   category?: string;
   muscles?: string[];
@@ -14,7 +18,24 @@ export interface ExerciseHeroProps {
   className?: string;
 }
 
+const MEDIA_REGISTRY: Record<string, { role: string; path: string }[]> = {
+  "agachamento_goblet": [
+    { role: "execution_start", path: "/media-reference/agachamento_goblet/1.png" },
+    { role: "execution_end", path: "/media-reference/agachamento_goblet/2.png" },
+    { role: "execution_start_female", path: "/media-reference/agachamento_goblet/3.png" },
+    { role: "execution_end_female", path: "/media-reference/agachamento_goblet/4.png" },
+    { role: "muscle_map_female", path: "/media-reference/agachamento_goblet/5.png" },
+    { role: "muscle_map", path: "/media-reference/agachamento_goblet/6.png" },
+    { role: "instruction_card", path: "/media-reference/agachamento_goblet/7.png" },
+    { role: "instruction_card_female", path: "/media-reference/agachamento_goblet/8.png" },
+  ],
+  "remada_unilateral_com_halter": [
+    { role: "instruction_card", path: "/media-reference/remada_unilateral_com_halter/7.png" }
+  ]
+};
+
 export function ExerciseHero({
+  exerciseId,
   name = "Supino Reto com Barra",
   category = "Peitoral & Tríceps",
   muscles = ["Peitoral Maior", "Deltoide Anterior", "Tríceps Braquial"],
@@ -27,20 +48,60 @@ export function ExerciseHero({
   ],
   className = "",
 }: ExerciseHeroProps) {
+  const mediaList = exerciseId ? MEDIA_REGISTRY[exerciseId] || [] : [];
+  const primaryMedia = mediaList.find(m => m.role === "execution_start") || mediaList[0];
+
   return (
     <div
       className={`relative overflow-hidden rounded-xl border border-border bg-card text-card-foreground shadow-sm ${className}`}
     >
       {/* Área de Destaque Visual */}
-      <div className="relative h-40 sm:h-48 w-full bg-muted/40 border-b border-border flex items-center justify-center">
-        <div className="flex flex-col items-center justify-center text-center p-4">
-          <div className="w-14 h-14 rounded-xl bg-background border border-border flex items-center justify-center shadow-xs mb-2 text-primary">
-            <Dumbbell className="w-7 h-7" />
+      <div className="relative h-48 w-full bg-muted/40 border-b border-border">
+        {primaryMedia ? (
+          <Dialog>
+            <DialogTrigger className="block relative w-full h-full cursor-pointer hover:opacity-90 transition-opacity p-0 border-none bg-transparent">
+              <Image
+                src={primaryMedia.path}
+                  alt={name}
+                  fill
+                  className="object-cover object-top"
+                  sizes="(max-width: 768px) 100vw, 50vw"
+                  priority
+                />
+                <div className="absolute bottom-2 right-2 bg-black/60 text-white text-[10px] px-2 py-1 rounded-md font-semibold backdrop-blur-sm">
+                  Tocar para expandir
+                </div>
+            </DialogTrigger>
+            <DialogContent className="max-w-md w-full p-2 h-[85vh] flex flex-col items-center bg-black border-none">
+              <DialogTitle className="sr-only">Visualizador de Galeria</DialogTitle>
+              <div className="flex-1 w-full relative overflow-y-auto overflow-x-hidden snap-y snap-mandatory scrollbar-hide">
+                {mediaList.map((media, idx) => (
+                  <div key={idx} className="w-full h-full relative snap-center flex items-center justify-center bg-black shrink-0">
+                    <Image
+                      src={media.path}
+                      alt={`${name} - ${media.role}`}
+                      fill
+                      className="object-contain"
+                    />
+                    <div className="absolute bottom-4 left-4 right-4 text-center text-white/80 text-xs font-semibold uppercase tracking-widest drop-shadow-md">
+                      {media.role.replace(/_/g, ' ')}
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <p className="text-white/50 text-[10px] mt-2 text-center pb-2">Role para ver mais imagens</p>
+            </DialogContent>
+          </Dialog>
+        ) : (
+          <div className="w-full h-full flex flex-col items-center justify-center text-center p-4">
+            <div className="w-14 h-14 rounded-xl bg-background border border-border flex items-center justify-center shadow-xs mb-2 text-primary">
+              <Dumbbell className="w-7 h-7" />
+            </div>
+            <span className="text-xs uppercase tracking-wider font-semibold text-muted-foreground">
+              Mídia Indisponível
+            </span>
           </div>
-          <span className="text-xs uppercase tracking-wider font-semibold text-muted-foreground">
-            Exercício Composto
-          </span>
-        </div>
+        )}
       </div>
 
       {/* Conteúdo textual do Exercício */}
