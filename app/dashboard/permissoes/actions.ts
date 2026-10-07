@@ -2,6 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
+import { invalidatePublicRoutesCache } from "@/lib/supabase/middleware";
 
 export type AppPermission = {
   id: string;
@@ -128,6 +129,7 @@ export async function togglePublicRoute(routePath: string, isPublic: boolean) {
   
   if (error) return { error: error.message };
 
+  invalidatePublicRoutesCache();
   revalidatePath("/dashboard/permissoes");
   return { success: true };
 }
