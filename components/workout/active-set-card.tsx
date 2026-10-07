@@ -4,6 +4,8 @@ import React, { useState } from "react";
 import { Check, Flame, RotateCcw, Plus, Minus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { NumberStepper } from "@/components/forca/number-stepper";
+import { RirSelector } from "@/components/forca/rir-selector";
 
 export interface ActiveSetCardProps {
   exerciseName?: string;
@@ -74,102 +76,35 @@ export function ActiveSetCard({
 
       {/* Grid de Métricas Principais - Otimizado para Leitura Rápida */}
       <div className="p-5 sm:p-6 space-y-5">
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {/* Carga */}
           <div className="p-4 rounded-lg bg-muted/30 border border-border flex flex-col items-center justify-center">
-            <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              Carga
-            </span>
-            <div className="flex items-baseline gap-1 my-2">
-              <span className="text-4xl sm:text-5xl font-black text-foreground tracking-tight font-mono">
-                {weight}
-              </span>
-              <span className="text-sm font-semibold text-muted-foreground">
-                kg
-              </span>
-            </div>
-            {/* Ajustes rápidos */}
-            <div className="flex items-center gap-2 mt-1">
-              <button
-                type="button"
-                onClick={() => setWeight((w) => Math.max(0, w - 2))}
-                aria-label="Diminuir 2 kg"
-                className="w-10 h-10 rounded-md bg-background border border-input flex items-center justify-center text-foreground hover:bg-muted active:scale-95 transition-all shadow-xs"
-              >
-                <Minus className="w-4 h-4" />
-              </button>
-              <button
-                type="button"
-                onClick={() => setWeight((w) => w + 2)}
-                aria-label="Aumentar 2 kg"
-                className="w-10 h-10 rounded-md bg-background border border-input flex items-center justify-center text-foreground hover:bg-muted active:scale-95 transition-all shadow-xs"
-              >
-                <Plus className="w-4 h-4" />
-              </button>
-            </div>
+            <NumberStepper
+              label="Carga"
+              value={weight}
+              unit="kg"
+              onDecrement={() => setWeight((w) => Math.max(0, w - 2))}
+              onIncrement={() => setWeight((w) => w + 2)}
+            />
           </div>
 
           {/* Repetições */}
           <div className="p-4 rounded-lg bg-muted/30 border border-border flex flex-col items-center justify-center">
-            <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              Repetições
-            </span>
-            <div className="flex items-baseline gap-1 my-2">
-              <span className="text-4xl sm:text-5xl font-black text-foreground tracking-tight font-mono">
-                {reps}
-              </span>
-              <span className="text-sm font-semibold text-muted-foreground">
-                reps
-              </span>
-            </div>
-            {/* Ajustes rápidos */}
-            <div className="flex items-center gap-2 mt-1">
-              <button
-                type="button"
-                onClick={() => setReps((r) => Math.max(1, r - 1))}
-                aria-label="Diminuir 1 repetição"
-                className="w-10 h-10 rounded-md bg-background border border-input flex items-center justify-center text-foreground hover:bg-muted active:scale-95 transition-all shadow-xs"
-              >
-                <Minus className="w-4 h-4" />
-              </button>
-              <button
-                type="button"
-                onClick={() => setReps((r) => r + 1)}
-                aria-label="Aumentar 1 repetição"
-                className="w-10 h-10 rounded-md bg-background border border-input flex items-center justify-center text-foreground hover:bg-muted active:scale-95 transition-all shadow-xs"
-              >
-                <Plus className="w-4 h-4" />
-              </button>
-            </div>
+            <NumberStepper
+              label="Repetições"
+              value={reps}
+              unit="reps"
+              onDecrement={() => setReps((r) => Math.max(1, r - 1))}
+              onIncrement={() => setReps((r) => r + 1)}
+            />
           </div>
         </div>
 
         {/* Seletor RIR (Reps in Reserve / Esforço) */}
-        <div className="p-3.5 rounded-lg bg-muted/20 border border-border flex items-center justify-between gap-2">
-          <div className="flex items-center gap-2">
-            <Flame className="w-4 h-4 text-orange-500 shrink-0" />
-            <span className="text-xs font-semibold text-foreground">
-              RIR (Repetições na reserva):
-            </span>
-          </div>
-          <div className="flex items-center gap-1.5">
-            {[0, 1, 2, 3].map((val) => (
-              <button
-                key={val}
-                type="button"
-                onClick={() => setRir(val)}
-                aria-label={`RIR ${val}`}
-                className={`w-9 h-9 rounded-md font-bold text-xs transition-all ${
-                  rir === val
-                    ? "bg-primary text-primary-foreground shadow-xs scale-105"
-                    : "bg-background border border-input text-muted-foreground hover:text-foreground hover:bg-muted"
-                }`}
-              >
-                {val}
-              </button>
-            ))}
-          </div>
-        </div>
+        <RirSelector
+          value={rir}
+          onChange={setRir}
+        />
 
         {/* Ação Concluir Série */}
         <div className="pt-1">

@@ -4,6 +4,7 @@ import { Play, RotateCcw, Pause } from "lucide-react";
 export interface TimerCardProps {
   timeRemaining: string;
   status: "Ativo" | "Pausado";
+  progress?: number;
   onReset?: () => void;
   onToggle?: () => void;
   onAdd30s?: () => void;
@@ -13,12 +14,17 @@ export interface TimerCardProps {
 export function TimerCard({
   timeRemaining,
   status,
+  progress = 0,
   onReset,
   onToggle,
   onAdd30s,
   className,
 }: TimerCardProps) {
   const isActive = status === "Ativo";
+  const radius = 70;
+  const strokeWidth = 6;
+  const circumference = 2 * Math.PI * radius;
+  const strokeDashoffset = circumference - progress * circumference;
 
   return (
     <div
@@ -27,20 +33,51 @@ export function TimerCard({
         className
       )}
     >
-      <div className="flex flex-col items-center mb-6">
-        <span
-          className={cn(
-            "text-sm font-semibold tracking-widest uppercase mb-2 transition-colors",
-            isActive
-              ? "text-green-600 dark:text-green-400"
-              : "text-amber-500 dark:text-amber-400"
-          )}
+      <div className="relative flex flex-col items-center justify-center w-56 h-56 mb-4">
+        <svg
+          className="absolute inset-0 w-full h-full transform -rotate-90"
+          viewBox="0 0 160 160"
         >
-          {status}
-        </span>
-        <span className="text-6xl font-black tracking-tighter text-slate-900 dark:text-white tabular-nums">
-          {timeRemaining}
-        </span>
+          {/* Fundo do anel */}
+          <circle
+            cx="80"
+            cy="80"
+            r={radius}
+            stroke="currentColor"
+            strokeWidth={strokeWidth}
+            fill="transparent"
+            className="text-slate-100 dark:text-slate-800"
+          />
+          {/* Anel ativo de progresso */}
+          <circle
+            cx="80"
+            cy="80"
+            r={radius}
+            stroke="currentColor"
+            strokeWidth={strokeWidth}
+            fill="transparent"
+            strokeDasharray={circumference}
+            strokeDashoffset={strokeDashoffset}
+            strokeLinecap="round"
+            className="text-slate-900 dark:text-white transition-all duration-1000 ease-linear"
+          />
+        </svg>
+
+        <div className="flex flex-col items-center z-10 mt-2">
+          <span
+            className={cn(
+              "text-xs font-semibold tracking-widest uppercase mb-1 transition-colors",
+              isActive
+                ? "text-slate-900 dark:text-white"
+                : "text-slate-400 dark:text-slate-500"
+            )}
+          >
+            {status}
+          </span>
+          <span className="text-5xl sm:text-6xl font-black tracking-tighter text-slate-900 dark:text-white tabular-nums">
+            {timeRemaining}
+          </span>
+        </div>
       </div>
 
       <div className="flex items-center gap-3 w-full justify-center">
@@ -55,10 +92,10 @@ export function TimerCard({
         <button
           onClick={onToggle}
           className={cn(
-            "flex flex-col items-center justify-center flex-1 h-16 max-w-[120px] rounded-2xl text-white font-bold text-lg shadow-md transition-transform active:scale-95",
+            "flex flex-col items-center justify-center flex-1 h-16 max-w-[120px] rounded-2xl font-bold text-lg transition-transform active:scale-95",
             isActive
-              ? "bg-slate-900 dark:bg-white dark:text-slate-900"
-              : "bg-green-600 hover:bg-green-700 dark:bg-green-500"
+              ? "bg-transparent border-2 border-slate-900 text-slate-900 dark:border-white dark:text-white"
+              : "bg-slate-900 text-white shadow-md dark:bg-white dark:text-slate-900"
           )}
         >
           {isActive ? (
