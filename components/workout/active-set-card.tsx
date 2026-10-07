@@ -16,8 +16,9 @@ export interface ActiveSetCardProps {
   reps?: number;
   rir?: number;
   isWarmup?: boolean;
-  onDraftChange?: (draft: { weight: number; reps: number; rir: number; isWarmup: boolean }) => void;
-  onCompleteSet?: (data: { weight: number; reps: number; rir: number; isWarmup: boolean }) => void;
+  isExtra?: boolean;
+  onDraftChange?: (draft: { weight: number; reps: number; rir: number; isWarmup: boolean; isExtra?: boolean }) => void;
+  onCompleteSet?: (data: { weight: number; reps: number; rir: number; isWarmup: boolean; isExtra?: boolean }) => void;
   className?: string;
   measurementType?: "reps" | "duration" | "distance";
   loadConvention?: "total" | "per_implement" | "additional" | "bodyweight";
@@ -32,6 +33,7 @@ export function ActiveSetCard({
   reps = 8,
   rir = 2,
   isWarmup = false,
+  isExtra = false,
   onDraftChange,
   onCompleteSet,
   className = "",
@@ -40,9 +42,9 @@ export function ActiveSetCard({
 }: ActiveSetCardProps) {
   const [isCompleted, setIsCompleted] = useState(false);
 
-  const handleUpdate = (updates: Partial<{ weight: number; reps: number; rir: number; isWarmup: boolean }>) => {
+  const handleUpdate = (updates: Partial<{ weight: number; reps: number; rir: number; isWarmup: boolean; isExtra: boolean }>) => {
     if (onDraftChange) {
-      onDraftChange({ weight, reps, rir, isWarmup, ...updates });
+      onDraftChange({ weight, reps, rir, isWarmup, isExtra, ...updates });
     }
   };
 
@@ -50,7 +52,7 @@ export function ActiveSetCard({
     if (isCompleted) return;
     setIsCompleted(true);
     if (onCompleteSet) {
-      onCompleteSet({ weight, reps, rir, isWarmup });
+      onCompleteSet({ weight, reps, rir, isWarmup, isExtra });
     }
   };
 
@@ -116,24 +118,26 @@ export function ActiveSetCard({
 
         {/* Tipo de Série & Seletor RIR */}
         <div className="space-y-4">
-          <div className="flex items-center justify-between px-1">
-            <span className="text-sm font-semibold text-foreground">Série de Aquecimento?</span>
-            <button
-              onClick={() => handleUpdate({ isWarmup: !isWarmup })}
-              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-slate-900 focus:ring-offset-2 ${
-                isWarmup ? "bg-amber-500" : "bg-slate-200 dark:bg-slate-700"
-              }`}
-              aria-pressed={isWarmup}
-            >
-              <span
-                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                  isWarmup ? "translate-x-6" : "translate-x-1"
+          {!isExtra && (
+            <div className="flex items-center justify-between px-1">
+              <span className="text-sm font-semibold text-foreground">Série de Aquecimento?</span>
+              <button
+                onClick={() => handleUpdate({ isWarmup: !isWarmup })}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-slate-900 focus:ring-offset-2 ${
+                  isWarmup ? "bg-amber-500" : "bg-slate-200 dark:bg-slate-700"
                 }`}
-              />
-            </button>
-          </div>
+                aria-pressed={isWarmup}
+              >
+                <span
+                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                    isWarmup ? "translate-x-6" : "translate-x-1"
+                  }`}
+                />
+              </button>
+            </div>
+          )}
 
-          {!isWarmup && (
+          {(!isWarmup || isExtra) && (
             <RirSelector
               value={rir}
               onChange={(newRir) => handleUpdate({ rir: newRir })}
@@ -145,13 +149,13 @@ export function ActiveSetCard({
         <div className="pt-1">
           {!isCompleted ? (
             <Button
-              variant="default"
+              variant={isExtra ? "secondary" : "default"}
               size="lg"
               onClick={handleComplete}
               className="w-full font-bold tracking-wide h-12 gap-2 text-sm shadow-xs"
             >
               <Check className="w-5 h-5 stroke-[2.5]" />
-              Concluir série {currentSet}
+              Concluir {isExtra ? "série extra" : `série ${currentSet}`}
             </Button>
           ) : (
             <div className="flex items-center gap-3">

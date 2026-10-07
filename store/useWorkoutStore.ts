@@ -14,13 +14,16 @@ export interface ExerciseDefinition {
 
 export interface SetRecord {
   id: string;
-  type: "warmup" | "work";
+  type: "warmup" | "work" | "extra";
   weight: number; // zero is valid
   reps?: number;
   durationSeconds?: number;
   distanceMeters?: number;
   rir?: number; // 0, 1, 2, 3, 4+ or undefined
   completedAt: number;
+  editedAt?: number;
+  note?: string;
+  side?: "left" | "right";
 }
 
 // Em progresso, mantemos os valores parciais.
@@ -31,6 +34,8 @@ export interface SetDraft {
   distanceMeters?: number;
   rir?: number;
   isWarmup: boolean;
+  side?: "left" | "right";
+  note?: string;
 }
 
 export interface SessionExercise {
@@ -55,9 +60,14 @@ export interface WorkoutSession {
   title: string;
   startTime: number;
   endedAt?: number;
+  durationMs?: number;
   activeExerciseIndex: number;
   exercises: SessionExercise[];
-  isCompleted: boolean;
+  isCompleted: boolean; // deprecated, use status
+  status?: "completed" | "partial";
+  observation?: string;
+  schemaVersion?: number;
+  localOrigin?: boolean;
 }
 
 export interface RestTimerState {
@@ -76,10 +86,13 @@ interface WorkoutStore {
   completedWorkouts: WorkoutSession[];
 
   startWorkout: (workoutDef: { letter: string; title: string; focus: string; exercises: Array<{ id: string, name: string, measurementType: MeasurementType, loadConvention: LoadConvention, expectedSets: number, targetMuscles: string }> }) => void;
-  logSet: (set: Partial<SetRecord> & { type: "warmup" | "work", weight: number }) => void;
+  logSet: (set: Partial<SetRecord> & { type: "warmup" | "work" | "extra", weight: number }) => void;
   updateSet: (setId: string, updates: Partial<SetRecord>) => void;
   deleteSet: (setId: string) => void;
   updateDraft: (draft: SetDraft) => void;
+  updateHistoricalSet: (sessionId: string, setId: string, updates: Partial<SetRecord>) => void;
+  deleteHistoricalSet: (sessionId: string, setId: string) => void;
+  updateSessionObservation: (sessionId: string, observation: string) => void;
   
   nextExercise: () => void;
   finishWorkout: (isPartial?: boolean) => void;
@@ -182,7 +195,7 @@ export const useWorkoutStore = create<WorkoutStore>()(
         const currentExIndex = activeWorkout.activeExerciseIndex;
         const currentExercise = activeWorkout.exercises[currentExIndex];
 
-        const updatedSets = currentExercise.sets.map(s => s.id === setId ? { ...s, ...updates } : s);
+        const updatedSets = currentExercise.sets.map(s => s.id === setId ? { ...s, ...updates, editedAt: Date.now() } : s);
         const updatedExercises = [...activeWorkout.exercises];
         updatedExercises[currentExIndex] = { ...currentExercise, sets: updatedSets };
 
@@ -215,6 +228,41 @@ export const useWorkoutStore = create<WorkoutStore>()(
         set({ activeWorkout: { ...activeWorkout, exercises: updatedExercises } });
       },
 
+      updateHistoricalSet: (sessionId, setId, updates) => {
+        const { completedWorkouts } = get();
+        const updatedWorkouts = completedWorkouts.map(workout => {
+          if (workout.id !== sessionId) return workout;
+          const updatedExercises = workout.exercises.map(ex => ({
+            ...ex,
+            sets: ex.sets.map(s => s.id === setId ? { ...s, ...updates, editedAt: Date.now() } : s)
+          }));
+          return { ...workout, exercises: updatedExercises };
+        });
+        set({ completedWorkouts: updatedWorkouts });
+      },
+
+      deleteHistoricalSet: (sessionId, setId) => {
+        const { completedWorkouts } = get();
+        const updatedWorkouts = completedWorkouts.map(workout => {
+          if (workout.id !== sessionId) return workout;
+          const updatedExercises = workout.exercises.map(ex => ({
+            ...ex,
+            sets: ex.sets.filter(s => s.id !== setId)
+          }));
+          return { ...workout, exercises: updatedExercises };
+        });
+        set({ completedWorkouts: updatedWorkouts });
+      },
+
+      updateSessionObservation: (sessionId, observation) => {
+        const { activeWorkout, completedWorkouts } = get();
+        if (activeWorkout && activeWorkout.id === sessionId) {
+          set({ activeWorkout: { ...activeWorkout, observation } });
+        } else {
+          set({ completedWorkouts: completedWorkouts.map(w => w.id === sessionId ? { ...w, observation } : w) });
+        }
+      },
+
       nextExercise: () => {
         const { activeWorkout } = get();
         if (!activeWorkout) return;
@@ -234,10 +282,17 @@ export const useWorkoutStore = create<WorkoutStore>()(
         const { activeWorkout, completedWorkouts } = get();
         if (!activeWorkout) return;
 
-        const finished = { 
+        const endedAt = Date.now();
+        const durationMs = endedAt - activeWorkout.startTime;
+
+        const finished: WorkoutSession = { 
           ...activeWorkout, 
-          isCompleted: !isPartial, 
-          endedAt: Date.now() 
+          status: isPartial ? "partial" : "completed",
+          isCompleted: !isPartial, // keep for compat
+          endedAt,
+          durationMs,
+          localOrigin: true,
+          schemaVersion: 1
         };
         set({
           activeWorkout: null,

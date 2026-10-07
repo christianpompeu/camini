@@ -20,6 +20,10 @@ import { WorkoutCard } from "@/components/workout/workout-card";
 import { ActiveSetCard } from "@/components/workout/active-set-card";
 import { RestTimer } from "@/components/workout/rest-timer";
 import { ExerciseHero } from "@/components/workout/exercise-hero";
+import { SetEditorDialog } from "@/components/workout/set-editor-dialog";
+import { HistoryList } from "@/components/workout/history-list";
+import { HistorySessionDetail } from "@/components/workout/history-session-detail";
+import { ExportDataPanel } from "@/components/workout/export-data-panel";
 import { BottomNavigation, NavItem } from "@/components/workout/bottom-navigation";
 import { useWorkoutStore } from "@/store/useWorkoutStore";
 
@@ -122,8 +126,10 @@ const WORKOUT_PROGRAM: WorkoutDef[] = [
 
 export default function ForcaAppPage() {
   const [activeTab, setActiveTab] = useState<NavItem["id"]>("treinos");
-  const [editingSetId, setEditingSetId] = useState<string | null>(null);
-  
+  const [editingSet, setEditingSet] = useState<(SetRecord & { _sessionId?: string }) | null>(null);
+  const [selectedHistorySession, setSelectedHistorySession] = useState<WorkoutSession | null>(null);
+  const [lastFinishedId, setLastFinishedId] = useState<string | null>(null);
+
   const {
     hasHydrated,
     activeWorkout,
@@ -135,6 +141,7 @@ export default function ForcaAppPage() {
     startTimer,
     updateDraft,
     updateSet,
+    deleteSet,
   } = useWorkoutStore();
 
   const handleStartWorkoutSession = (workout: WorkoutDef) => {
@@ -142,14 +149,10 @@ export default function ForcaAppPage() {
     setActiveTab("treinos");
   };
 
-  const handleCompleteSet = ({ weight, reps, rir, isWarmup }: { weight: number, reps: number, rir: number, isWarmup: boolean }) => {
-    if (editingSetId) {
-      updateSet(editingSetId, { weight, reps, rir, type: isWarmup ? "warmup" : "work" });
-      setEditingSetId(null);
-    } else {
-      logSet({ weight, reps, rir, type: isWarmup ? "warmup" : "work" });
-      startTimer(90);
-    }
+  const handleCompleteSet = ({ weight, reps, rir, isWarmup, isExtra }: { weight: number, reps: number, rir: number, isWarmup: boolean, isExtra?: boolean }) => {
+    const type = isExtra ? "extra" : (isWarmup ? "warmup" : "work");
+    logSet({ weight, reps, rir, type });
+    startTimer(90);
   };
 
   const currentExerciseIndex = activeWorkout?.activeExerciseIndex || 0;
@@ -279,10 +282,9 @@ export default function ForcaAppPage() {
                 </div>
               </div>
 
-              {!isSessionCompleted ? (
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-                  {/* Coluna Principal: Registro de Cargas e Séries */}
-                  <div className="lg:col-span-7 space-y-4">
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+                {/* Coluna Principal: Registro de Cargas e Séries */}
+                <div className="lg:col-span-7 space-y-4">
                     {currentExercise && (
                       <ExerciseHero
                         exerciseId={currentExercise.definitionId}
@@ -304,14 +306,15 @@ export default function ForcaAppPage() {
                               <Badge variant="outline" className="w-16 justify-center">Série {idx + 1}</Badge>
                               <span className="text-sm font-semibold">
                                 {currentExercise.loadConvention !== "bodyweight" ? `${setRecord.weight} kg x ` : ""}
-                                {currentExercise.measurementType === "duration" ? `${setRecord.reps} seg` : 
-                                 currentExercise.measurementType === "distance" ? `${setRecord.reps} m` : 
+                                {currentExercise.measurementType === "duration" ? `${setRecord.durationSeconds || setRecord.reps} seg` : 
+                                 currentExercise.measurementType === "distance" ? `${setRecord.distanceMeters || setRecord.reps} m` : 
                                  `${setRecord.reps} reps`}
                               </span>
                               {setRecord.type === "warmup" && <Badge variant="secondary" className="text-[10px]">Aquec</Badge>}
+                              {setRecord.type === "extra" && <Badge variant="default" className="text-[10px]">Extra</Badge>}
                             </div>
                             <div className="flex gap-2">
-                              <Button variant="ghost" size="sm" className="h-8 text-xs" onClick={() => setEditingSetId(setRecord.id)}>
+                              <Button variant="ghost" size="sm" className="h-8 text-xs" onClick={() => setEditingSet(setRecord)}>
                                 Corrigir
                               </Button>
                             </div>
@@ -320,28 +323,7 @@ export default function ForcaAppPage() {
                       </div>
                     )}
 
-                    {/* Formulário da Série Ativa ou Em Edição */}
-                    {editingSetId ? (() => {
-                      const setToEdit = currentExercise?.sets.find(s => s.id === editingSetId);
-                      if (!setToEdit) return null;
-                      return (
-                        <ActiveSetCard
-                          key={`edit-${editingSetId}`}
-                          exerciseName={`${currentExercise?.exerciseName} (Editando)`}
-                          targetMuscles={currentExercise?.targetMuscles}
-                          currentSet={currentExercise!.sets.findIndex(s => s.id === editingSetId) + 1}
-                          totalSets={currentExercise?.expectedSets || 4}
-                          weight={setToEdit.weight}
-                          reps={setToEdit.reps}
-                          rir={setToEdit.rir}
-                          isWarmup={setToEdit.type === "warmup"}
-                          measurementType={currentExercise?.measurementType || "reps"}
-                          loadConvention={currentExercise?.loadConvention || "total"}
-                          onDraftChange={() => {}} // Não atualiza draft ao editar
-                          onCompleteSet={handleCompleteSet}
-                        />
-                      );
-                    })() : (
+                    {/* Formulário da Série Ativa */}
                       <ActiveSetCard
                         key={`set-${currentExerciseIndex}-${currentSetNumber}`} // Força re-render limpo a cada nova série/exercício
                         exerciseName={currentExercise?.exerciseName}
@@ -352,13 +334,13 @@ export default function ForcaAppPage() {
                         reps={currentDraft.reps}
                         rir={currentDraft.rir}
                         isWarmup={currentDraft.isWarmup}
+                        isExtra={currentSetNumber > (currentExercise?.expectedSets || 4)}
                         measurementType={currentExercise?.measurementType || "reps"}
                         loadConvention={currentExercise?.loadConvention || "total"}
                         onDraftChange={updateDraft}
                         onCompleteSet={handleCompleteSet}
                       />
-                    )}
-
+                    
                     {/* Botão de Avançar Exercício */}
                     <div className="flex items-center justify-between p-4 rounded-xl border border-border bg-card">
                       <div className="text-xs text-muted-foreground">
@@ -375,7 +357,9 @@ export default function ForcaAppPage() {
                               if (currentExerciseIndex < activeWorkout.exercises.length - 1) {
                                 nextExercise();
                               } else {
+                                const currentId = activeWorkout.id;
                                 finishWorkout(false); // finish completo
+                                setLastFinishedId(currentId);
                               }
                             }}
                             className="gap-1.5 h-9 font-semibold"
@@ -390,7 +374,9 @@ export default function ForcaAppPage() {
                               size="sm"
                               onClick={() => {
                                 if (window.confirm("Deseja finalizar o treino antecipadamente? O histórico será salvo.")) {
+                                  const currentId = activeWorkout.id;
                                   finishWorkout(true);
+                                  setLastFinishedId(currentId);
                                 }
                               }}
                               className="text-xs text-muted-foreground underline underline-offset-2"
@@ -440,22 +426,7 @@ export default function ForcaAppPage() {
                     </div>
                   </div>
                 </div>
-              ) : (
-                <div className="p-8 sm:p-12 text-center rounded-xl border border-border bg-card space-y-4">
-                  <div className="w-16 h-16 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mx-auto">
-                    <CheckCircle2 className="w-8 h-8" />
-                  </div>
-                  <div className="space-y-1">
-                    <h3 className="text-2xl font-bold tracking-tight text-foreground">
-                      Treino Finalizado!
-                    </h3>
-                    <p className="text-sm text-muted-foreground max-w-md mx-auto">
-                      Sessão salva com sucesso. Você já pode visualizar o resumo ou voltar ao Início.
-                    </p>
-                  </div>
-                </div>
-              )}
-            </div>
+              </div>
             )}
           </div>
         )}
@@ -509,9 +480,7 @@ export default function ForcaAppPage() {
             </div>
 
             <div className="space-y-3">
-              <div className="p-8 text-center rounded-xl border border-border bg-muted/20">
-                <p className="text-sm text-muted-foreground">Você ainda não completou nenhum treino. Inicie sua primeira sessão!</p>
-              </div>
+              <HistoryList onSessionClick={(session) => setSelectedHistorySession(session)} />
             </div>
           </div>
         )}
@@ -523,23 +492,121 @@ export default function ForcaAppPage() {
               <div className="flex items-center gap-2 text-muted-foreground mb-1">
                 <TrendingUp className="w-4 h-4 text-primary" />
                 <span className="text-xs font-bold uppercase tracking-wider">
-                  Sobrecarga Progressiva
+                  Métricas Locais
                 </span>
               </div>
               <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-foreground">
-                Evolução de Cargas
+                Progresso do Mês
               </h1>
               <p className="text-xs sm:text-sm text-muted-foreground mt-1">
-                Ganhos de carga verificados nos exercícios principais.
+                Métricas calculadas a partir das sessões armazenadas localmente.
               </p>
             </div>
 
-            <div className="grid grid-cols-1 gap-4">
-              <div className="p-8 text-center rounded-xl border border-border bg-muted/20">
-                <p className="text-sm text-muted-foreground">Grave sessões para visualizar seus gráficos de progressão de carga.</p>
-              </div>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              {(() => {
+                const now = new Date();
+                const thisMonthWorkouts = useWorkoutStore.getState().completedWorkouts.filter(w => new Date(w.startTime).getMonth() === now.getMonth() && new Date(w.startTime).getFullYear() === now.getFullYear());
+                const totalSets = thisMonthWorkouts.reduce((acc, w) => acc + w.exercises.reduce((exAcc, ex) => exAcc + ex.sets.filter(s => s.type !== "warmup").length, 0), 0);
+                const workoutsWithDuration = thisMonthWorkouts.filter(w => w.durationMs && w.durationMs > 0);
+                const avgDuration = workoutsWithDuration.length > 0 
+                  ? workoutsWithDuration.reduce((acc, w) => acc + (w.durationMs || 0), 0) / workoutsWithDuration.length 
+                  : 0;
+
+                return (
+                  <>
+                    <div className="p-6 rounded-xl border border-border bg-card flex flex-col items-center justify-center text-center">
+                      <span className="text-4xl font-extrabold text-primary mb-2">{thisMonthWorkouts.length}</span>
+                      <span className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Sessões</span>
+                    </div>
+                    <div className="p-6 rounded-xl border border-border bg-card flex flex-col items-center justify-center text-center">
+                      <span className="text-4xl font-extrabold text-primary mb-2">{totalSets}</span>
+                      <span className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Séries (Trabalho)</span>
+                    </div>
+                    <div className="p-6 rounded-xl border border-border bg-card flex flex-col items-center justify-center text-center">
+                      <span className="text-4xl font-extrabold text-primary mb-2">
+                        {avgDuration > 0 ? `${Math.floor(avgDuration / 60000)}m` : "-"}
+                      </span>
+                      <span className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Duração Média</span>
+                    </div>
+                  </>
+                );
+              })()}
             </div>
+
+            <ExportDataPanel />
           </div>
+        )}
+
+        {/* Editor de Séries (Usado no Treino Ativo e no Histórico) */}
+        {editingSet && (
+          <SetEditorDialog
+            open={!!editingSet}
+            onOpenChange={(open) => !open && setEditingSet(null)}
+            setRecord={editingSet}
+            measurementType={
+              // Descobre o measurementType buscando o exercício correspondente na sessão ativa ou no histórico
+              (activeWorkout?.exercises.find(e => e.sets.some(s => s.id === editingSet.id))?.measurementType) || 
+              "reps"
+            }
+            onSave={(setId, updates) => {
+              if (editingSet._sessionId) {
+                useWorkoutStore.getState().updateHistoricalSet(editingSet._sessionId, setId, updates);
+                // Also update the local state so the dialog immediately reflects the change
+                setSelectedHistorySession((prev: WorkoutSession | null) => {
+                  if (!prev) return prev;
+                  const updatedExercises = prev.exercises.map(ex => ({
+                    ...ex,
+                    sets: ex.sets.map(s => s.id === setId ? { ...s, ...updates, editedAt: Date.now() } : s)
+                  }));
+                  return { ...prev, exercises: updatedExercises };
+                });
+              } else {
+                updateSet(setId, updates);
+              }
+              setEditingSet(null);
+            }}
+            onDelete={(setId) => {
+              if (editingSet._sessionId) {
+                useWorkoutStore.getState().deleteHistoricalSet(editingSet._sessionId, setId);
+                // Atualiza também o estado local
+                setSelectedHistorySession((prev: WorkoutSession | null) => {
+                  if (!prev) return prev;
+                  const updatedExercises = prev.exercises.map(ex => ({
+                    ...ex,
+                    sets: ex.sets.filter(s => s.id !== setId)
+                  }));
+                  return { ...prev, exercises: updatedExercises };
+                });
+              } else {
+                deleteSet(setId);
+              }
+              setEditingSet(null);
+            }}
+          />
+        )}
+
+        {/* Detalhe da Sessão Histórica ou Resumo Final */}
+        {(selectedHistorySession || lastFinishedId) && (
+          <HistorySessionDetail
+            session={selectedHistorySession || useWorkoutStore.getState().completedWorkouts.find(w => w.id === lastFinishedId) || null}
+            open={!!selectedHistorySession || !!lastFinishedId}
+            onOpenChange={(open) => {
+              if (!open) {
+                setSelectedHistorySession(null);
+                setLastFinishedId(null);
+              }
+            }}
+            onEditSet={(set, measurementType, sessionId) => {
+              setEditingSet({ ...set, _sessionId: sessionId }); // pass along session id for history editing
+            }}
+            onUpdateObservation={(sessionId, obs) => {
+              useWorkoutStore.getState().updateSessionObservation(sessionId, obs);
+              if (selectedHistorySession) {
+                setSelectedHistorySession((prev: WorkoutSession | null) => (prev ? { ...prev, observation: obs } : prev));
+              }
+            }}
+          />
         )}
       </main>
 
