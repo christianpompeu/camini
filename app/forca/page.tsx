@@ -25,7 +25,7 @@ import { HistoryList } from "@/components/workout/history-list";
 import { HistorySessionDetail } from "@/components/workout/history-session-detail";
 import { ExportDataPanel } from "@/components/workout/export-data-panel";
 import { BottomNavigation, NavItem } from "@/components/workout/bottom-navigation";
-import { useWorkoutStore } from "@/store/useWorkoutStore";
+import { useWorkoutStore, SetRecord, WorkoutSession } from "@/store/useWorkoutStore";
 
 export interface WorkoutExerciseDef {
   id: string;

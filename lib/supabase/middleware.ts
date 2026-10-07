@@ -119,8 +119,8 @@ export async function updateSession(request: NextRequest) {
 
     // Buscar a regra mais específica correspondente ao caminho
     const matchingRule = publicRoutes
-      .filter((r) => matchesRoute(checkPath, r.route_path))
-      .sort((a, b) => b.route_path.length - a.route_path.length)[0];
+      .filter((r: any) => matchesRoute(checkPath, r.route_path))
+      .sort((a: any, b: any) => b.route_path.length - a.route_path.length)[0];
 
     // Se houver regra explícita declarando como pública
     const isPublic = matchingRule ? matchingRule.is_public : false;

@@ -161,7 +161,7 @@ export function SetEditorDialog({
           {/* RIR */}
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="rir" className="text-right">RIR</Label>
-            <Select value={rir} onValueChange={setRir}>
+            <Select value={rir} onValueChange={(val) => val && setRir(val)}>
               <SelectTrigger className="col-span-3 h-11">
                 <SelectValue placeholder="Selecione o RIR" />
               </SelectTrigger>
@@ -179,7 +179,7 @@ export function SetEditorDialog({
           {/* Side */}
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="side" className="text-right">Lado</Label>
-            <Select value={side} onValueChange={(val: any) => setSide(val)}>
+            <Select value={side} onValueChange={(val) => { if (val === "none" || val === "left" || val === "right") setSide(val); }}>
               <SelectTrigger className="col-span-3 h-11">
                 <SelectValue placeholder="Bilateral/Indefinido" />
               </SelectTrigger>

@@ -61,7 +61,7 @@ export function HistoryList({ onSessionClick }: HistoryListProps) {
         </div>
         
         <div className="grid grid-cols-3 gap-2">
-          <Select value={filterLetter} onValueChange={setFilterLetter}>
+          <Select value={filterLetter} onValueChange={(val) => val && setFilterLetter(val)}>
             <SelectTrigger className="h-9 text-xs">
               <SelectValue placeholder="Ficha" />
             </SelectTrigger>
@@ -75,7 +75,7 @@ export function HistoryList({ onSessionClick }: HistoryListProps) {
             </SelectContent>
           </Select>
 
-          <Select value={filterStatus} onValueChange={setFilterStatus}>
+          <Select value={filterStatus} onValueChange={(val) => val && setFilterStatus(val)}>
             <SelectTrigger className="h-9 text-xs">
               <SelectValue placeholder="Status" />
             </SelectTrigger>
@@ -86,7 +86,7 @@ export function HistoryList({ onSessionClick }: HistoryListProps) {
             </SelectContent>
           </Select>
 
-          <Select value={filterPeriod} onValueChange={setFilterPeriod}>
+          <Select value={filterPeriod} onValueChange={(val) => val && setFilterPeriod(val)}>
             <SelectTrigger className="h-9 text-xs">
               <SelectValue placeholder="Período" />
             </SelectTrigger>
