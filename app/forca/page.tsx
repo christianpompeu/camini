@@ -21,7 +21,7 @@ import { ActiveSetCard } from "@/components/workout/active-set-card";
 import { RestTimer } from "@/components/workout/rest-timer";
 import { ExerciseHero } from "@/components/workout/exercise-hero";
 import { BottomNavigation, NavItem } from "@/components/workout/bottom-navigation";
-import { useWorkoutStore, SetRecord } from "@/store/useWorkoutStore";
+import { useWorkoutStore } from "@/store/useWorkoutStore";
 
 interface WorkoutDef {
   letter: "A" | "B" | "C";
@@ -100,7 +100,6 @@ export default function ForcaAppPage() {
     startTimer,
     updateDraft,
     updateSet,
-    deleteSet,
   } = useWorkoutStore();
 
   const handleStartWorkoutSession = (workout: WorkoutDef) => {
