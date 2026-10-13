@@ -16,6 +16,14 @@ import {
 import { Navbar } from "@/components/layout/navbar";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { WorkoutCard } from "@/components/workout/workout-card";
 import { ActiveSetCard } from "@/components/workout/active-set-card";
 import { RestTimer } from "@/components/workout/rest-timer";
@@ -131,6 +139,9 @@ export default function ForcaAppPage() {
   const [selectedSessionId, setSelectedSessionId] = useState<string | null>(null);
   const [lastFinishedId, setLastFinishedId] = useState<string | null>(null);
   const [isSessionMinimized, setIsSessionMinimized] = useState(false);
+  const [pendingSwitchWorkout, setPendingSwitchWorkout] = useState<WorkoutDef | null>(null);
+  const [showDiscardConfirm, setShowDiscardConfirm] = useState(false);
+  const [showEarlyFinishConfirm, setShowEarlyFinishConfirm] = useState(false);
 
   const {
     hasHydrated,
@@ -152,23 +163,47 @@ export default function ForcaAppPage() {
 
   const handleStartWorkoutSession = (workout: WorkoutDef) => {
     // Se clicar no mesmo treino já ativo, apenas restaura a tela de execução
-    if (activeWorkout && activeWorkout.letter === workout.letter) {
+    if (activeWorkout && activeWorkout.letter === workout.letter && !activeWorkout.isCompleted) {
       setIsSessionMinimized(false);
       setActiveTab("treinos");
       return;
     }
 
-    // Se já houver outro treino ativo, pede confirmação antes de descartar
-    if (activeWorkout && activeWorkout.letter !== workout.letter) {
-      const confirmSwitch = window.confirm(
-        `Você já possui uma sessão ativa do Treino ${activeWorkout.letter} em andamento. Deseja descartá-la para iniciar o Treino ${workout.letter}?`
-      );
-      if (!confirmSwitch) return;
+    // Se já houver outro treino ativo em andamento, abre o diálogo declarativo de confirmação
+    if (activeWorkout && activeWorkout.letter !== workout.letter && !activeWorkout.isCompleted) {
+      setPendingSwitchWorkout(workout);
+      return;
     }
 
     startWorkout(workout);
     setIsSessionMinimized(false);
     setActiveTab("treinos");
+  };
+
+  const handleConfirmSwitchWorkout = () => {
+    if (!pendingSwitchWorkout) return;
+    discardWorkout();
+    startWorkout(pendingSwitchWorkout);
+    setPendingSwitchWorkout(null);
+    setIsSessionMinimized(false);
+    setActiveTab("treinos");
+  };
+
+  const handleConfirmDiscard = () => {
+    discardWorkout();
+    setShowDiscardConfirm(false);
+    setIsSessionMinimized(false);
+  };
+
+  const handleConfirmEarlyFinish = () => {
+    if (!activeWorkout) return;
+    const currentId = activeWorkout.id;
+    const ok = finishWorkout(true);
+    if (ok) {
+      setLastFinishedId(currentId);
+      setIsSessionMinimized(false);
+    }
+    setShowEarlyFinishConfirm(false);
   };
 
   const currentExerciseIndex = activeWorkout?.activeExerciseIndex || 0;
@@ -380,12 +415,7 @@ export default function ForcaAppPage() {
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => {
-                      if (window.confirm("Deseja realmente descartar o progresso desta sessão?")) {
-                        discardWorkout();
-                        setIsSessionMinimized(false);
-                      }
-                    }}
+                    onClick={() => setShowDiscardConfirm(true)}
                     className="gap-1.5 text-xs h-9 text-destructive border-destructive/20 hover:bg-destructive/10"
                   >
                     <RotateCcw className="w-3.5 h-3.5" />
@@ -536,16 +566,7 @@ export default function ForcaAppPage() {
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => {
-                              if (window.confirm("Deseja finalizar o treino antecipadamente? O histórico será salvo.")) {
-                                const currentId = activeWorkout.id;
-                                const ok = finishWorkout(true);
-                                if (ok) {
-                                  setLastFinishedId(currentId);
-                                  setIsSessionMinimized(false);
-                                }
-                              }
-                            }}
+                            onClick={() => setShowEarlyFinishConfirm(true)}
                             className="text-xs text-muted-foreground underline underline-offset-2"
                           >
                             Finalizar Incompleto
@@ -787,6 +808,127 @@ export default function ForcaAppPage() {
             }}
           />
         )}
+
+        {/* Diálogo de Confirmação para Trocar de Treino */}
+        <Dialog
+          open={Boolean(pendingSwitchWorkout)}
+          onOpenChange={(open) => !open && setPendingSwitchWorkout(null)}
+        >
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle className="text-base font-bold">
+                Trocar de treino em andamento?
+              </DialogTitle>
+              <DialogDescription className="text-xs text-muted-foreground pt-1.5 leading-relaxed">
+                Você já possui uma sessão ativa do{" "}
+                <strong className="text-foreground">
+                  Treino {activeWorkout?.letter} ({activeWorkout?.title})
+                </strong>{" "}
+                com registros em andamento.
+                <br /><br />
+                Iniciar o{" "}
+                <strong className="text-foreground">Treino {pendingSwitchWorkout?.letter}</strong>{" "}
+                irá descartar o progresso atual do Treino {activeWorkout?.letter}.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter className="flex-row justify-end gap-2 pt-3">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setPendingSwitchWorkout(null)}
+                className="text-xs"
+              >
+                Continuar Treino {activeWorkout?.letter}
+              </Button>
+              <Button
+                type="button"
+                variant="destructive"
+                size="sm"
+                onClick={handleConfirmSwitchWorkout}
+                className="text-xs font-semibold"
+              >
+                Encerrar e Iniciar Treino {pendingSwitchWorkout?.letter}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Diálogo de Confirmação para Descartar Sessão */}
+        <Dialog
+          open={showDiscardConfirm}
+          onOpenChange={setShowDiscardConfirm}
+        >
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle className="text-base font-bold text-destructive">
+                Descartar sessão ativa?
+              </DialogTitle>
+              <DialogDescription className="text-xs text-muted-foreground pt-1.5 leading-relaxed">
+                Tem certeza de que deseja descartar o progresso do{" "}
+                <strong className="text-foreground">Treino {activeWorkout?.letter}</strong>?
+                Todas as séries registradas nesta sessão serão excluídas.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter className="flex-row justify-end gap-2 pt-3">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setShowDiscardConfirm(false)}
+                className="text-xs"
+              >
+                Voltar ao treino
+              </Button>
+              <Button
+                type="button"
+                variant="destructive"
+                size="sm"
+                onClick={handleConfirmDiscard}
+                className="text-xs font-semibold"
+              >
+                Sim, descartar
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Diálogo de Confirmação para Finalizar Incompleto */}
+        <Dialog
+          open={showEarlyFinishConfirm}
+          onOpenChange={setShowEarlyFinishConfirm}
+        >
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle className="text-base font-bold">
+                Finalizar treino antecipadamente?
+              </DialogTitle>
+              <DialogDescription className="text-xs text-muted-foreground pt-1.5 leading-relaxed">
+                O treino será concluído e as séries já registradas serão salvas no histórico como uma sessão parcial.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter className="flex-row justify-end gap-2 pt-3">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setShowEarlyFinishConfirm(false)}
+                className="text-xs"
+              >
+                Continuar treinando
+              </Button>
+              <Button
+                type="button"
+                variant="default"
+                size="sm"
+                onClick={handleConfirmEarlyFinish}
+                className="text-xs font-semibold"
+              >
+                Salvar e finalizar
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </main>
 
       {/* Barra de Navegação Inferior Flutuante Fixa */}
