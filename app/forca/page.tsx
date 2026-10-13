@@ -7,10 +7,10 @@ import {
   Dumbbell,
   TrendingUp,
   History,
-  BookOpen,
   CheckCircle2,
   ChevronRight,
   RotateCcw,
+  Play,
 } from "lucide-react";
 
 import { Navbar } from "@/components/layout/navbar";
@@ -25,6 +25,7 @@ import { HistoryList } from "@/components/workout/history-list";
 import { HistorySessionDetail } from "@/components/workout/history-session-detail";
 import { ExportDataPanel } from "@/components/workout/export-data-panel";
 import { BottomNavigation, NavItem } from "@/components/workout/bottom-navigation";
+import { ExerciseCatalogView } from "@/components/catalog/exercise-catalog-view";
 import { useWorkoutStore, SetRecord, EditSetContext } from "@/store/useWorkoutStore";
 
 export interface WorkoutExerciseDef {
@@ -129,6 +130,7 @@ export default function ForcaAppPage() {
   const [editingContext, setEditingContext] = useState<EditSetContext | null>(null);
   const [selectedSessionId, setSelectedSessionId] = useState<string | null>(null);
   const [lastFinishedId, setLastFinishedId] = useState<string | null>(null);
+  const [isSessionMinimized, setIsSessionMinimized] = useState(false);
 
   const {
     hasHydrated,
@@ -149,7 +151,23 @@ export default function ForcaAppPage() {
   } = useWorkoutStore();
 
   const handleStartWorkoutSession = (workout: WorkoutDef) => {
+    // Se clicar no mesmo treino já ativo, apenas restaura a tela de execução
+    if (activeWorkout && activeWorkout.letter === workout.letter) {
+      setIsSessionMinimized(false);
+      setActiveTab("treinos");
+      return;
+    }
+
+    // Se já houver outro treino ativo, pede confirmação antes de descartar
+    if (activeWorkout && activeWorkout.letter !== workout.letter) {
+      const confirmSwitch = window.confirm(
+        `Você já possui uma sessão ativa do Treino ${activeWorkout.letter} em andamento. Deseja descartá-la para iniciar o Treino ${workout.letter}?`
+      );
+      if (!confirmSwitch) return;
+    }
+
     startWorkout(workout);
+    setIsSessionMinimized(false);
     setActiveTab("treinos");
   };
 
@@ -272,8 +290,41 @@ export default function ForcaAppPage() {
               </div>
             </div>
 
-            {/* Grid dos Cards de Treino (Apenas se não houver treino ativo) */}
-            {!activeWorkout && (
+            {/* Banner de Sessão Ativa em Andamento (quando minimizada) */}
+            {activeWorkout && isSessionMinimized && (
+              <div className="p-4 sm:p-5 rounded-2xl border border-emerald-500/30 bg-emerald-500/10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-xs">
+                <div className="space-y-0.5">
+                  <div className="flex items-center gap-2">
+                    <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
+                    <h3 className="font-bold text-sm text-foreground">
+                      Sessão em andamento: Treino {activeWorkout.letter}
+                    </h3>
+                    <Badge variant="secondary" className="text-[10px] font-semibold">
+                      {activeWorkout.title}
+                    </Badge>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Exercício {currentExerciseIndex + 1} de {activeWorkout.exercises.length}:{" "}
+                    <strong className="text-foreground">{currentExercise?.exerciseName}</strong>. Suas séries e rascunhos continuam salvos.
+                  </p>
+                </div>
+                <div className="flex items-center gap-2 w-full sm:w-auto">
+                  <Button
+                    type="button"
+                    variant="default"
+                    size="sm"
+                    onClick={() => setIsSessionMinimized(false)}
+                    className="text-xs font-semibold gap-1.5 h-9 shrink-0 w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 text-white"
+                  >
+                    <Play className="w-3.5 h-3.5 fill-current" />
+                    Retomar treino em andamento
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {/* Grid dos Cards de Treino (Exibido se não houver sessão ativa ou se estiver minimizada) */}
+            {(!activeWorkout || isSessionMinimized) && (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                 {WORKOUT_PROGRAM.map((workout) => (
                   <WorkoutCard
@@ -284,6 +335,7 @@ export default function ForcaAppPage() {
                     exerciseCount={workout.exerciseCount}
                     lastExecuted={workout.lastExecuted}
                     estimatedMinutes={workout.estimatedMinutes}
+                    isActiveSession={Boolean(activeWorkout && activeWorkout.letter === workout.letter)}
                     onStart={() => handleStartWorkoutSession(workout)}
                   />
                 ))}
@@ -291,8 +343,21 @@ export default function ForcaAppPage() {
             )}
 
             {/* Sessão em Andamento do Treino Selecionado */}
-            {activeWorkout && (
-            <div className="pt-4 border-t border-border space-y-6">
+            {activeWorkout && !isSessionMinimized && (
+            <div className="pt-2 border-t border-border space-y-6">
+              {/* Barra de Retorno: Minimizar / Ver todas as fichas */}
+              <div className="flex items-center justify-between pb-1">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setIsSessionMinimized(true)}
+                  className="gap-1.5 text-xs text-muted-foreground hover:text-foreground -ml-2 h-8"
+                >
+                  <ArrowLeft className="w-3.5 h-3.5" />
+                  <span>Ver todas as fichas (minimizar treino)</span>
+                </Button>
+              </div>
+
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                 <div>
                   <div className="flex items-center gap-2">
@@ -318,6 +383,7 @@ export default function ForcaAppPage() {
                     onClick={() => {
                       if (window.confirm("Deseja realmente descartar o progresso desta sessão?")) {
                         discardWorkout();
+                        setIsSessionMinimized(false);
                       }
                     }}
                     className="gap-1.5 text-xs h-9 text-destructive border-destructive/20 hover:bg-destructive/10"
@@ -450,7 +516,10 @@ export default function ForcaAppPage() {
                             } else {
                               const currentId = activeWorkout.id;
                               const ok = finishWorkout(false);
-                              if (ok) setLastFinishedId(currentId);
+                              if (ok) {
+                                setLastFinishedId(currentId);
+                                setIsSessionMinimized(false);
+                              }
                             }
                           }}
                           className="gap-1.5 h-9 font-semibold"
@@ -471,7 +540,10 @@ export default function ForcaAppPage() {
                               if (window.confirm("Deseja finalizar o treino antecipadamente? O histórico será salvo.")) {
                                 const currentId = activeWorkout.id;
                                 const ok = finishWorkout(true);
-                                if (ok) setLastFinishedId(currentId);
+                                if (ok) {
+                                  setLastFinishedId(currentId);
+                                  setIsSessionMinimized(false);
+                                }
                               }
                             }}
                             className="text-xs text-muted-foreground underline underline-offset-2"
@@ -526,34 +598,9 @@ export default function ForcaAppPage() {
           </div>
         )}
 
-        {/* ABA: EXERCÍCIOS (CONSULTA E INSTRUÇÕES) */}
+        {/* ABA: EXERCÍCIOS (CATÁLOGO INDEPENDENTE F2.1) */}
         {activeTab === "exercicios" && (
-          <div className="space-y-6 animate-in fade-in duration-200">
-            <div className="border-b border-border pb-5">
-              <div className="flex items-center gap-2 text-muted-foreground mb-1">
-                <BookOpen className="w-4 h-4 text-primary" />
-                <span className="text-xs font-bold uppercase tracking-wider">
-                  Biblioteca de Execução
-                </span>
-              </div>
-              <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-foreground">
-                Instruções dos Exercícios
-              </h1>
-              <p className="text-xs sm:text-sm text-muted-foreground mt-1">
-                Consulte a mecânica exata, músculos ativados e pontos de atenção para cada movimento.
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 gap-6">
-              <div className="p-12 text-center border border-border rounded-xl bg-muted/10 text-muted-foreground flex flex-col items-center">
-                <Dumbbell className="w-10 h-10 mb-3 opacity-50" />
-                <h3 className="font-semibold text-foreground mb-1">Catálogo de Exercícios</h3>
-                <p className="text-xs max-w-sm">
-                  O guia completo de execução e vídeos estará disponível em atualizações futuras.
-                </p>
-              </div>
-            </div>
-          </div>
+          <ExerciseCatalogView onGoToSession={() => setActiveTab("treinos")} />
         )}
 
         {/* ABA: HISTÓRICO */}

@@ -4,6 +4,8 @@ import React from "react";
 import { Button } from "@/components/ui/button";
 import { Download } from "lucide-react";
 import { useWorkoutStore, WorkoutSession } from "@/store/useWorkoutStore";
+import { useExerciseCatalogStore } from "@/store/useExerciseCatalogStore";
+import { CatalogExercise } from "@/types/exercise";
 
 export function escapeCsvField(val: unknown): string {
   if (val === undefined || val === null) return '""';
@@ -13,13 +15,17 @@ export function escapeCsvField(val: unknown): string {
   return `"${escaped}"`;
 }
 
-export function formatWorkoutsAsJson(sessions: WorkoutSession[]): string {
+export function formatWorkoutsAsJson(
+  sessions: WorkoutSession[],
+  catalog?: CatalogExercise[]
+): string {
   const exportPayload = {
     app: "Camini FORÇA",
     schemaVersion: 1,
     exportedAt: new Date().toISOString(),
     totalSessions: sessions.length,
     sessions,
+    catalog: catalog || [],
   };
   return JSON.stringify(exportPayload, null, 2);
 }
@@ -122,9 +128,10 @@ export function downloadBlob(content: string, filename: string, mimeType: string
 
 export function ExportDataPanel() {
   const { completedWorkouts } = useWorkoutStore();
+  const { exercises } = useExerciseCatalogStore();
 
   const handleExportJSON = () => {
-    const jsonStr = formatWorkoutsAsJson(completedWorkouts);
+    const jsonStr = formatWorkoutsAsJson(completedWorkouts, exercises);
     const dateStr = new Date().toISOString().split("T")[0];
     downloadBlob(jsonStr, `camini-forca-export-${dateStr}.json`, "application/json;charset=utf-8;");
   };

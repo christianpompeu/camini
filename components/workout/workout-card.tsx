@@ -12,6 +12,7 @@ export interface WorkoutCardProps {
   exerciseCount: number;
   lastExecuted?: string;
   estimatedMinutes?: number;
+  isActiveSession?: boolean;
   onStart?: () => void;
   className?: string;
 }
@@ -23,34 +24,54 @@ export function WorkoutCard({
   exerciseCount,
   lastExecuted = "Há 2 dias",
   estimatedMinutes = 55,
+  isActiveSession = false,
   onStart,
   className = "",
 }: WorkoutCardProps) {
   return (
     <div
-      className={`relative overflow-hidden rounded-xl border border-border bg-card text-card-foreground shadow-sm transition-all duration-200 hover:border-foreground/25 hover:shadow-md ${className}`}
+      className={`relative overflow-hidden rounded-xl border transition-all duration-200 shadow-sm ${
+        isActiveSession
+          ? "border-emerald-500/60 bg-emerald-500/[0.04] shadow-emerald-500/10 hover:border-emerald-500"
+          : "border-border bg-card text-card-foreground hover:border-foreground/25 hover:shadow-md"
+      } ${className}`}
     >
       <div className="p-5 sm:p-6 flex flex-col justify-between h-full">
         <div>
           <div className="flex items-start justify-between gap-4">
             <div className="flex items-center gap-3">
               {/* Emblema Treino A/B/C */}
-              <div className="w-11 h-11 rounded-lg bg-primary text-primary-foreground flex items-center justify-center font-bold text-lg shrink-0 shadow-sm">
+              <div
+                className={`w-11 h-11 rounded-lg flex items-center justify-center font-bold text-lg shrink-0 shadow-sm ${
+                  isActiveSession
+                    ? "bg-emerald-600 text-white"
+                    : "bg-primary text-primary-foreground"
+                }`}
+              >
                 <span>{letter}</span>
               </div>
               <div className="min-w-0 flex-1">
-                <h3 className="text-base sm:text-lg font-bold text-foreground tracking-tight leading-tight">
-                  {title}
-                </h3>
+                <div className="flex items-center gap-2">
+                  <h3 className="text-base sm:text-lg font-bold text-foreground tracking-tight leading-tight">
+                    {title}
+                  </h3>
+                </div>
                 <p className="text-xs sm:text-sm font-medium text-muted-foreground mt-1 line-clamp-2 leading-relaxed">
                   {focus}
                 </p>
               </div>
             </div>
 
-            <Badge variant="secondary" className="shrink-0 text-xs font-semibold">
-              {estimatedMinutes} min
-            </Badge>
+            <div className="flex flex-col items-end gap-1 shrink-0">
+              {isActiveSession ? (
+                <Badge className="bg-emerald-600 hover:bg-emerald-600 text-white text-[10px] font-semibold">
+                  Em andamento
+                </Badge>
+              ) : null}
+              <Badge variant="secondary" className="text-xs font-semibold">
+                {estimatedMinutes} min
+              </Badge>
+            </div>
           </div>
 
           {/* Informações secundárias */}
@@ -66,16 +87,20 @@ export function WorkoutCard({
           </div>
         </div>
 
-        {/* CTA Iniciar Treino */}
+        {/* CTA Iniciar Treino ou Continuar */}
         <div className="mt-5 pt-1">
           <Button
             variant="default"
             size="default"
-            className="w-full gap-2 font-semibold h-10"
+            className={`w-full gap-2 font-semibold h-10 ${
+              isActiveSession
+                ? "bg-emerald-600 hover:bg-emerald-700 text-white"
+                : ""
+            }`}
             onClick={onStart}
           >
             <Play className="w-4 h-4 fill-current" />
-            Iniciar treino
+            {isActiveSession ? "Continuar treino" : "Iniciar treino"}
           </Button>
         </div>
       </div>

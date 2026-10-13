@@ -237,15 +237,16 @@ Pedir atualização da ficha gera rascunho; mostrar diff; aceitar cria versão n
 
 Os códigos F0–F6 abaixo são exclusivos desta evolução FORÇA. Não substituem a nomenclatura das fases A–E do redesign global Camini nem afirmam que as fases do Gemini foram homologadas.
 
-| Etapa | Entrega | Critério de saída |
-|---|---|---|
-| F0 — Reconciliação | Inventário atual, contratos, fontes A–E, remoção de histórico fictício no modo real | Evidências por arquivo; exemplos isolados; parâmetros ausentes sinalizados. |
-| F1 — Núcleo confiável | Tipos, estados, rascunho, edição, timer, completa/parcial e migração local | Reabrir recupera; timer pausa/retoma; séries válidas não duplicam; zero/tempo/distância funcionam. |
-| F2 — Fichas e consulta | A–E real, biblioteca, editor/versionamento, orientação e imagens básicas | Origem verificável; Ficha B localizada é conciliada pela fonte; nenhum número é inventado; edição não altera sessão ativa. |
-| F3 — Uso offline | IndexedDB transacional, shell, downloads essenciais, exportação e update seguro | Abrir previamente preparado em modo avião; gravar e reabrir; falha de quota visível. |
-| F4 — Sincronização | Schema conciliado, RLS, outbox, idempotência, erro/conflito | Retry não duplica; outra conta não lê; expiração de auth preserva pendências. |
-| F5 — Histórico e mídia | Progresso verificável, galeria completa, vídeos seletivos, semana flexível | Cada ponto rastreável às séries; cache/Range testado; vídeos ausentes não bloqueiam. |
-| F6 — IA assistiva | Job Groq, proposta validada, explicação e aceite manual | Falha da IA não bloqueia; nada muda sem aceite; versão de ficha e auditoria preservadas. |
+| Etapa | Entrega | Critério de saída | Status |
+|---|---|---|---|
+| F0 — Reconciliação | Inventário atual, contratos, fontes A–E, remoção de histórico fictício no modo real | Evidências por arquivo; exemplos isolados; parâmetros ausentes sinalizados. | Concluído |
+| F1 — Núcleo confiável | Tipos, estados, rascunho, edição, timer, completa/parcial e migração local | Reabrir recupera; timer pausa/retoma; séries válidas não duplicam; zero/tempo/distância funcionam. | Concluído |
+| F2.1 — Catálogo independente de exercícios | Catálogo isolado de prescrições, CRUD de exercícios, validação de publicação, galeria 9:16, status de revisão/origem e persistência idempotente. | ID estável; não sobrescreve edições locais; sessão ativa e histórico 100% preservados; exportação versionada. | Concluído (Aguardando validação) |
+| F2.2 — Fichas individuais e versões | Fichas versionadas A–E referenciando exerciseId, seleção de exercícios do catálogo, editor de fichas e snapshots. | Histórico e sessões usam snapshots; novas versões não alteram passados; conciliação definitiva da prescrição. | Próxima etapa |
+| F3 — Uso offline | IndexedDB transacional, shell, downloads essenciais, exportação e update seguro | Abrir previamente preparado em modo avião; gravar e reabrir; falha de quota visível. | Planejado |
+| F4 — Sincronização | Schema conciliado, RLS, outbox, idempotência, erro/conflito | Retry não duplica; outra conta não lê; expiração de auth preserva pendências. | Planejado |
+| F5 — Histórico e mídia | Progresso verificável, galeria completa, vídeos seletivos, semana flexível | Cada ponto rastreável às séries; cache/Range testado; vídeos ausentes não bloqueiam. | Planejado |
+| F6 — IA assistiva | Job Groq, proposta validada, explicação e aceite manual | Falha da IA não bloqueia; nada muda sem aceite; versão de ficha e auditoria preservadas. | Planejado |
 
 **Marco de uso pessoal local:** F0–F3, com exportação e limitações claras. **V1 sincronizada:** F0–F4. **V1 ampliada:** F5. IA não é pré-requisito para começar a usar.
 
