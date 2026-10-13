@@ -34,6 +34,8 @@ const MEDIA_REGISTRY: Record<string, { role: string; path: string }[]> = {
   ]
 };
 
+import { useExerciseCatalogStore } from "@/store/useExerciseCatalogStore";
+
 export function ExerciseHero({
   exerciseId,
   name = "Supino Reto com Barra",
@@ -48,7 +50,14 @@ export function ExerciseHero({
   ],
   className = "",
 }: ExerciseHeroProps) {
-  const mediaList = exerciseId ? MEDIA_REGISTRY[exerciseId] || [] : [];
+  const catEx = exerciseId ? useExerciseCatalogStore.getState().getExerciseById(exerciseId) : undefined;
+  const legacyList = exerciseId ? MEDIA_REGISTRY[exerciseId] || [] : [];
+  const primaryCatMedia = catEx?.media?.find((m) => m.role === "execution_start" || m.url)?.url;
+  const mediaList = legacyList.length > 0
+    ? legacyList
+    : primaryCatMedia
+    ? [{ role: "demonstracao", path: primaryCatMedia }]
+    : [];
   const primaryMedia = mediaList.find(m => m.role === "execution_start") || mediaList[0];
 
   return (

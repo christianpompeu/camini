@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 
 export interface WorkoutCardProps {
-  letter: "A" | "B" | "C" | "D" | "E";
+  letter: string;
   title: string;
   focus: string;
   exerciseCount: number;
@@ -14,6 +14,7 @@ export interface WorkoutCardProps {
   estimatedMinutes?: number;
   isActiveSession?: boolean;
   onStart?: () => void;
+  onViewDetail?: () => void;
   className?: string;
 }
 
@@ -26,11 +27,15 @@ export function WorkoutCard({
   estimatedMinutes = 55,
   isActiveSession = false,
   onStart,
+  onViewDetail,
   className = "",
 }: WorkoutCardProps) {
   return (
     <div
+      onClick={onViewDetail}
       className={`relative overflow-hidden rounded-xl border transition-all duration-200 shadow-sm ${
+        onViewDetail ? "cursor-pointer" : ""
+      } ${
         isActiveSession
           ? "border-emerald-500/60 bg-emerald-500/[0.04] shadow-emerald-500/10 hover:border-emerald-500"
           : "border-border bg-card text-card-foreground hover:border-foreground/25 hover:shadow-md"
@@ -97,7 +102,10 @@ export function WorkoutCard({
                 ? "bg-emerald-600 hover:bg-emerald-700 text-white"
                 : ""
             }`}
-            onClick={onStart}
+            onClick={(e) => {
+              e.stopPropagation();
+              onStart?.();
+            }}
           >
             <Play className="w-4 h-4 fill-current" />
             {isActiveSession ? "Continuar treino" : "Iniciar treino"}

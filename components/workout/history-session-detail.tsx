@@ -69,7 +69,14 @@ export function HistorySessionDetail({
                 {session.status === "partial" ? "Parcial" : "Completo"}
               </Badge>
             </div>
-            <span className="text-sm font-medium text-muted-foreground">{session.title}</span>
+            <div className="flex items-center justify-between mt-0.5">
+              <span className="text-sm font-medium text-muted-foreground">{session.title}</span>
+              {session.planName && (
+                <Badge variant="outline" className="text-[10px] text-primary border-primary/30">
+                  {session.planName} {session.planVersion ? `v${session.planVersion}` : ""}
+                </Badge>
+              )}
+            </div>
           </DialogTitle>
 
           <div className="flex flex-wrap gap-x-4 gap-y-2 mt-4 text-sm text-muted-foreground">

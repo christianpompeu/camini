@@ -1,16 +1,17 @@
 "use client";
 
 import React from "react";
-import { Dumbbell, History, BookOpen, TrendingUp } from "lucide-react";
+import { Dumbbell, History, BookOpen, TrendingUp, Layers } from "lucide-react";
 
 export interface NavItem {
-  id: "treinos" | "exercicios" | "historico" | "progresso";
+  id: "treinos" | "fichas" | "exercicios" | "historico" | "progresso";
   label: string;
   icon: React.ComponentType<{ className?: string }>;
 }
 
 export const defaultNavItems: NavItem[] = [
   { id: "treinos", label: "Treinos", icon: Dumbbell },
+  { id: "fichas", label: "Fichas", icon: Layers },
   { id: "exercicios", label: "Exercícios", icon: BookOpen },
   { id: "historico", label: "Histórico", icon: History },
   { id: "progresso", label: "Progresso", icon: TrendingUp },

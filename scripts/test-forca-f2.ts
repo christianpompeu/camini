@@ -336,7 +336,7 @@ async function runForcaF2Tests() {
     const jsonOutput = formatWorkoutsAsJson(allHistory);
     const parsedJson = JSON.parse(jsonOutput);
     assertEqual(parsedJson.app, "Camini FORÇA", "JSON deve incluir identificador do app");
-    assertEqual(parsedJson.schemaVersion, 1, "JSON deve incluir schemaVersion: 1");
+    assert(parsedJson.schemaVersion >= 1, "JSON deve incluir schemaVersion versionada >= 1");
     assertEqual(parsedJson.totalSessions, 2, "JSON totalSessions deve ser 2");
     assertEqual(parsedJson.sessions[1].title, 'Treino C - "Pernas & Posterior", Especial', "Título do JSON preservado");
 

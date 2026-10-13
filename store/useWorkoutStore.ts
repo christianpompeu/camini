@@ -52,12 +52,25 @@ export interface SetDraft {
 }
 
 export interface SessionExercise {
+  occurrenceId?: string;
   definitionId: string;
   exerciseName: string;
   measurementType: MeasurementType;
   loadConvention: LoadConvention;
   targetMuscles: string;
   expectedSets: number;
+  prescribedRestSeconds?: number;
+  prescribedReps?: number;
+  prescribedRepsMin?: number;
+  prescribedRepsMax?: number;
+  prescribedDurationSeconds?: number;
+  prescribedDistanceMeters?: number;
+  prescribedRir?: number;
+  prescribedWeight?: number;
+  prescribedLaterality?: "bilateral" | "unilateral";
+  prescribedNotes?: string;
+  mediaUrl?: string;
+  mediaType?: "video" | "image";
   sets: SetRecord[];
   draft?: SetDraft; // preserva digitado não concluído
 }
@@ -81,6 +94,10 @@ export interface WorkoutSession {
   observation?: string;
   schemaVersion?: number;
   localOrigin?: boolean;
+  planId?: string;
+  planName?: string;
+  planVersion?: number;
+  divisionId?: string;
 }
 
 export interface RestTimerState {
@@ -152,7 +169,36 @@ interface WorkoutStore {
   restTimer: RestTimerState;
   completedWorkouts: WorkoutSession[];
 
-  startWorkout: (workoutDef: { letter: string; title: string; focus: string; exercises: Array<{ id: string, name: string, measurementType: MeasurementType, loadConvention: LoadConvention, expectedSets: number, targetMuscles: string }> }) => void;
+  startWorkout: (workoutDef: {
+    letter: string;
+    title: string;
+    focus: string;
+    planId?: string;
+    planName?: string;
+    planVersion?: number;
+    divisionId?: string;
+    exercises: Array<{
+      occurrenceId?: string;
+      id: string;
+      name: string;
+      measurementType: MeasurementType;
+      loadConvention: LoadConvention;
+      expectedSets: number;
+      targetMuscles: string;
+      restSeconds?: number;
+      reps?: number;
+      repsMin?: number;
+      repsMax?: number;
+      durationSeconds?: number;
+      distanceMeters?: number;
+      targetRir?: number;
+      initialWeight?: number;
+      laterality?: "bilateral" | "unilateral";
+      prescriptionNotes?: string;
+      mediaUrl?: string;
+      mediaType?: "video" | "image";
+    }>;
+  }) => void;
   logSet: (set: Partial<SetRecord> & { type: "warmup" | "work" | "extra", weight: number, isExtra?: boolean }) => boolean;
   updateSet: (setId: string, updates: Partial<SetRecord>) => boolean;
   deleteSet: (setId: string) => void;
@@ -198,20 +244,40 @@ export const useWorkoutStore = create<WorkoutStore>()(
 
       startWorkout: (workoutDef) => {
         const exercises: SessionExercise[] = workoutDef.exercises.map((ex) => ({
+          occurrenceId: ex.occurrenceId,
           definitionId: ex.id,
           exerciseName: ex.name,
           measurementType: ex.measurementType,
           loadConvention: ex.loadConvention,
           targetMuscles: ex.targetMuscles || workoutDef.focus,
           expectedSets: ex.expectedSets,
+          prescribedRestSeconds: ex.restSeconds,
+          prescribedReps: ex.reps,
+          prescribedRepsMin: ex.repsMin,
+          prescribedRepsMax: ex.repsMax,
+          prescribedDurationSeconds: ex.durationSeconds,
+          prescribedDistanceMeters: ex.distanceMeters,
+          prescribedRir: ex.targetRir,
+          prescribedWeight: ex.initialWeight,
+          prescribedLaterality: ex.laterality,
+          prescribedNotes: ex.prescriptionNotes,
+          mediaUrl: ex.mediaUrl,
+          mediaType: ex.mediaType,
           sets: [],
         }));
+
+        const initialRestDurationMs =
+          (exercises[0]?.prescribedRestSeconds || 90) * 1000;
 
         set({
           activeWorkout: {
             id: generateSetId(),
             letter: workoutDef.letter,
             title: workoutDef.title,
+            planId: workoutDef.planId,
+            planName: workoutDef.planName,
+            planVersion: workoutDef.planVersion,
+            divisionId: workoutDef.divisionId,
             startTime: Date.now(),
             activeExerciseIndex: 0,
             exercises,
@@ -219,7 +285,12 @@ export const useWorkoutStore = create<WorkoutStore>()(
             schemaVersion: 1,
             localOrigin: true,
           },
-          restTimer: { status: "idle", endsAt: null, remainingMsWhenPaused: null, durationMs: 90000 },
+          restTimer: {
+            status: "idle",
+            endsAt: null,
+            remainingMsWhenPaused: null,
+            durationMs: initialRestDurationMs,
+          },
         });
       },
 
@@ -424,12 +495,21 @@ export const useWorkoutStore = create<WorkoutStore>()(
         if (!activeWorkout) return;
 
         if (activeWorkout.activeExerciseIndex < activeWorkout.exercises.length - 1) {
+          const nextIndex = activeWorkout.activeExerciseIndex + 1;
+          const nextEx = activeWorkout.exercises[nextIndex];
+          const nextRestMs = (nextEx?.prescribedRestSeconds || 90) * 1000;
+
           set({
             activeWorkout: {
               ...activeWorkout,
-              activeExerciseIndex: activeWorkout.activeExerciseIndex + 1,
+              activeExerciseIndex: nextIndex,
             },
-            restTimer: { status: "idle", endsAt: null, remainingMsWhenPaused: null, durationMs: 90000 },
+            restTimer: {
+              status: "idle",
+              endsAt: null,
+              remainingMsWhenPaused: null,
+              durationMs: nextRestMs,
+            },
           });
         }
       },

@@ -7,6 +7,9 @@ import { useWorkoutStore, WorkoutSession } from "@/store/useWorkoutStore";
 import { useExerciseCatalogStore } from "@/store/useExerciseCatalogStore";
 import { CatalogExercise } from "@/types/exercise";
 
+import { useWorkoutPlanStore } from "@/store/useWorkoutPlanStore";
+import { WorkoutPlan } from "@/types/workout-plan";
+
 export function escapeCsvField(val: unknown): string {
   if (val === undefined || val === null) return '""';
   const str = String(val);
@@ -17,13 +20,17 @@ export function escapeCsvField(val: unknown): string {
 
 export function formatWorkoutsAsJson(
   sessions: WorkoutSession[],
-  catalog?: CatalogExercise[]
+  catalog?: CatalogExercise[],
+  workoutPlans?: WorkoutPlan[],
+  activePlanId?: string | null
 ): string {
   const exportPayload = {
     app: "Camini FORÇA",
-    schemaVersion: 1,
+    schemaVersion: 3,
     exportedAt: new Date().toISOString(),
     totalSessions: sessions.length,
+    activePlanId: activePlanId || null,
+    workoutPlans: workoutPlans || [],
     sessions,
     catalog: catalog || [],
   };
@@ -129,9 +136,10 @@ export function downloadBlob(content: string, filename: string, mimeType: string
 export function ExportDataPanel() {
   const { completedWorkouts } = useWorkoutStore();
   const { exercises } = useExerciseCatalogStore();
+  const { plans, activePlanId } = useWorkoutPlanStore();
 
   const handleExportJSON = () => {
-    const jsonStr = formatWorkoutsAsJson(completedWorkouts, exercises);
+    const jsonStr = formatWorkoutsAsJson(completedWorkouts, exercises, plans, activePlanId);
     const dateStr = new Date().toISOString().split("T")[0];
     downloadBlob(jsonStr, `camini-forca-export-${dateStr}.json`, "application/json;charset=utf-8;");
   };

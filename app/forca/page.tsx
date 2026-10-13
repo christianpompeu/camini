@@ -11,6 +11,7 @@ import {
   ChevronRight,
   RotateCcw,
   Play,
+  Layers,
 } from "lucide-react";
 
 import { Navbar } from "@/components/layout/navbar";
@@ -34,7 +35,14 @@ import { HistorySessionDetail } from "@/components/workout/history-session-detai
 import { ExportDataPanel } from "@/components/workout/export-data-panel";
 import { BottomNavigation, NavItem } from "@/components/workout/bottom-navigation";
 import { ExerciseCatalogView } from "@/components/catalog/exercise-catalog-view";
+import { WorkoutPlanListView } from "@/components/plans/workout-plan-list-view";
+import { WorkoutPlanEditorView } from "@/components/plans/workout-plan-editor-view";
+import { WorkoutPlanReviewView } from "@/components/plans/workout-plan-review-view";
+import { WorkoutDivisionDetailView } from "@/components/plans/workout-division-detail-view";
 import { useWorkoutStore, SetRecord, EditSetContext } from "@/store/useWorkoutStore";
+import { useWorkoutPlanStore } from "@/store/useWorkoutPlanStore";
+import { useExerciseCatalogStore } from "@/store/useExerciseCatalogStore";
+import { WorkoutPlan, WorkoutDivision } from "@/types/workout-plan";
 
 export interface WorkoutExerciseDef {
   id: string;
@@ -139,9 +147,18 @@ export default function ForcaAppPage() {
   const [selectedSessionId, setSelectedSessionId] = useState<string | null>(null);
   const [lastFinishedId, setLastFinishedId] = useState<string | null>(null);
   const [isSessionMinimized, setIsSessionMinimized] = useState(false);
-  const [pendingSwitchWorkout, setPendingSwitchWorkout] = useState<WorkoutDef | null>(null);
+  const [pendingSwitchWorkout, setPendingSwitchWorkout] = useState<{
+    letter: string;
+    title: string;
+    onConfirm: () => void;
+  } | null>(null);
   const [showDiscardConfirm, setShowDiscardConfirm] = useState(false);
   const [showEarlyFinishConfirm, setShowEarlyFinishConfirm] = useState(false);
+
+  // Estados de navegação interna de Fichas
+  const [planViewMode, setPlanViewMode] = useState<"list" | "editor" | "review" | "division-detail">("list");
+  const [selectedPlan, setSelectedPlan] = useState<WorkoutPlan | null>(null);
+  const [selectedDivision, setSelectedDivision] = useState<WorkoutDivision | null>(null);
 
   const {
     hasHydrated,
@@ -161,17 +178,31 @@ export default function ForcaAppPage() {
     updateSessionObservation,
   } = useWorkoutStore();
 
-  const handleStartWorkoutSession = (workout: WorkoutDef) => {
-    // Se clicar no mesmo treino já ativo, apenas restaura a tela de execução
+  const {
+    getActivePlan,
+    importDraftFromBaseline,
+    createNewVersionFromPlan,
+    createEmptyPlan,
+    savePlan,
+    hasHydrated: plansHydrated,
+  } = useWorkoutPlanStore();
+
+  const { getExerciseById } = useExerciseCatalogStore();
+  const activePlan = getActivePlan();
+
+  const handleStartBaselineWorkout = (workout: WorkoutDef) => {
     if (activeWorkout && activeWorkout.letter === workout.letter && !activeWorkout.isCompleted) {
       setIsSessionMinimized(false);
       setActiveTab("treinos");
       return;
     }
 
-    // Se já houver outro treino ativo em andamento, abre o diálogo declarativo de confirmação
-    if (activeWorkout && activeWorkout.letter !== workout.letter && !activeWorkout.isCompleted) {
-      setPendingSwitchWorkout(workout);
+    if (activeWorkout && !activeWorkout.isCompleted) {
+      setPendingSwitchWorkout({
+        letter: workout.letter,
+        title: workout.title,
+        onConfirm: () => startWorkout(workout),
+      });
       return;
     }
 
@@ -180,10 +211,79 @@ export default function ForcaAppPage() {
     setActiveTab("treinos");
   };
 
+  const handleStartPlanDivision = (plan: WorkoutPlan, division: WorkoutDivision) => {
+    const isSameSession =
+      activeWorkout &&
+      !activeWorkout.isCompleted &&
+      ((activeWorkout.divisionId && activeWorkout.divisionId === division.id) ||
+        activeWorkout.letter === (division.letter || division.name.charAt(0)));
+
+    if (isSameSession) {
+      setIsSessionMinimized(false);
+      setActiveTab("treinos");
+      return;
+    }
+
+    const startFn = () => {
+      const sessionExercises = division.prescribedExercises.map((pEx) => {
+        const catEx = getExerciseById(pEx.exerciseId);
+        const primaryCatMedia = catEx?.media?.find((m) => m.role === "execution_start" || m.url)?.url;
+        const isVideo = Boolean(catEx?.media?.some((m) => m.role === "video"));
+        const targetMuscles = catEx?.targetMuscles || catEx?.primaryMuscles?.join(", ") || "";
+
+        return {
+          occurrenceId: pEx.id,
+          id: pEx.exerciseId,
+          name: catEx?.name || pEx.exerciseId,
+          measurementType: pEx.measurementType || catEx?.measurementType || "reps",
+          loadConvention: pEx.loadConvention || catEx?.loadConvention || "total",
+          expectedSets: pEx.targetSets,
+          targetMuscles,
+          restSeconds: pEx.restSeconds,
+          reps: pEx.targetReps || pEx.minReps,
+          repsMin: pEx.minReps,
+          repsMax: pEx.maxReps,
+          durationSeconds: pEx.targetDurationSeconds,
+          distanceMeters: pEx.targetDistanceMeters,
+          targetRir: pEx.targetRir,
+          initialWeight: pEx.targetWeight,
+          laterality: (pEx.laterality || catEx?.laterality || "bilateral") as "bilateral" | "unilateral",
+          prescriptionNotes: pEx.notes,
+          mediaUrl: primaryCatMedia,
+          mediaType: (isVideo ? "video" : "image") as "video" | "image",
+        };
+      });
+
+      startWorkout({
+        letter: division.letter || division.name.charAt(0),
+        title: division.name,
+        focus: division.notes || division.name,
+        planId: plan.id,
+        planName: plan.name,
+        planVersion: plan.version,
+        divisionId: division.id,
+        exercises: sessionExercises,
+      });
+    };
+
+    if (activeWorkout && !activeWorkout.isCompleted) {
+      setPendingSwitchWorkout({
+        letter: division.letter || division.name.charAt(0),
+        title: division.name,
+        onConfirm: startFn,
+      });
+      return;
+    }
+
+    startFn();
+    setIsSessionMinimized(false);
+    setActiveTab("treinos");
+  };
+
   const handleConfirmSwitchWorkout = () => {
     if (!pendingSwitchWorkout) return;
     discardWorkout();
-    startWorkout(pendingSwitchWorkout);
+    pendingSwitchWorkout.onConfirm();
     setPendingSwitchWorkout(null);
     setIsSessionMinimized(false);
     setActiveTab("treinos");
@@ -262,7 +362,7 @@ export default function ForcaAppPage() {
     isExtra: currentSetNumber > (currentExercise?.expectedSets || 4),
   };
 
-  if (!hasHydrated) return null; // Aguarda hidratação do storage
+  if (!hasHydrated || !plansHydrated) return null; // Aguarda hidratação do storage
 
   const activeDetailSession =
     (selectedSessionId && completedWorkouts.find((w) => w.id === selectedSessionId)) ||
@@ -310,20 +410,98 @@ export default function ForcaAppPage() {
                 <div className="flex items-center gap-2 text-muted-foreground mb-1">
                   <Dumbbell className="w-4 h-4 text-primary" />
                   <span className="text-xs font-bold uppercase tracking-wider">
-                    Programa Atual
+                    {activePlan ? "Ficha Ativa" : "Programa Atual"}
                   </span>
                 </div>
                 <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-foreground">
-                  Fichas de Treino A-E
+                  {activePlan ? activePlan.name : "Fichas de Treino A-E"}
                 </h1>
               </div>
 
               <div className="flex items-center gap-2">
-                <span className="text-xs text-muted-foreground">
-                  Selecione o treino do dia ou continue a sessão ativa:
-                </span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setActiveTab("fichas");
+                    setPlanViewMode("list");
+                  }}
+                  className="text-xs font-semibold gap-1.5 h-8"
+                >
+                  <Layers className="w-3.5 h-3.5 text-primary" />
+                  Minhas Fichas
+                </Button>
               </div>
             </div>
+
+            {/* Banner de Status da Ficha (Ativa vs Padrão) */}
+            {activePlan ? (
+              <div className="p-4 sm:p-5 rounded-2xl border border-primary/20 bg-primary/5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-xs">
+                <div className="space-y-0.5">
+                  <div className="flex items-center gap-2">
+                    <Badge variant="default" className="text-[10px] font-semibold">
+                      Versão {activePlan.version} Ativa
+                    </Badge>
+                    <h3 className="font-bold text-sm text-foreground">
+                      {activePlan.name}
+                    </h3>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    {activePlan.goal || "Prescrição personalizada ativa"} • {activePlan.divisions.length} divisões de treino.
+                  </p>
+                </div>
+                <div className="flex items-center gap-2 w-full sm:w-auto">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      const newDraft = createNewVersionFromPlan(activePlan.id);
+                      if (newDraft) {
+                        setSelectedPlan(newDraft);
+                        setPlanViewMode("editor");
+                        setActiveTab("fichas");
+                      }
+                    }}
+                    className="text-xs font-semibold h-8"
+                  >
+                    Editar Ficha (Novo Rascunho)
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <div className="p-4 sm:p-5 rounded-2xl border border-amber-500/20 bg-amber-500/5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-xs">
+                <div className="space-y-0.5">
+                  <div className="flex items-center gap-2">
+                    <Badge variant="secondary" className="text-[10px] font-semibold text-amber-600 bg-amber-500/10">
+                      Treinos Provisórios A–E
+                    </Badge>
+                    <h3 className="font-bold text-sm text-foreground">
+                      Prescrição Provisória
+                    </h3>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Você está executando os treinos padrão provisórios. Crie sua ficha pessoal versionada com exercícios do catálogo.
+                  </p>
+                </div>
+                <div className="flex items-center gap-2 w-full sm:w-auto">
+                  <Button
+                    type="button"
+                    variant="default"
+                    size="sm"
+                    onClick={() => {
+                      const draft = importDraftFromBaseline();
+                      setSelectedPlan(draft);
+                      setPlanViewMode("editor");
+                      setActiveTab("fichas");
+                    }}
+                    className="text-xs font-semibold h-8 bg-amber-600 hover:bg-amber-700 text-white"
+                  >
+                    ⚡ Criar rascunho dos treinos atuais
+                  </Button>
+                </div>
+              </div>
+            )}
 
             {/* Banner de Sessão Ativa em Andamento (quando minimizada) */}
             {activeWorkout && isSessionMinimized && (
@@ -359,7 +537,38 @@ export default function ForcaAppPage() {
             )}
 
             {/* Grid dos Cards de Treino (Exibido se não houver sessão ativa ou se estiver minimizada) */}
-            {(!activeWorkout || isSessionMinimized) && (
+            {(!activeWorkout || isSessionMinimized) && activePlan && (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+                {activePlan.divisions.map((div, idx) => {
+                  const letter = div.letter || String.fromCharCode(65 + idx);
+                  const isActive = Boolean(
+                    activeWorkout &&
+                      (activeWorkout.divisionId === div.id || activeWorkout.letter === letter)
+                  );
+                  return (
+                    <WorkoutCard
+                      key={div.id}
+                      letter={letter}
+                      title={div.name}
+                      focus={div.notes || `${div.prescribedExercises.length} exercícios prescritos`}
+                      exerciseCount={div.prescribedExercises.length}
+                      lastExecuted="-"
+                      estimatedMinutes={div.estimatedMinutes || Math.max(30, div.prescribedExercises.length * 10)}
+                      isActiveSession={isActive}
+                      onViewDetail={() => {
+                        setSelectedPlan(activePlan);
+                        setSelectedDivision(div);
+                        setPlanViewMode("division-detail");
+                        setActiveTab("fichas");
+                      }}
+                      onStart={() => handleStartPlanDivision(activePlan, div)}
+                    />
+                  );
+                })}
+              </div>
+            )}
+
+            {(!activeWorkout || isSessionMinimized) && !activePlan && (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                 {WORKOUT_PROGRAM.map((workout) => (
                   <WorkoutCard
@@ -371,7 +580,7 @@ export default function ForcaAppPage() {
                     lastExecuted={workout.lastExecuted}
                     estimatedMinutes={workout.estimatedMinutes}
                     isActiveSession={Boolean(activeWorkout && activeWorkout.letter === workout.letter)}
-                    onStart={() => handleStartWorkoutSession(workout)}
+                    onStart={() => handleStartBaselineWorkout(workout)}
                   />
                 ))}
               </div>
@@ -428,14 +637,31 @@ export default function ForcaAppPage() {
                 {/* Coluna Principal: Registro de Cargas e Séries */}
                 <div className="lg:col-span-7 space-y-4">
                     {currentExercise && (
-                      <ExerciseHero
-                        exerciseId={currentExercise.definitionId}
-                        name={currentExercise.exerciseName}
-                        category={currentExercise.targetMuscles}
-                        sets={`${currentExercise.expectedSets} Séries`}
-                        reps="Conforme Prescrição"
-                        className="mb-4"
-                      />
+                      <div className="space-y-3 mb-4">
+                        <ExerciseHero
+                          exerciseId={currentExercise.definitionId}
+                          name={currentExercise.exerciseName}
+                          category={currentExercise.targetMuscles}
+                          sets={`${currentExercise.expectedSets} Séries`}
+                          reps={
+                            currentExercise.prescribedRepsMin && currentExercise.prescribedRepsMax
+                              ? `${currentExercise.prescribedRepsMin} a ${currentExercise.prescribedRepsMax} reps`
+                              : currentExercise.prescribedReps
+                              ? `${currentExercise.prescribedReps} repetições`
+                              : currentExercise.prescribedDurationSeconds
+                              ? `${currentExercise.prescribedDurationSeconds} seg`
+                              : currentExercise.prescribedDistanceMeters
+                              ? `${currentExercise.prescribedDistanceMeters} m`
+                              : "Conforme Prescrição"
+                          }
+                        />
+                        {currentExercise.prescribedNotes && (
+                          <div className="p-3 bg-muted/40 rounded-xl border border-border text-xs text-muted-foreground flex items-center gap-2">
+                            <span className="font-semibold text-foreground">Prescrição:</span>
+                            <span>{currentExercise.prescribedNotes}</span>
+                          </div>
+                        )}
+                      </div>
                     )}
 
                     {/* Lista de Séries Concluídas (Permite Correção) */}
@@ -615,6 +841,95 @@ export default function ForcaAppPage() {
                   </div>
                 </div>
               </div>
+            )}
+          </div>
+        )}
+
+        {/* ABA: FICHAS (PROGRAMAS PESSOAIS VERSIONADOS F2.2) */}
+        {activeTab === "fichas" && (
+          <div className="space-y-6 animate-in fade-in duration-200">
+            {planViewMode === "list" && (
+              <WorkoutPlanListView
+                onCreateNewPlan={() => {
+                  const newPlan = createEmptyPlan("Minha Nova Ficha", "Hipertrofia e força");
+                  setSelectedPlan(newPlan);
+                  setPlanViewMode("editor");
+                }}
+                onEditPlan={(plan) => {
+                  if (plan.status === "draft") {
+                    setSelectedPlan(plan);
+                    setPlanViewMode("editor");
+                  } else {
+                    const newDraft = createNewVersionFromPlan(plan.id);
+                    if (newDraft) {
+                      setSelectedPlan(newDraft);
+                      setPlanViewMode("editor");
+                    }
+                  }
+                }}
+                onSelectDivision={(plan, division) => {
+                  setSelectedPlan(plan);
+                  setSelectedDivision(division);
+                  setPlanViewMode("division-detail");
+                }}
+                onImportBaseline={() => {
+                  const draft = importDraftFromBaseline();
+                  setSelectedPlan(draft);
+                  setPlanViewMode("editor");
+                }}
+                onGoToCatalog={() => setActiveTab("exercicios")}
+              />
+            )}
+
+            {planViewMode === "editor" && selectedPlan && (
+              <WorkoutPlanEditorView
+                initialPlan={selectedPlan}
+                onSaveDraft={(savedPlan) => {
+                  savePlan(savedPlan);
+                  setSelectedPlan(savedPlan);
+                }}
+                onReview={(revPlan) => {
+                  savePlan(revPlan);
+                  setSelectedPlan(revPlan);
+                  setPlanViewMode("review");
+                }}
+                onCancel={() => setPlanViewMode("list")}
+              />
+            )}
+
+            {planViewMode === "review" && selectedPlan && (
+              <WorkoutPlanReviewView
+                plan={selectedPlan}
+                onBack={() => setPlanViewMode("editor")}
+                onActivateSuccess={(activated) => {
+                  setSelectedPlan(activated);
+                  setPlanViewMode("list");
+                  setActiveTab("treinos");
+                }}
+              />
+            )}
+
+            {planViewMode === "division-detail" && selectedPlan && selectedDivision && (
+              <WorkoutDivisionDetailView
+                plan={selectedPlan}
+                division={selectedDivision}
+                onBack={() => setPlanViewMode("list")}
+                onEditPlan={(plan) => {
+                  if (plan.status === "draft") {
+                    setSelectedPlan(plan);
+                    setPlanViewMode("editor");
+                  } else {
+                    const newDraft = createNewVersionFromPlan(plan.id);
+                    if (newDraft) {
+                      setSelectedPlan(newDraft);
+                      setPlanViewMode("editor");
+                    }
+                  }
+                }}
+                onStartSession={(plan, division) => {
+                  handleStartPlanDivision(plan, division);
+                }}
+              />
             )}
           </div>
         )}
@@ -828,6 +1143,7 @@ export default function ForcaAppPage() {
                 <br /><br />
                 Iniciar o{" "}
                 <strong className="text-foreground">Treino {pendingSwitchWorkout?.letter}</strong>{" "}
+                {pendingSwitchWorkout?.title ? `(${pendingSwitchWorkout.title})` : ""}{" "}
                 irá descartar o progresso atual do Treino {activeWorkout?.letter}.
               </DialogDescription>
             </DialogHeader>

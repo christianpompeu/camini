@@ -176,7 +176,10 @@ export function HistoryList({ onSessionClick }: HistoryListProps) {
                       {session.status === "partial" ? "Parcial" : "Completo"}
                     </Badge>
                   </div>
-                  <p className="text-xs text-muted-foreground">{session.title}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {session.title}
+                    {session.planName ? ` • ${session.planName}${session.planVersion ? ` v${session.planVersion}` : ""}` : ""}
+                  </p>
 
                   <div className="flex items-center gap-3 text-[11px] text-muted-foreground mt-2">
                     <div className="flex items-center gap-1">
