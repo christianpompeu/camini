@@ -25,7 +25,7 @@ import { HistoryList } from "@/components/workout/history-list";
 import { HistorySessionDetail } from "@/components/workout/history-session-detail";
 import { ExportDataPanel } from "@/components/workout/export-data-panel";
 import { BottomNavigation, NavItem } from "@/components/workout/bottom-navigation";
-import { useWorkoutStore, SetRecord, WorkoutSession } from "@/store/useWorkoutStore";
+import { useWorkoutStore, SetRecord, EditSetContext } from "@/store/useWorkoutStore";
 
 export interface WorkoutExerciseDef {
   id: string;
@@ -36,7 +36,7 @@ export interface WorkoutExerciseDef {
   targetMuscles: string;
 }
 
-interface WorkoutDef {
+export interface WorkoutDef {
   letter: "A" | "B" | "C" | "D" | "E";
   title: string;
   focus: string;
@@ -46,7 +46,7 @@ interface WorkoutDef {
   exercises: WorkoutExerciseDef[];
 }
 
-const WORKOUT_PROGRAM: WorkoutDef[] = [
+export const WORKOUT_PROGRAM: WorkoutDef[] = [
   {
     letter: "A",
     title: "Pernas e Core",
@@ -126,13 +126,14 @@ const WORKOUT_PROGRAM: WorkoutDef[] = [
 
 export default function ForcaAppPage() {
   const [activeTab, setActiveTab] = useState<NavItem["id"]>("treinos");
-  const [editingSet, setEditingSet] = useState<(SetRecord & { _sessionId?: string }) | null>(null);
-  const [selectedHistorySession, setSelectedHistorySession] = useState<WorkoutSession | null>(null);
+  const [editingContext, setEditingContext] = useState<EditSetContext | null>(null);
+  const [selectedSessionId, setSelectedSessionId] = useState<string | null>(null);
   const [lastFinishedId, setLastFinishedId] = useState<string | null>(null);
 
   const {
     hasHydrated,
     activeWorkout,
+    completedWorkouts,
     startWorkout,
     logSet,
     nextExercise,
@@ -142,6 +143,9 @@ export default function ForcaAppPage() {
     updateDraft,
     updateSet,
     deleteSet,
+    updateHistoricalSet,
+    deleteHistoricalSet,
+    updateSessionObservation,
   } = useWorkoutStore();
 
   const handleStartWorkoutSession = (workout: WorkoutDef) => {
@@ -149,26 +153,68 @@ export default function ForcaAppPage() {
     setActiveTab("treinos");
   };
 
-  const handleCompleteSet = ({ weight, reps, rir, isWarmup, isExtra }: { weight: number, reps: number, rir: number, isWarmup: boolean, isExtra?: boolean }) => {
-    const type = isExtra ? "extra" : (isWarmup ? "warmup" : "work");
-    logSet({ weight, reps, rir, type });
-    startTimer(90);
-  };
-
   const currentExerciseIndex = activeWorkout?.activeExerciseIndex || 0;
   const currentExercise = activeWorkout?.exercises[currentExerciseIndex];
   const currentSetNumber = (currentExercise?.sets?.length || 0) + 1;
   const isSessionCompleted = activeWorkout?.isCompleted;
 
-  const lastSet = currentExercise?.sets?.length ? currentExercise.sets[currentExercise.sets.length - 1] : null;
-  const currentDraft = currentExercise?.draft || {
-    weight: lastSet ? lastSet.weight : 30,
-    reps: lastSet ? (lastSet.reps || 10) : 10,
-    rir: 2,
-    isWarmup: currentSetNumber === 1,
+  const handleCompleteSet = ({
+    weight,
+    reps,
+    rir,
+    isWarmup,
+    isExtra,
+  }: {
+    weight: number;
+    reps: number;
+    rir?: number;
+    isWarmup: boolean;
+    isExtra?: boolean;
+  }) => {
+    if (!currentExercise) return;
+    const type = isWarmup ? "warmup" : "work";
+    const setPayload: Partial<SetRecord> & { type: "warmup" | "work"; weight: number; isExtra?: boolean } = {
+      weight,
+      type,
+      isExtra,
+      rir,
+    };
+    if (currentExercise.measurementType === "reps") {
+      setPayload.reps = reps;
+    } else if (currentExercise.measurementType === "duration") {
+      setPayload.durationSeconds = reps;
+    } else if (currentExercise.measurementType === "distance") {
+      setPayload.distanceMeters = reps;
+    }
+    logSet(setPayload);
+    startTimer(90);
   };
 
-  if (!hasHydrated) return null; // Hydration step before render
+  const lastSet = currentExercise?.sets?.length ? currentExercise.sets[currentExercise.sets.length - 1] : null;
+  const currentDraft = currentExercise?.draft || {
+    weight: lastSet
+      ? lastSet.weight
+      : currentExercise?.loadConvention === "bodyweight"
+      ? 0
+      : 20,
+    reps: lastSet
+      ? (lastSet.reps || lastSet.durationSeconds || lastSet.distanceMeters || 8)
+      : currentExercise?.measurementType === "duration"
+      ? 60
+      : currentExercise?.measurementType === "distance"
+      ? 20
+      : 8,
+    rir: undefined,
+    isWarmup: currentSetNumber === 1 && currentExercise?.loadConvention !== "bodyweight",
+    isExtra: currentSetNumber > (currentExercise?.expectedSets || 4),
+  };
+
+  if (!hasHydrated) return null; // Aguarda hidratação do storage
+
+  const activeDetailSession =
+    (selectedSessionId && completedWorkouts.find((w) => w.id === selectedSessionId)) ||
+    (lastFinishedId && completedWorkouts.find((w) => w.id === lastFinishedId)) ||
+    null;
 
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col pb-28">
@@ -299,48 +345,93 @@ export default function ForcaAppPage() {
                     {/* Lista de Séries Concluídas (Permite Correção) */}
                     {currentExercise && currentExercise.sets.length > 0 && (
                       <div className="space-y-2 mb-6">
-                        <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground ml-1">Séries Registradas</h3>
-                        {currentExercise.sets.map((setRecord, idx) => (
-                          <div key={setRecord.id} className="flex items-center justify-between p-3 rounded-xl border border-border bg-muted/10">
-                            <div className="flex items-center gap-3">
-                              <Badge variant="outline" className="w-16 justify-center">Série {idx + 1}</Badge>
-                              <span className="text-sm font-semibold">
-                                {currentExercise.loadConvention !== "bodyweight" ? `${setRecord.weight} kg x ` : ""}
-                                {currentExercise.measurementType === "duration" ? `${setRecord.durationSeconds || setRecord.reps} seg` : 
-                                 currentExercise.measurementType === "distance" ? `${setRecord.distanceMeters || setRecord.reps} m` : 
-                                 `${setRecord.reps} reps`}
-                              </span>
-                              {setRecord.type === "warmup" && <Badge variant="secondary" className="text-[10px]">Aquec</Badge>}
-                              {setRecord.type === "extra" && <Badge variant="default" className="text-[10px]">Extra</Badge>}
+                        <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground ml-1">
+                          Séries Registradas
+                        </h3>
+                        {currentExercise.sets.map((setRecord, idx) => {
+                          const isExtra = Boolean(setRecord.isExtra || setRecord.type === "extra");
+                          const isWarmup = setRecord.type === "warmup";
+                          return (
+                            <div
+                              key={setRecord.id}
+                              className="flex items-center justify-between p-3 rounded-xl border border-border bg-muted/10"
+                            >
+                              <div className="flex items-center gap-3">
+                                <Badge variant="outline" className="w-16 justify-center">
+                                  Série {idx + 1}
+                                </Badge>
+                                <span className="text-sm font-semibold">
+                                  {currentExercise.loadConvention !== "bodyweight"
+                                    ? `${setRecord.weight} kg x `
+                                    : setRecord.weight > 0
+                                    ? `+${setRecord.weight} kg x `
+                                    : ""}
+                                  {currentExercise.measurementType === "duration"
+                                    ? `${setRecord.durationSeconds || setRecord.reps} seg`
+                                    : currentExercise.measurementType === "distance"
+                                    ? `${setRecord.distanceMeters || setRecord.reps} m`
+                                    : `${setRecord.reps} reps`}
+                                </span>
+                                {isWarmup && (
+                                  <Badge variant="secondary" className="text-[10px] text-amber-600 bg-amber-500/10">
+                                    Aquec
+                                  </Badge>
+                                )}
+                                {isExtra && (
+                                  <Badge variant="default" className="text-[10px]">
+                                    Extra
+                                  </Badge>
+                                )}
+                                {setRecord.editedAt && (
+                                  <Badge variant="outline" className="text-[10px] text-blue-500 border-blue-500/40">
+                                    C
+                                  </Badge>
+                                )}
+                              </div>
+                              <div className="flex gap-2">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-8 text-xs"
+                                  onClick={() =>
+                                    setEditingContext({
+                                      mode: "active",
+                                      sessionId: activeWorkout.id,
+                                      exerciseDefinitionId: currentExercise.definitionId,
+                                      exerciseName: currentExercise.exerciseName,
+                                      setRecord,
+                                      measurementType: currentExercise.measurementType,
+                                      loadConvention: currentExercise.loadConvention,
+                                    })
+                                  }
+                                >
+                                  Corrigir
+                                </Button>
+                              </div>
                             </div>
-                            <div className="flex gap-2">
-                              <Button variant="ghost" size="sm" className="h-8 text-xs" onClick={() => setEditingSet(setRecord)}>
-                                Corrigir
-                              </Button>
-                            </div>
-                          </div>
-                        ))}
+                          );
+                        })}
                       </div>
                     )}
 
                     {/* Formulário da Série Ativa */}
-                      <ActiveSetCard
-                        key={`set-${currentExerciseIndex}-${currentSetNumber}`} // Força re-render limpo a cada nova série/exercício
-                        exerciseName={currentExercise?.exerciseName}
-                        targetMuscles={currentExercise?.targetMuscles}
-                        currentSet={currentSetNumber}
-                        totalSets={currentExercise?.expectedSets || 4}
-                        weight={currentDraft.weight}
-                        reps={currentDraft.reps}
-                        rir={currentDraft.rir}
-                        isWarmup={currentDraft.isWarmup}
-                        isExtra={currentSetNumber > (currentExercise?.expectedSets || 4)}
-                        measurementType={currentExercise?.measurementType || "reps"}
-                        loadConvention={currentExercise?.loadConvention || "total"}
-                        onDraftChange={updateDraft}
-                        onCompleteSet={handleCompleteSet}
-                      />
-                    
+                    <ActiveSetCard
+                      key={`set-${currentExerciseIndex}-${currentSetNumber}`}
+                      exerciseName={currentExercise?.exerciseName}
+                      targetMuscles={currentExercise?.targetMuscles}
+                      currentSet={currentSetNumber}
+                      totalSets={currentExercise?.expectedSets || 4}
+                      weight={currentDraft.weight}
+                      reps={currentDraft.reps}
+                      rir={currentDraft.rir}
+                      isWarmup={currentDraft.isWarmup}
+                      isExtra={currentDraft.isExtra}
+                      measurementType={currentExercise?.measurementType || "reps"}
+                      loadConvention={currentExercise?.loadConvention || "total"}
+                      onDraftChange={updateDraft}
+                      onCompleteSet={handleCompleteSet}
+                    />
+
                     {/* Botão de Avançar Exercício */}
                     <div className="flex items-center justify-between p-4 rounded-xl border border-border bg-card">
                       <div className="text-xs text-muted-foreground">
@@ -349,44 +440,48 @@ export default function ForcaAppPage() {
                           {activeWorkout.exercises[currentExerciseIndex + 1]?.exerciseName || "Conclusão do Treino"}
                         </span>
                       </div>
-                        <div className="flex flex-col gap-2">
+                      <div className="flex flex-col gap-2">
+                        <Button
+                          variant="default"
+                          size="sm"
+                          onClick={() => {
+                            if (currentExerciseIndex < activeWorkout.exercises.length - 1) {
+                              nextExercise();
+                            } else {
+                              const currentId = activeWorkout.id;
+                              const ok = finishWorkout(false);
+                              if (ok) setLastFinishedId(currentId);
+                            }
+                          }}
+                          className="gap-1.5 h-9 font-semibold"
+                        >
+                          <span>
+                            {currentExerciseIndex < activeWorkout.exercises.length - 1
+                              ? "Próximo Exercício"
+                              : "Finalizar Treino"}
+                          </span>
+                          <ChevronRight className="w-4 h-4" />
+                        </Button>
+
+                        {currentExerciseIndex < activeWorkout.exercises.length - 1 && (
                           <Button
-                            variant="default"
+                            variant="ghost"
                             size="sm"
                             onClick={() => {
-                              if (currentExerciseIndex < activeWorkout.exercises.length - 1) {
-                                nextExercise();
-                              } else {
+                              if (window.confirm("Deseja finalizar o treino antecipadamente? O histórico será salvo.")) {
                                 const currentId = activeWorkout.id;
-                                finishWorkout(false); // finish completo
-                                setLastFinishedId(currentId);
+                                const ok = finishWorkout(true);
+                                if (ok) setLastFinishedId(currentId);
                               }
                             }}
-                            className="gap-1.5 h-9 font-semibold"
+                            className="text-xs text-muted-foreground underline underline-offset-2"
                           >
-                            <span>{currentExerciseIndex < activeWorkout.exercises.length - 1 ? "Próximo Exercício" : "Finalizar Treino"}</span>
-                            <ChevronRight className="w-4 h-4" />
+                            Finalizar Incompleto
                           </Button>
-
-                          {currentExerciseIndex < activeWorkout.exercises.length - 1 && (
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => {
-                                if (window.confirm("Deseja finalizar o treino antecipadamente? O histórico será salvo.")) {
-                                  const currentId = activeWorkout.id;
-                                  finishWorkout(true);
-                                  setLastFinishedId(currentId);
-                                }
-                              }}
-                              className="text-xs text-muted-foreground underline underline-offset-2"
-                            >
-                              Finalizar Incompleto
-                            </Button>
-                          )}
-                        </div>
+                        )}
                       </div>
                     </div>
+                  </div>
 
                   {/* Coluna Secundária: Descanso com Temporizador */}
                   <div className="lg:col-span-5 space-y-4">
@@ -480,7 +575,7 @@ export default function ForcaAppPage() {
             </div>
 
             <div className="space-y-3">
-              <HistoryList onSessionClick={(session) => setSelectedHistorySession(session)} />
+              <HistoryList onSessionClick={(session) => setSelectedSessionId(session.id)} />
             </div>
           </div>
         )}
@@ -503,108 +598,145 @@ export default function ForcaAppPage() {
               </p>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              {(() => {
-                const now = new Date();
-                const thisMonthWorkouts = useWorkoutStore.getState().completedWorkouts.filter(w => new Date(w.startTime).getMonth() === now.getMonth() && new Date(w.startTime).getFullYear() === now.getFullYear());
-                const totalSets = thisMonthWorkouts.reduce((acc, w) => acc + w.exercises.reduce((exAcc, ex) => exAcc + ex.sets.filter(s => s.type !== "warmup").length, 0), 0);
-                const workoutsWithDuration = thisMonthWorkouts.filter(w => w.durationMs && w.durationMs > 0);
-                const avgDuration = workoutsWithDuration.length > 0 
-                  ? workoutsWithDuration.reduce((acc, w) => acc + (w.durationMs || 0), 0) / workoutsWithDuration.length 
+            {(() => {
+              const now = new Date();
+              const thisMonthWorkouts = completedWorkouts.filter(
+                (w) =>
+                  new Date(w.startTime).getMonth() === now.getMonth() &&
+                  new Date(w.startTime).getFullYear() === now.getFullYear()
+              );
+              const completedCount = thisMonthWorkouts.filter((w) => w.status !== "partial").length;
+              const partialCount = thisMonthWorkouts.filter((w) => w.status === "partial").length;
+
+              let totalWorkSets = 0;
+              let totalWarmupSets = 0;
+              let totalExtraSets = 0;
+              let totalTonnage = 0;
+
+              thisMonthWorkouts.forEach((w) => {
+                w.exercises.forEach((ex) => {
+                  ex.sets.forEach((s) => {
+                    const isWarmup = s.type === "warmup";
+                    const isExtra = Boolean(s.isExtra || s.type === "extra");
+                    if (isWarmup) totalWarmupSets++;
+                    else totalWorkSets++;
+                    if (isExtra) totalExtraSets++;
+
+                    if (!isWarmup && ex.measurementType === "reps" && ex.loadConvention !== "bodyweight") {
+                      const mult = ex.loadConvention === "per_implement" ? 2 : 1;
+                      totalTonnage += (s.weight || 0) * mult * (s.reps || 0);
+                    }
+                  });
+                });
+              });
+
+              const workoutsWithDuration = thisMonthWorkouts.filter((w) => w.durationMs && w.durationMs > 0);
+              const avgDuration =
+                workoutsWithDuration.length > 0
+                  ? workoutsWithDuration.reduce((acc, w) => acc + (w.durationMs || 0), 0) /
+                    workoutsWithDuration.length
                   : 0;
 
-                return (
-                  <>
-                    <div className="p-6 rounded-xl border border-border bg-card flex flex-col items-center justify-center text-center">
-                      <span className="text-4xl font-extrabold text-primary mb-2">{thisMonthWorkouts.length}</span>
-                      <span className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Sessões</span>
+              return (
+                <div className="space-y-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+                    <div className="p-5 rounded-xl border border-border bg-card flex flex-col items-center justify-center text-center">
+                      <span className="text-3xl sm:text-4xl font-extrabold text-primary mb-1">
+                        {thisMonthWorkouts.length}
+                      </span>
+                      <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                        Sessões Totais
+                      </span>
+                      <span className="text-[11px] text-muted-foreground mt-1">
+                        {completedCount} completas · {partialCount} parciais
+                      </span>
                     </div>
-                    <div className="p-6 rounded-xl border border-border bg-card flex flex-col items-center justify-center text-center">
-                      <span className="text-4xl font-extrabold text-primary mb-2">{totalSets}</span>
-                      <span className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Séries (Trabalho)</span>
+
+                    <div className="p-5 rounded-xl border border-border bg-card flex flex-col items-center justify-center text-center">
+                      <span className="text-3xl sm:text-4xl font-extrabold text-primary mb-1">
+                        {totalWorkSets}
+                      </span>
+                      <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                        Séries de Trabalho
+                      </span>
+                      <span className="text-[11px] text-muted-foreground mt-1">
+                        +{totalWarmupSets} aquec. · {totalExtraSets} extras
+                      </span>
                     </div>
-                    <div className="p-6 rounded-xl border border-border bg-card flex flex-col items-center justify-center text-center">
-                      <span className="text-4xl font-extrabold text-primary mb-2">
+
+                    <div className="p-5 rounded-xl border border-border bg-card flex flex-col items-center justify-center text-center">
+                      <span className="text-3xl sm:text-4xl font-extrabold text-primary mb-1">
+                        {totalTonnage > 0 ? `${Math.round(totalTonnage)} kg` : "0 kg"}
+                      </span>
+                      <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                        Volume Externo
+                      </span>
+                      <span className="text-[11px] text-muted-foreground mt-1">
+                        Apenas trabalho com reps
+                      </span>
+                    </div>
+
+                    <div className="p-5 rounded-xl border border-border bg-card flex flex-col items-center justify-center text-center">
+                      <span className="text-3xl sm:text-4xl font-extrabold text-primary mb-1">
                         {avgDuration > 0 ? `${Math.floor(avgDuration / 60000)}m` : "-"}
                       </span>
-                      <span className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Duração Média</span>
+                      <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                        Duração Média
+                      </span>
+                      <span className="text-[11px] text-muted-foreground mt-1">
+                        Tempo de sessão ativa
+                      </span>
                     </div>
-                  </>
-                );
-              })()}
-            </div>
+                  </div>
+                </div>
+              );
+            })()}
 
             <ExportDataPanel />
           </div>
         )}
 
         {/* Editor de Séries (Usado no Treino Ativo e no Histórico) */}
-        {editingSet && (
+        {editingContext && (
           <SetEditorDialog
-            open={!!editingSet}
-            onOpenChange={(open) => !open && setEditingSet(null)}
-            setRecord={editingSet}
-            measurementType={
-              // Descobre o measurementType buscando o exercício correspondente na sessão ativa ou no histórico
-              (activeWorkout?.exercises.find(e => e.sets.some(s => s.id === editingSet.id))?.measurementType) || 
-              "reps"
-            }
-            onSave={(setId, updates) => {
-              if (editingSet._sessionId) {
-                useWorkoutStore.getState().updateHistoricalSet(editingSet._sessionId, setId, updates);
-                // Also update the local state so the dialog immediately reflects the change
-                setSelectedHistorySession((prev: WorkoutSession | null) => {
-                  if (!prev) return prev;
-                  const updatedExercises = prev.exercises.map(ex => ({
-                    ...ex,
-                    sets: ex.sets.map(s => s.id === setId ? { ...s, ...updates, editedAt: Date.now() } : s)
-                  }));
-                  return { ...prev, exercises: updatedExercises };
-                });
+            open={!!editingContext}
+            onOpenChange={(open) => !open && setEditingContext(null)}
+            context={editingContext}
+            onSave={(ctx, updates) => {
+              if (ctx.mode === "history") {
+                updateHistoricalSet(ctx.sessionId, ctx.setRecord.id, updates);
               } else {
-                updateSet(setId, updates);
+                updateSet(ctx.setRecord.id, updates);
               }
-              setEditingSet(null);
+              setEditingContext(null);
             }}
-            onDelete={(setId) => {
-              if (editingSet._sessionId) {
-                useWorkoutStore.getState().deleteHistoricalSet(editingSet._sessionId, setId);
-                // Atualiza também o estado local
-                setSelectedHistorySession((prev: WorkoutSession | null) => {
-                  if (!prev) return prev;
-                  const updatedExercises = prev.exercises.map(ex => ({
-                    ...ex,
-                    sets: ex.sets.filter(s => s.id !== setId)
-                  }));
-                  return { ...prev, exercises: updatedExercises };
-                });
+            onDelete={(ctx) => {
+              if (ctx.mode === "history") {
+                deleteHistoricalSet(ctx.sessionId, ctx.setRecord.id);
               } else {
-                deleteSet(setId);
+                deleteSet(ctx.setRecord.id);
               }
-              setEditingSet(null);
+              setEditingContext(null);
             }}
           />
         )}
 
         {/* Detalhe da Sessão Histórica ou Resumo Final */}
-        {(selectedHistorySession || lastFinishedId) && (
+        {activeDetailSession && (
           <HistorySessionDetail
-            session={selectedHistorySession || useWorkoutStore.getState().completedWorkouts.find(w => w.id === lastFinishedId) || null}
-            open={!!selectedHistorySession || !!lastFinishedId}
+            session={activeDetailSession}
+            open={!!activeDetailSession}
             onOpenChange={(open) => {
               if (!open) {
-                setSelectedHistorySession(null);
+                setSelectedSessionId(null);
                 setLastFinishedId(null);
               }
             }}
-            onEditSet={(set, measurementType, sessionId) => {
-              setEditingSet({ ...set, _sessionId: sessionId }); // pass along session id for history editing
+            onEditSet={(ctx) => {
+              setEditingContext(ctx);
             }}
             onUpdateObservation={(sessionId, obs) => {
-              useWorkoutStore.getState().updateSessionObservation(sessionId, obs);
-              if (selectedHistorySession) {
-                setSelectedHistorySession((prev: WorkoutSession | null) => (prev ? { ...prev, observation: obs } : prev));
-              }
+              updateSessionObservation(sessionId, obs);
             }}
           />
         )}

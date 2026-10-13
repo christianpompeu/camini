@@ -4,16 +4,16 @@ import React, { useState } from "react";
 import { useWorkoutStore, WorkoutSession } from "@/store/useWorkoutStore";
 import { format, isSameWeek, isSameMonth } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Search, Filter, Dumbbell, Calendar, Clock, ChevronRight } from "lucide-react";
+import { Search, Dumbbell, Calendar, Clock, ChevronRight } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from "@/components/ui/select";
 
 interface HistoryListProps {
@@ -21,19 +21,38 @@ interface HistoryListProps {
 }
 
 export function HistoryList({ onSessionClick }: HistoryListProps) {
-  const { completedWorkouts } = useWorkoutStore();
+  const { completedWorkouts, hasHydrated } = useWorkoutStore();
   const [searchTerm, setSearchTerm] = useState("");
   const [filterLetter, setFilterLetter] = useState<string>("ALL");
   const [filterStatus, setFilterStatus] = useState<string>("ALL");
   const [filterPeriod, setFilterPeriod] = useState<string>("ALL");
 
-  const filteredSessions = completedWorkouts.filter(session => {
-    // Busca por título
-    if (searchTerm && !session.title.toLowerCase().includes(searchTerm.toLowerCase())) return false;
-    
+  if (!hasHydrated) {
+    return (
+      <div className="space-y-4">
+        <div className="h-11 bg-muted/40 animate-pulse rounded-xl" />
+        <div className="h-24 bg-muted/20 animate-pulse rounded-xl" />
+        <div className="h-24 bg-muted/20 animate-pulse rounded-xl" />
+      </div>
+    );
+  }
+
+  const term = searchTerm.trim().toLowerCase();
+
+  const filteredSessions = completedWorkouts.filter((session) => {
+    // Busca por treino (título ou letra) e por exercício
+    if (term) {
+      const matchTitle = session.title.toLowerCase().includes(term);
+      const matchLetter = session.letter.toLowerCase().includes(term);
+      const matchExercise = session.exercises.some((ex) =>
+        ex.exerciseName.toLowerCase().includes(term)
+      );
+      if (!matchTitle && !matchLetter && !matchExercise) return false;
+    }
+
     // Filtro por Ficha A-E
     if (filterLetter !== "ALL" && session.letter !== filterLetter) return false;
-    
+
     // Filtro por Status
     if (filterStatus !== "ALL" && session.status !== filterStatus) return false;
 
@@ -46,20 +65,26 @@ export function HistoryList({ onSessionClick }: HistoryListProps) {
     return true;
   });
 
+  const hasActiveFilters =
+    searchTerm.trim() !== "" ||
+    filterLetter !== "ALL" ||
+    filterStatus !== "ALL" ||
+    filterPeriod !== "ALL";
+
   return (
     <div className="space-y-6">
       {/* Header & Filtros */}
       <div className="flex flex-col gap-4">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input 
-            placeholder="Buscar sessão por título..." 
+          <Input
+            placeholder="Buscar por treino ou exercício..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="pl-9 h-11"
           />
         </div>
-        
+
         <div className="grid grid-cols-3 gap-2">
           <Select value={filterLetter} onValueChange={(val) => val && setFilterLetter(val)}>
             <SelectTrigger className="h-9 text-xs">
@@ -82,7 +107,7 @@ export function HistoryList({ onSessionClick }: HistoryListProps) {
             <SelectContent>
               <SelectItem value="ALL">Qualquer Status</SelectItem>
               <SelectItem value="completed">Completo</SelectItem>
-              <SelectItem value="partial">Incompleto</SelectItem>
+              <SelectItem value="partial">Parcial</SelectItem>
             </SelectContent>
           </Select>
 
@@ -99,40 +124,60 @@ export function HistoryList({ onSessionClick }: HistoryListProps) {
         </div>
       </div>
 
-      {/* Lista de Sessões */}
-      {filteredSessions.length === 0 ? (
+      {/* Estados da Lista */}
+      {completedWorkouts.length === 0 ? (
+        <div className="p-10 text-center border border-dashed border-border rounded-xl text-muted-foreground flex flex-col items-center gap-3 bg-muted/10">
+          <HistoryIcon className="w-10 h-10 opacity-30" />
+          <h4 className="font-semibold text-foreground text-sm">Nenhum treino no histórico</h4>
+          <p className="text-xs max-w-sm">
+            Você ainda não registrou nenhum treino. Inicie uma sessão na aba Treinos para que suas
+            séries e sobrecargas apareçam aqui.
+          </p>
+        </div>
+      ) : filteredSessions.length === 0 ? (
         <div className="p-8 text-center border border-dashed border-border rounded-xl text-muted-foreground flex flex-col items-center gap-3">
           <HistoryIcon className="w-10 h-10 opacity-20" />
-          <p>Nenhuma sessão encontrada para os filtros selecionados.</p>
-          {(searchTerm || filterLetter !== "ALL" || filterStatus !== "ALL" || filterPeriod !== "ALL") && (
-            <Button variant="link" onClick={() => {
-              setSearchTerm("");
-              setFilterLetter("ALL");
-              setFilterStatus("ALL");
-              setFilterPeriod("ALL");
-            }}>Limpar filtros</Button>
+          <p className="text-sm">Nenhuma sessão encontrada para os filtros selecionados.</p>
+          {hasActiveFilters && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setSearchTerm("");
+                setFilterLetter("ALL");
+                setFilterStatus("ALL");
+                setFilterPeriod("ALL");
+              }}
+              className="text-xs"
+            >
+              Limpar todos os filtros
+            </Button>
           )}
         </div>
       ) : (
         <div className="grid gap-3">
           {filteredSessions.map((session) => {
             const totalSets = session.exercises.reduce((acc, ex) => acc + ex.sets.length, 0);
-            
+
             return (
-              <button 
+              <button
                 key={session.id}
+                type="button"
                 onClick={() => onSessionClick(session)}
-                className="text-left bg-card border border-border p-4 rounded-xl flex items-center justify-between hover:bg-muted/30 transition-colors active:scale-[0.98]"
+                className="text-left bg-card border border-border p-4 rounded-xl flex items-center justify-between hover:bg-muted/30 transition-colors active:scale-[0.98] w-full"
               >
                 <div className="space-y-1">
                   <div className="flex items-center gap-2">
                     <span className="font-bold text-sm text-foreground">Treino {session.letter}</span>
-                    <Badge variant={session.status === "partial" ? "outline" : "default"} className="text-[10px] h-5 px-1.5">
+                    <Badge
+                      variant={session.status === "partial" ? "outline" : "default"}
+                      className="text-[10px] h-5 px-1.5"
+                    >
                       {session.status === "partial" ? "Parcial" : "Completo"}
                     </Badge>
                   </div>
                   <p className="text-xs text-muted-foreground">{session.title}</p>
-                  
+
                   <div className="flex items-center gap-3 text-[11px] text-muted-foreground mt-2">
                     <div className="flex items-center gap-1">
                       <Calendar className="w-3 h-3" />
@@ -150,7 +195,7 @@ export function HistoryList({ onSessionClick }: HistoryListProps) {
                     </div>
                   </div>
                 </div>
-                
+
                 <ChevronRight className="w-5 h-5 text-muted-foreground opacity-50" />
               </button>
             );
@@ -179,5 +224,6 @@ function HistoryIcon(props: React.SVGProps<SVGSVGElement>) {
       <path d="M3 3v5h5" />
       <path d="M12 7v5l4 2" />
     </svg>
-  )
+  );
 }
+
