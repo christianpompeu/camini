@@ -1,0 +1,98 @@
+/* ==========================================================================
+   NUTRE CLINICAL PRECISION - DESIGN SYSTEM & THEME TOKENS
+   Strictly isolated to .nutre-theme to preserve Camini, FORÇA, Radar.
+   ========================================================================== */
+
+.nutre-theme {
+  /* Brand Palette */
+  --nutre-primary: #6846b5;
+  --nutre-primary-hover: #57389b;
+  --nutre-primary-dark: #502b9c;
+  --nutre-primary-container: #6846b5;
+  --nutre-on-primary-container: #ddcdff;
+  --nutre-primary-fixed: #e9ddff;
+  --nutre-primary-fixed-dim: #d0bcff;
+  --nutre-on-primary-fixed: #23005c;
+
+  /* Secondary Lilac */
+  --nutre-secondary: #b8a1e3;
+  --nutre-secondary-dark: #685490;
+  --nutre-secondary-container: #d3bbff;
+  --nutre-on-secondary-container: #5c4883;
+  --nutre-secondary-fixed: #ebddff;
+  --nutre-secondary-fixed-dim: #d3bbff;
+  --nutre-on-secondary-fixed: #230e48;
+
+  /* Tertiary / Success (Sálvia) */
+  --nutre-tertiary: #93aa91;
+  --nutre-tertiary-dark: #354935;
+  --nutre-tertiary-container: #4c614c;
+  --nutre-on-tertiary-container: #c3dbc0;
+  --nutre-tertiary-fixed: #d1e9ce;
+  --nutre-tertiary-fixed-dim: #b5cdb2;
+  --nutre-on-tertiary-fixed: #0c200f;
+
+  /* Warning / Attention (Âmbar) */
+  --nutre-amber: #dca76b;
+  --nutre-amber-light: #fef3c7;
+  --nutre-amber-dark: #92400e;
+
+  /* Surfaces & Containers */
+  --nutre-surface: #fdf7ff;
+  --nutre-surface-lowest: #ffffff;
+  --nutre-surface-low: #f8f1ff;
+  --nutre-surface-container: #f3eaff;
+  --nutre-surface-high: #ede5fa;
+  --nutre-surface-highest: #e7dff4;
+
+  /* Text & Foreground */
+  --nutre-canvas: #f5f1fc;
+  --nutre-on-surface: #1d1928;
+  --nutre-on-surface-variant: #494552;
+  --nutre-graphite: #282433;
+  --nutre-muted: #6b6678;
+
+  /* Outlines & Borders */
+  --nutre-outline: #7a7483;
+  --nutre-outline-variant: #cbc3d4;
+  --nutre-border: #eae5f2;
+  --nutre-border-subtle: #e2dced;
+
+  /* Errors */
+  --nutre-error: #ba1a1a;
+  --nutre-error-container: #ffdad6;
+  --nutre-on-error-container: #93000a;
+  
+  font-family: var(--font-sans, "Geist", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif);
+  color: var(--nutre-on-surface);
+  background-color: var(--nutre-surface);
+}
+
+/* Headings with Plus Jakarta Sans */
+.nutre-theme h1,
+.nutre-theme h2,
+.nutre-theme h3,
+.nutre-theme .font-heading {
+  font-family: var(--font-plus-jakarta, "Plus Jakarta Sans", var(--font-sans, sans-serif));
+}
+
+/* Tabular numeric alignment for metrics, times and clinical data */
+.nutre-theme .font-tabular {
+  font-variant-numeric: tabular-nums lining-nums;
+}
+
+/* Scrollbar refinement for clean clinical tables */
+.nutre-theme ::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+.nutre-theme ::-webkit-scrollbar-track {
+  background: transparent;
+}
+.nutre-theme ::-webkit-scrollbar-thumb {
+  background: var(--nutre-outline-variant);
+  border-radius: 9999px;
+}
+.nutre-theme ::-webkit-scrollbar-thumb:hover {
+  background: var(--nutre-outline);
+}
