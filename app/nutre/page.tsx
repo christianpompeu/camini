@@ -33,7 +33,7 @@ export default function NutreDashboardPage() {
           </div>
 
           <h1 className="font-heading text-2xl sm:text-3xl text-[#1D1928] font-bold tracking-tight">
-            Bom dia, Dra. Camila Ramos
+            Bom dia, Dra. Camila Pompeu
           </h1>
 
           <p className="text-xs sm:text-sm text-[#494552] flex flex-wrap items-center gap-1.5">

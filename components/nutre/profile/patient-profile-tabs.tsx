@@ -75,21 +75,19 @@ export function PatientProfileTabs({ patient }: PatientProfileTabsProps) {
                 role="tab"
                 aria-selected={isActive}
                 onClick={() => setActiveTab(tab.id)}
-                className={`px-3.5 py-2 rounded-lg text-xs sm:text-sm font-semibold flex items-center gap-2 transition-all cursor-pointer ${
-                  isActive
+                className={`px-3.5 py-2 rounded-lg text-xs sm:text-sm font-semibold flex items-center gap-2 transition-all cursor-pointer ${isActive
                     ? "bg-[#6846B5] text-[#FFFFFF] shadow-2xs"
                     : "text-[#494552] hover:text-[#1D1928] hover:bg-[#F8F1FF]"
-                }`}
+                  }`}
               >
                 <Icon className={`w-4 h-4 ${isActive ? "text-[#FFFFFF]" : "text-[#7A7483]"}`} />
                 <span>{tab.label}</span>
                 {tab.badge && (
                   <span
-                    className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold ${
-                      isActive
+                    className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold ${isActive
                         ? "bg-[#EDE5FA] text-[#6846B5]"
                         : "bg-[#F3EAFF] text-[#685490]"
-                    }`}
+                      }`}
                   >
                     {tab.badge}
                   </span>
@@ -117,7 +115,7 @@ export function PatientProfileTabs({ patient }: PatientProfileTabsProps) {
                       Resumo Executivo da Última Consulta
                     </h2>
                     <span className="text-xs text-[#7A7483]">
-                      Registrada em {patient.executiveSummary.lastConductDate} • Dra. Camila Ramos
+                      Registrada em {patient.executiveSummary.lastConductDate} • Dra. Camila Pompeu
                     </span>
                   </div>
                 </div>
@@ -375,7 +373,7 @@ export function PatientProfileTabs({ patient }: PatientProfileTabsProps) {
                 Aguardando pesquisa de campo com a nutricionista
               </h3>
               <p className="text-xs text-[#6B6678] leading-relaxed">
-                Os formulários específicos de anamnese alimentar, histórico familiar e rastreamento metabólico serão integrados na próxima iteração após alinhamento com a Dra. Camila Ramos.
+                Os formulários específicos de anamnese alimentar, histórico familiar e rastreamento metabólico serão integrados na próxima iteração após alinhamento com a Dra. Camila Pompeu.
               </p>
             </div>
 

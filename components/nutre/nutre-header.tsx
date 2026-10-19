@@ -172,7 +172,7 @@ export function NutreHeader({
               </div>
               <div className="hidden lg:flex flex-col">
                 <span className="text-xs font-semibold text-[#1D1928] leading-tight">
-                  Dra. Camila Ramos
+                  Dra. Camila Pompeu
                 </span>
                 <span className="text-[10px] text-[#7A7483] leading-tight">
                   CRN-3 48.912 • Clínica
@@ -190,7 +190,7 @@ export function NutreHeader({
                 <div className="absolute right-0 mt-2 w-56 bg-[#FFFFFF] rounded-xl shadow-xl border border-[#EAE5F2] p-2 z-50 space-y-1 animate-in fade-in zoom-in-95 duration-100">
                   <div className="px-3 py-2 border-b border-[#F8F1FF]">
                     <div className="text-xs font-bold text-[#1D1928]">
-                      Dra. Camila Ramos
+                      Dra. Camila Pompeu
                     </div>
                     <div className="text-[11px] text-[#6B6678]">
                       camila.ramos@nutre.clinica.br

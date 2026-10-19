@@ -242,28 +242,25 @@ export function PatientWizard() {
                     setCurrentStep(step.num);
                   }
                 }}
-                className={`flex items-center gap-3 p-2.5 rounded-lg text-left transition-all cursor-pointer border ${
-                  isCurrent
+                className={`flex items-center gap-3 p-2.5 rounded-lg text-left transition-all cursor-pointer border ${isCurrent
                     ? "bg-[#F8F1FF] border-[#B8A1E3] shadow-2xs"
                     : "border-transparent hover:bg-[#F8F1FF]/50"
-                }`}
+                  }`}
               >
                 <div
-                  className={`w-7 h-7 rounded-full flex items-center justify-center font-tabular text-xs font-bold shrink-0 transition-colors ${
-                    isCurrent
+                  className={`w-7 h-7 rounded-full flex items-center justify-center font-tabular text-xs font-bold shrink-0 transition-colors ${isCurrent
                       ? "bg-[#6846B5] text-[#FFFFFF]"
                       : isCompleted
-                      ? "bg-[#D1E9CE] text-[#0C200F]"
-                      : "bg-[#F3EAFF] text-[#7A7483]"
-                  }`}
+                        ? "bg-[#D1E9CE] text-[#0C200F]"
+                        : "bg-[#F3EAFF] text-[#7A7483]"
+                    }`}
                 >
                   {isCompleted ? <CheckCircle2 className="w-4 h-4 text-[#354935]" /> : step.num}
                 </div>
                 <div className="min-w-0 flex-1">
                   <div
-                    className={`text-xs font-semibold truncate ${
-                      isCurrent ? "text-[#6846B5]" : "text-[#1D1928]"
-                    }`}
+                    className={`text-xs font-semibold truncate ${isCurrent ? "text-[#6846B5]" : "text-[#1D1928]"
+                      }`}
                   >
                     {step.title}
                   </div>
@@ -319,9 +316,8 @@ export function PatientWizard() {
                   value={formData.fullName}
                   onChange={(e) => handleInputChange("fullName", e.target.value)}
                   placeholder="Ex: Beatriz Helena Nogueira"
-                  className={`h-10 px-3 rounded-lg bg-[#F8F1FF] text-sm text-[#1D1928] border ${
-                    errors.fullName ? "border-[#BA1A1A] ring-1 ring-[#BA1A1A]" : "border-[#EAE5F2]"
-                  } focus:outline-none focus:bg-[#FFFFFF] focus:border-[#6846B5] transition-all`}
+                  className={`h-10 px-3 rounded-lg bg-[#F8F1FF] text-sm text-[#1D1928] border ${errors.fullName ? "border-[#BA1A1A] ring-1 ring-[#BA1A1A]" : "border-[#EAE5F2]"
+                    } focus:outline-none focus:bg-[#FFFFFF] focus:border-[#6846B5] transition-all`}
                 />
                 {errors.fullName ? (
                   <span className="text-[11px] text-[#BA1A1A] font-medium">{errors.fullName}</span>
@@ -360,9 +356,8 @@ export function PatientWizard() {
                   type="date"
                   value={formData.birthDate}
                   onChange={(e) => handleInputChange("birthDate", e.target.value)}
-                  className={`h-10 px-3 rounded-lg bg-[#F8F1FF] text-sm text-[#1D1928] font-tabular border ${
-                    errors.birthDate ? "border-[#BA1A1A] ring-1 ring-[#BA1A1A]" : "border-[#EAE5F2]"
-                  } focus:outline-none focus:bg-[#FFFFFF] focus:border-[#6846B5] transition-all`}
+                  className={`h-10 px-3 rounded-lg bg-[#F8F1FF] text-sm text-[#1D1928] font-tabular border ${errors.birthDate ? "border-[#BA1A1A] ring-1 ring-[#BA1A1A]" : "border-[#EAE5F2]"
+                    } focus:outline-none focus:bg-[#FFFFFF] focus:border-[#6846B5] transition-all`}
                 />
                 <div className="flex items-center gap-1.5 text-xs text-[#6846B5] font-semibold font-tabular">
                   <span>{computedAge.label}</span>
@@ -380,11 +375,10 @@ export function PatientWizard() {
                       key={sex}
                       type="button"
                       onClick={() => handleInputChange("biologicalSex", sex)}
-                      className={`flex-1 h-full rounded-md text-xs font-semibold transition-all cursor-pointer ${
-                        formData.biologicalSex === sex
+                      className={`flex-1 h-full rounded-md text-xs font-semibold transition-all cursor-pointer ${formData.biologicalSex === sex
                           ? "bg-[#FFFFFF] text-[#6846B5] shadow-2xs border border-[#EDE5FA]"
                           : "text-[#7A7483] hover:text-[#1D1928]"
-                      }`}
+                        }`}
                     >
                       {sex}
                     </button>
@@ -406,9 +400,8 @@ export function PatientWizard() {
                   value={formData.cpf}
                   onChange={(e) => handleInputChange("cpf", e.target.value)}
                   placeholder="000.000.000-00"
-                  className={`h-10 px-3 rounded-lg bg-[#F8F1FF] text-sm text-[#1D1928] font-tabular border ${
-                    errors.cpf ? "border-[#BA1A1A] ring-1 ring-[#BA1A1A]" : "border-[#EAE5F2]"
-                  } focus:outline-none focus:bg-[#FFFFFF] focus:border-[#6846B5] transition-all`}
+                  className={`h-10 px-3 rounded-lg bg-[#F8F1FF] text-sm text-[#1D1928] font-tabular border ${errors.cpf ? "border-[#BA1A1A] ring-1 ring-[#BA1A1A]" : "border-[#EAE5F2]"
+                    } focus:outline-none focus:bg-[#FFFFFF] focus:border-[#6846B5] transition-all`}
                 />
                 <span className="text-[11px] text-[#7A7483]">
                   Utilizado para emissão de recibos e notas fiscais de saúde.
@@ -514,9 +507,8 @@ export function PatientWizard() {
                     value={formData.phone}
                     onChange={(e) => handleInputChange("phone", e.target.value)}
                     placeholder="(11) 90000-0000"
-                    className={`h-10 pl-9 pr-3 w-full rounded-lg bg-[#F8F1FF] text-sm text-[#1D1928] font-tabular border ${
-                      errors.phone ? "border-[#BA1A1A] ring-1 ring-[#BA1A1A]" : "border-[#EAE5F2]"
-                    } focus:outline-none focus:bg-[#FFFFFF] focus:border-[#6846B5] transition-all`}
+                    className={`h-10 pl-9 pr-3 w-full rounded-lg bg-[#F8F1FF] text-sm text-[#1D1928] font-tabular border ${errors.phone ? "border-[#BA1A1A] ring-1 ring-[#BA1A1A]" : "border-[#EAE5F2]"
+                      } focus:outline-none focus:bg-[#FFFFFF] focus:border-[#6846B5] transition-all`}
                   />
                 </div>
                 {errors.phone && (
@@ -556,9 +548,8 @@ export function PatientWizard() {
                     value={formData.email}
                     onChange={(e) => handleInputChange("email", e.target.value)}
                     placeholder="paciente@exemplo.com.br"
-                    className={`h-10 pl-9 pr-3 w-full rounded-lg bg-[#F8F1FF] text-sm text-[#1D1928] border ${
-                      errors.email ? "border-[#BA1A1A] ring-1 ring-[#BA1A1A]" : "border-[#EAE5F2]"
-                    } focus:outline-none focus:bg-[#FFFFFF] focus:border-[#6846B5] transition-all`}
+                    className={`h-10 pl-9 pr-3 w-full rounded-lg bg-[#F8F1FF] text-sm text-[#1D1928] border ${errors.email ? "border-[#BA1A1A] ring-1 ring-[#BA1A1A]" : "border-[#EAE5F2]"
+                      } focus:outline-none focus:bg-[#FFFFFF] focus:border-[#6846B5] transition-all`}
                   />
                 </div>
                 {errors.email && (
@@ -720,11 +711,10 @@ export function PatientWizard() {
                   onClick={() =>
                     handleInputChange("attendanceMode", "Presencial no Consultório")
                   }
-                  className={`p-4 rounded-xl text-left transition-all border-2 cursor-pointer relative ${
-                    formData.attendanceMode === "Presencial no Consultório"
+                  className={`p-4 rounded-xl text-left transition-all border-2 cursor-pointer relative ${formData.attendanceMode === "Presencial no Consultório"
                       ? "bg-[#F8F1FF] border-[#6846B5] shadow-xs"
                       : "bg-[#FFFFFF] border-[#EAE5F2] hover:border-[#B8A1E3]"
-                  }`}
+                    }`}
                 >
                   <div className="flex items-center gap-2">
                     <Building2 className="w-4 h-4 text-[#6846B5]" />
@@ -745,11 +735,10 @@ export function PatientWizard() {
                   onClick={() =>
                     handleInputChange("attendanceMode", "Teleconsulta / Online")
                   }
-                  className={`p-4 rounded-xl text-left transition-all border-2 cursor-pointer relative ${
-                    formData.attendanceMode === "Teleconsulta / Online"
+                  className={`p-4 rounded-xl text-left transition-all border-2 cursor-pointer relative ${formData.attendanceMode === "Teleconsulta / Online"
                       ? "bg-[#F8F1FF] border-[#6846B5] shadow-xs"
                       : "bg-[#FFFFFF] border-[#EAE5F2] hover:border-[#B8A1E3]"
-                  }`}
+                    }`}
                 >
                   <div className="flex items-center gap-2">
                     <Video className="w-4 h-4 text-[#685490]" />
@@ -795,7 +784,7 @@ export function PatientWizard() {
                   className="h-10 px-3 rounded-lg bg-[#F8F1FF] text-sm text-[#1D1928] border border-[#EAE5F2] focus:outline-none focus:bg-[#FFFFFF] focus:border-[#6846B5] cursor-pointer"
                 >
                   <option value="Indicação de outro paciente (Boca a boca)">Indicação de outro paciente (Boca a boca)</option>
-                  <option value="Instagram da Dra. Camila Ramos (@dranutri)">Instagram da Dra. Camila Ramos (@dranutri)</option>
+                  <option value="Instagram da Dra. Camila Pompeu (@dranutri)">Instagram da Dra. Camila Pompeu (@dranutri)</option>
                   <option value="Indicação Médica (Ginecologista / Endocrino)">Indicação Médica</option>
                   <option value="Busca Google / Maps">Busca Google / Maps</option>
                 </select>

@@ -6,7 +6,7 @@ export const MOCK_PATIENT_DETAILS: Record<string, PatientDetail> = {
     ...MOCK_PATIENTS[0],
     executiveSummary: {
       lastConductDate: "14/09/2024",
-      practitioner: "Dra. Camila Ramos",
+      practitioner: "Dra. Camila Pompeu",
       summaryText:
         "Paciente demonstrou excelente aceitação da rotina alimentar proposta, sem queixas gástricas recentes. Ajuste calórico gradual orientado focado no suporte ao treinamento físico habitual, com incentivo à manutenção de alimentos in natura e fracionamento regular de refeições.",
       agreedSteps: [
@@ -46,7 +46,7 @@ export const MOCK_PATIENT_DETAILS: Record<string, PatientDetail> = {
         title: "Consulta 03 (Revisão & Ajustes)",
         dateTime: "14/09/2024 às 14:30",
         mode: "Presencial (Sala 02)",
-        practitioner: "Dra. Camila Ramos",
+        practitioner: "Dra. Camila Pompeu",
         status: "Finalizada",
       },
       {
@@ -54,7 +54,7 @@ export const MOCK_PATIENT_DETAILS: Record<string, PatientDetail> = {
         title: "Consulta 02 (Acompanhamento Mensal)",
         dateTime: "18/07/2024 às 15:00",
         mode: "Teleconsulta",
-        practitioner: "Dra. Camila Ramos",
+        practitioner: "Dra. Camila Pompeu",
         status: "Finalizada",
       },
       {
@@ -62,7 +62,7 @@ export const MOCK_PATIENT_DETAILS: Record<string, PatientDetail> = {
         title: "Consulta 01 (Anamnese Inicial)",
         dateTime: "12/05/2024 às 10:00",
         mode: "Presencial (Sala 01)",
-        practitioner: "Dra. Camila Ramos",
+        practitioner: "Dra. Camila Pompeu",
         status: "Finalizada",
       },
     ],
@@ -125,7 +125,7 @@ export function getPatientDetail(id: string): PatientDetail {
     ...patient,
     executiveSummary: {
       lastConductDate: patient.lastConsultation,
-      practitioner: "Dra. Camila Ramos",
+      practitioner: "Dra. Camila Pompeu",
       summaryText: `Paciente ${patient.name} com objetivo em ${patient.clinicalGoal}. Acompanhamento regular e boa resposta clínica às condutas propostas.`,
       agreedSteps: [
         {
@@ -160,7 +160,7 @@ export function getPatientDetail(id: string): PatientDetail {
         title: "Consulta de Retorno",
         dateTime: `${patient.lastConsultation} às 10:00`,
         mode: patient.attendanceMode,
-        practitioner: "Dra. Camila Ramos",
+        practitioner: "Dra. Camila Pompeu",
         status: "Finalizada",
       },
     ],
