@@ -6,6 +6,58 @@
 
 const CAMINI_PRIMARY_DOMAIN = "https://camini.dev.br";
 
+/**
+ * Expressão regular estrita para validação do subdomínio do Nutre.
+ * Aceita nutre.camini.dev.br e portas locais de teste (ex: nutre.camini.dev.br:3000).
+ */
+export const NUTRE_SUBDOMAIN_REGEX = /^nutre\.camini\.dev\.br(:\d+)?$/i;
+
+/**
+ * Identifica confiavelmente se o host da requisição pertence ao subdomínio exclusivo do Nutre.
+ * Não depende de nenhum cabeçalho arbitrário do cliente.
+ */
+export function isNutreHost(host: string | null | undefined): boolean {
+  if (!host) return false;
+  return NUTRE_SUBDOMAIN_REGEX.test(host.trim());
+}
+
+/**
+ * Valida se um determinado pathname é permitido no subdomínio nutre.camini.dev.br.
+ * Garante que o subdomínio sirva exclusivamente as rotas do Nutre e os recursos técnicos do Next.js.
+ */
+export function isAllowedNutreSubdomainPath(pathname: string): boolean {
+  if (!pathname) return false;
+
+  // Rotas canônicas ou internas do Nutre
+  if (
+    pathname === "/" ||
+    pathname === "/nutre" ||
+    pathname.startsWith("/nutre/") ||
+    pathname === "/pacientes" ||
+    pathname.startsWith("/pacientes/")
+  ) {
+    return true;
+  }
+
+  // Recursos técnicos do Next.js (RSC, chunks, prefetch, static, font, etc)
+  if (
+    pathname.startsWith("/_next/") ||
+    pathname === "/favicon.ico" ||
+    pathname === "/_not-found"
+  ) {
+    return true;
+  }
+
+  // Arquivos estáticos e fontes
+  if (
+    /\.(svg|png|jpg|jpeg|gif|webp|woff2|woff|ttf|ico|css|js|map)$/i.test(pathname)
+  ) {
+    return true;
+  }
+
+  return false;
+}
+
 // Prefixos canônicos pertencentes ao módulo Nutre
 const NUTRE_CANONICAL_PREFIXES = ["/pacientes", "#"];
 

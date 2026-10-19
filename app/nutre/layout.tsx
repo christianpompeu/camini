@@ -4,6 +4,7 @@ import { headers } from "next/headers";
 import "./nutre.css";
 import { NutreShell } from "@/components/nutre/nutre-shell";
 import { NutreNavigationProvider } from "@/components/nutre/nutre-navigation-context";
+import { isNutreHost } from "@/lib/nutre/navigation";
 
 const plusJakartaSans = Plus_Jakarta_Sans({
   variable: "--font-plus-jakarta",
@@ -24,10 +25,11 @@ export default async function NutreLayout({
   children: React.ReactNode;
 }) {
   const headerList = await headers();
-  const host = headerList.get("host") || "";
-  const isNutreSubdomain =
-    /^nutre\.camini\.dev\.br(:\d+)?$/i.test(host) ||
-    headerList.get("x-nutre-subdomain") === "true";
+  const host =
+    headerList.get("x-forwarded-host") ||
+    headerList.get("host") ||
+    "";
+  const isNutreSubdomain = isNutreHost(host);
 
   return (
     <NutreNavigationProvider initialIsSubdomain={isNutreSubdomain}>
