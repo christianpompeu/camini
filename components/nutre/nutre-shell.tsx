@@ -3,7 +3,6 @@
 import React, { useState } from "react";
 import { NutreSidebar } from "./nutre-sidebar";
 import { NutreHeader } from "./nutre-header";
-import { NutreDemoBadge } from "./nutre-demo-badge";
 
 interface NutreShellProps {
   children: React.ReactNode;
@@ -16,11 +15,6 @@ export function NutreShell({ children, breadcrumbs = [] }: NutreShellProps) {
 
   return (
     <div className="nutre-theme min-h-screen bg-[#FDF7FF] text-[#1D1928] flex flex-col antialiased selection:bg-[#EBDDFF] selection:text-[#23005C]">
-      {/* Top Demo Banner */}
-      <div className="z-50">
-        <NutreDemoBadge variant="top-banner" />
-      </div>
-
       {/* Main Structural Layout */}
       <div className="flex-1 flex w-full relative">
         {/* Nutre Sidebar */}
