@@ -19,8 +19,10 @@ import {
 } from "lucide-react";
 import { MOCK_PATIENTS } from "@/data/nutre/mock-patients";
 import { Patient, ClinicalGoal, PatientStatus } from "@/types/nutre";
+import { useNutreNavigation } from "@/components/nutre/nutre-navigation-context";
 
 export function PatientTable() {
+  const { resolveUrl } = useNutreNavigation();
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("todos");
   const [goalFilter, setGoalFilter] = useState<string>("todos");
@@ -320,7 +322,7 @@ export function PatientTable() {
                           </div>
                           <div className="flex flex-col min-w-0">
                             <Link
-                              href={`/nutre/pacientes/${patient.id}`}
+                              href={resolveUrl(`/nutre/pacientes/${patient.id}`)}
                               className="font-semibold text-sm text-[#1D1928] group-hover:text-[#6846B5] transition-colors truncate"
                             >
                               {patient.name}
@@ -384,7 +386,7 @@ export function PatientTable() {
                       <td className="px-4 py-3.5 text-right whitespace-nowrap">
                         <div className="flex items-center justify-end gap-1.5">
                           <Link
-                            href={`/nutre/pacientes/${patient.id}`}
+                            href={resolveUrl(`/nutre/pacientes/${patient.id}`)}
                             className="h-8 px-3 rounded-lg bg-[#6846B5] hover:bg-[#57389B] text-[#FFFFFF] text-xs font-semibold inline-flex items-center gap-1.5 transition-colors shadow-2xs"
                           >
                             <FolderOpen className="w-3.5 h-3.5" />
@@ -413,7 +415,7 @@ export function PatientTable() {
                                 />
                                 <div className="absolute right-0 mt-1 w-44 bg-[#FFFFFF] rounded-xl shadow-lg border border-[#EAE5F2] p-1.5 z-40 text-left space-y-0.5 animate-in fade-in zoom-in-95 duration-100">
                                   <Link
-                                    href={`/nutre/pacientes/${patient.id}`}
+                                    href={resolveUrl(`/nutre/pacientes/${patient.id}`)}
                                     onClick={() => setOpenDropdownId(null)}
                                     className="block px-3 py-1.5 text-xs text-[#1D1928] hover:bg-[#F8F1FF] rounded-md font-medium"
                                   >

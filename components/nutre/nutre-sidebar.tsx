@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { useNutreNavigation } from "./nutre-navigation-context";
 import {
   LayoutDashboard,
   Calendar,
@@ -38,14 +38,7 @@ export function NutreSidebar({
   isCollapsed = false,
   onToggleCollapse,
 }: NutreSidebarProps) {
-  const pathname = usePathname();
-
-  const isLinkActive = (path: string) => {
-    if (path === "/nutre") {
-      return pathname === "/nutre";
-    }
-    return pathname.startsWith(path);
-  };
+  const { resolveUrl, isActive } = useNutreNavigation();
 
   const navGroups = [
     {
@@ -105,7 +98,7 @@ export function NutreSidebar({
           {/* Header Brand */}
           <div className="h-14 px-4 flex items-center justify-between border-b border-[#EDE5FA]/70 shrink-0">
             <Link
-              href="/nutre"
+              href={resolveUrl("/nutre")}
               className="flex items-center gap-2.5 overflow-hidden group"
               onClick={onCloseMobile}
             >
@@ -149,12 +142,13 @@ export function NutreSidebar({
                 )}
                 <nav className="space-y-0.5">
                   {group.items.map((item) => {
-                    const active = isLinkActive(item.href);
+                    const active = isActive(item.href);
+                    const resolvedHref = resolveUrl(item.href);
                     const Icon = item.icon;
                     return (
                       <Link
                         key={item.label}
-                        href={item.href}
+                        href={resolvedHref}
                         onClick={onCloseMobile}
                         title={isCollapsed ? item.label : undefined}
                         className={`flex items-center justify-between px-3 py-2 rounded-lg text-sm font-medium transition-all ${

@@ -24,9 +24,11 @@ import {
   ShieldAlert,
 } from "lucide-react";
 import { WizardFormData } from "@/types/nutre";
+import { useNutreNavigation } from "@/components/nutre/nutre-navigation-context";
 
 export function PatientWizard() {
   const router = useRouter();
+  const { resolveUrl, push } = useNutreNavigation();
   const [, startTransition] = useTransition();
 
   const [currentStep, setCurrentStep] = useState<number>(1);
@@ -145,7 +147,7 @@ export function PatientWizard() {
       window.scrollTo({ top: 0, behavior: "smooth" });
     } else {
       startTransition(() => {
-        router.push("/nutre/pacientes");
+        push("/pacientes");
       });
     }
   };
@@ -179,7 +181,7 @@ export function PatientWizard() {
       <section className="py-2 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div className="space-y-1">
           <nav aria-label="Breadcrumb" className="flex items-center gap-1.5 text-xs text-[#6B6678]">
-            <Link href="/nutre/pacientes" className="hover:text-[#6846B5] transition-colors">
+            <Link href={resolveUrl("/nutre/pacientes")} className="hover:text-[#6846B5] transition-colors">
               Pacientes
             </Link>
             <span className="text-[#CBC3D4]">/</span>
@@ -217,7 +219,7 @@ export function PatientWizard() {
           </button>
 
           <Link
-            href="/nutre/pacientes"
+            href={resolveUrl("/nutre/pacientes")}
             className="h-9 px-3 rounded-lg text-[#7A7483] hover:text-[#1D1928] hover:bg-[#F8F1FF] text-xs font-medium flex items-center gap-1 transition-colors"
           >
             <X className="w-4 h-4" />
@@ -1026,7 +1028,7 @@ export function PatientWizard() {
                 onClick={() => {
                   setShowFinishModal(false);
                   startTransition(() => {
-                    router.push("/nutre/pacientes");
+                    push("/pacientes");
                   });
                 }}
                 className="w-full sm:w-auto h-9 px-4 rounded-lg bg-[#F8F1FF] hover:bg-[#EDE5FA] text-[#1D1928] text-xs font-semibold border border-[#EAE5F2] transition-colors"
@@ -1039,7 +1041,7 @@ export function PatientWizard() {
                 onClick={() => {
                   setShowFinishModal(false);
                   startTransition(() => {
-                    router.push("/nutre/pacientes/beatriz-nogueira");
+                    push("/pacientes/beatriz-nogueira");
                   });
                 }}
                 className="w-full sm:w-auto h-9 px-4 rounded-lg bg-[#6846B5] hover:bg-[#57389B] text-[#FFFFFF] text-xs font-semibold shadow-2xs transition-colors"

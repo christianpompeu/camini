@@ -1,5 +1,5 @@
 import React from "react";
-import Link from "next/link";
+import { NutreLink } from "@/components/nutre/nutre-navigation-context";
 import {
   UserPlus,
   ClipboardList,
@@ -49,13 +49,13 @@ export default function NutreDashboardPage() {
 
         {/* 3 Prominent Quick Actions */}
         <div className="flex flex-wrap items-center gap-2.5 pt-1 xl:pt-0">
-          <Link
-            href="/nutre/pacientes/novo"
+          <NutreLink
+            href="/pacientes/novo"
             className="h-10 px-4 rounded-lg bg-[#6846B5] hover:bg-[#57389B] text-[#FFFFFF] text-sm font-semibold flex items-center gap-2 shadow-2xs transition-all hover:scale-[1.01] active:scale-95"
           >
             <UserPlus className="w-4 h-4" />
             <span>+ Novo Paciente</span>
-          </Link>
+          </NutreLink>
 
           <button
             type="button"

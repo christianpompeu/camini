@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Search, X, User, ArrowRight, Activity, Calendar } from "lucide-react";
 import { MOCK_PATIENTS } from "@/data/nutre/mock-patients";
+import { useNutreNavigation } from "./nutre-navigation-context";
 
 interface CommandSearchModalProps {
   isOpen: boolean;
@@ -14,6 +15,7 @@ interface CommandSearchModalProps {
 export function CommandSearchModal({ isOpen, onClose }: CommandSearchModalProps) {
   const [query, setQuery] = useState("");
   const router = useRouter();
+  const { resolveUrl, push } = useNutreNavigation();
   const [, startTransition] = useTransition();
 
   useEffect(() => {
@@ -48,7 +50,7 @@ export function CommandSearchModal({ isOpen, onClose }: CommandSearchModalProps)
   const handleSelectPatient = (id: string) => {
     onClose();
     startTransition(() => {
-      router.push(`/nutre/pacientes/${id}`);
+      push(`/pacientes/${id}`);
     });
   };
 
@@ -135,7 +137,7 @@ export function CommandSearchModal({ isOpen, onClose }: CommandSearchModalProps)
           <div className="p-3 bg-[#F8F1FF]/60 rounded-xl mt-2 flex flex-wrap items-center justify-between gap-2 text-xs text-[#6B6678]">
             <div className="flex items-center gap-3">
               <Link
-                href="/nutre/pacientes/novo"
+                href={resolveUrl("/nutre/pacientes/novo")}
                 onClick={onClose}
                 className="hover:text-[#6846B5] font-medium flex items-center gap-1 transition-colors"
               >
@@ -143,7 +145,7 @@ export function CommandSearchModal({ isOpen, onClose }: CommandSearchModalProps)
               </Link>
               <span>•</span>
               <Link
-                href="/nutre/pacientes"
+                href={resolveUrl("/nutre/pacientes")}
                 onClick={onClose}
                 className="hover:text-[#6846B5] font-medium flex items-center gap-1 transition-colors"
               >

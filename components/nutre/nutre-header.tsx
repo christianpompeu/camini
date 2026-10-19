@@ -15,6 +15,7 @@ import {
   ExternalLink,
 } from "lucide-react";
 import { CommandSearchModal } from "./command-search-modal";
+import { useNutreNavigation } from "./nutre-navigation-context";
 
 interface NutreHeaderProps {
   onOpenMobileSidebar: () => void;
@@ -30,6 +31,7 @@ export function NutreHeader({
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isNewMenuOpen, setIsNewMenuOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  const { resolveUrl } = useNutreNavigation();
 
   return (
     <>
@@ -52,7 +54,7 @@ export function NutreHeader({
           {/* Breadcrumbs */}
           <nav aria-label="Breadcrumb" className="hidden md:flex items-center gap-1.5 text-xs text-[#494552] truncate">
             <Link
-              href="/nutre"
+              href={resolveUrl("/nutre")}
               className="font-bold text-[#1D1928] hover:text-[#6846B5] transition-colors flex items-center gap-1"
             >
               <span>NUTRE</span>
@@ -64,7 +66,7 @@ export function NutreHeader({
                 <span className="text-[#CBC3D4]">/</span>
                 {crumb.href && idx < breadcrumbs.length - 1 ? (
                   <Link
-                    href={crumb.href}
+                    href={resolveUrl(crumb.href)}
                     className="text-[#494552] hover:text-[#6846B5] transition-colors"
                   >
                     {crumb.label}
@@ -131,7 +133,7 @@ export function NutreHeader({
                 />
                 <div className="absolute right-0 mt-1.5 w-48 bg-[#FFFFFF] rounded-xl shadow-lg border border-[#EAE5F2] p-1.5 z-50 animate-in fade-in zoom-in-95 duration-100">
                   <Link
-                    href="/nutre/pacientes/novo"
+                    href={resolveUrl("/nutre/pacientes/novo")}
                     onClick={() => setIsNewMenuOpen(false)}
                     className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium text-[#1D1928] hover:bg-[#F8F1FF] hover:text-[#6846B5] transition-colors"
                   >
@@ -202,7 +204,7 @@ export function NutreHeader({
 
                   <div className="pt-1">
                     <Link
-                      href="/dashboard"
+                      href={resolveUrl("/dashboard")}
                       onClick={() => setIsUserMenuOpen(false)}
                       className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium text-[#494552] hover:bg-[#F8F1FF] hover:text-[#6846B5] transition-colors"
                     >

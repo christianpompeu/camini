@@ -1,6 +1,6 @@
 import React from "react";
-import Link from "next/link";
 import { Download, SlidersHorizontal, UserPlus } from "lucide-react";
+import { NutreLink } from "@/components/nutre/nutre-navigation-context";
 import { PatientMetricsStrip } from "@/components/nutre/patients/patient-metrics-strip";
 import { PatientTable } from "@/components/nutre/patients/patient-table";
 
@@ -36,13 +36,13 @@ export default function NutrePatientsPage() {
             <span>Exportar Lista</span>
           </button>
 
-          <Link
-            href="/nutre/pacientes/novo"
+          <NutreLink
+            href="/pacientes/novo"
             className="h-9 px-4 rounded-lg bg-[#6846B5] hover:bg-[#57389B] text-[#FFFFFF] text-xs sm:text-sm font-semibold flex items-center gap-2 transition-all shadow-2xs hover:scale-[1.01] active:scale-95"
           >
             <UserPlus className="w-4 h-4" />
             <span>+ Novo Paciente</span>
-          </Link>
+          </NutreLink>
         </div>
       </section>
 

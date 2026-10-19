@@ -16,6 +16,7 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import { PatientDetail } from "@/types/nutre";
+import { useNutreNavigation } from "@/components/nutre/nutre-navigation-context";
 
 interface PatientProfileHeaderProps {
   patient: PatientDetail;
@@ -23,6 +24,7 @@ interface PatientProfileHeaderProps {
 
 export function PatientProfileHeader({ patient }: PatientProfileHeaderProps) {
   const [isActionsOpen, setIsActionsOpen] = useState(false);
+  const { resolveUrl } = useNutreNavigation();
   const [showActionToast, setShowActionToast] = useState<string | null>(null);
 
   const handleActionClick = (msg: string) => {
@@ -58,7 +60,7 @@ export function PatientProfileHeader({ patient }: PatientProfileHeaderProps) {
       <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
         <div className="flex items-center gap-1.5 text-xs text-[#6B6678]">
           <Link
-            href="/nutre/pacientes"
+            href={resolveUrl("/nutre/pacientes")}
             className="hover:text-[#6846B5] transition-colors flex items-center gap-1"
           >
             <Users className="w-3.5 h-3.5" />

@@ -1,6 +1,6 @@
 import React from "react";
-import Link from "next/link";
 import { Calendar, Users, Send, CheckCircle2 } from "lucide-react";
+import { NutreLink } from "@/components/nutre/nutre-navigation-context";
 
 export function DashboardMetricsCards() {
   return (
@@ -76,12 +76,12 @@ export function DashboardMetricsCards() {
         </div>
         <div className="mt-3 pt-2 flex items-center justify-between text-xs text-[#494552] border-t border-[#EDE5FA]/60">
           <span>Janela de 30 a 45 dias</span>
-          <Link
-            href="/nutre/pacientes"
+          <NutreLink
+            href="/pacientes"
             className="text-[#6846B5] hover:underline font-semibold"
           >
             Ver lista
-          </Link>
+          </NutreLink>
         </div>
       </div>
 

@@ -2,7 +2,18 @@ import { type NextRequest } from "next/server";
 import { updateSession } from "./lib/supabase/middleware";
 
 export async function proxy(request: NextRequest) {
-  return await updateSession(request);
+  // Preserva integralmente a autenticação, cookies e atualização de sessão Supabase SSR do Camini
+  const response = await updateSession(request);
+
+  // Verificação estrita do subdomínio nutre.camini.dev.br (permitindo portas em ambiente de teste)
+  const host = request.headers.get("host") || "";
+  const isNutreSubdomain = /^nutre\.camini\.dev\.br(:\d+)?$/i.test(host);
+
+  if (isNutreSubdomain && response) {
+    response.headers.set("x-nutre-subdomain", "true");
+  }
+
+  return response;
 }
 
 export const config = {

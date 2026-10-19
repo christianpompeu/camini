@@ -1,5 +1,5 @@
 import React from "react";
-import Link from "next/link";
+import { NutreLink } from "@/components/nutre/nutre-navigation-context";
 import {
   Calendar,
   Filter,
@@ -68,12 +68,12 @@ export function DashboardAgendaTimeline() {
                   </div>
                   <div>
                     <div className="flex flex-wrap items-center gap-2">
-                      <Link
-                        href={`/nutre/pacientes/${item.patientId}`}
+                      <NutreLink
+                        href={`/pacientes/${item.patientId}`}
                         className="font-bold text-sm text-[#1D1928] hover:text-[#6846B5] transition-colors"
                       >
                         {item.patientName}
-                      </Link>
+                      </NutreLink>
                       <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#EBDDFF] text-[#230E48] text-[11px] font-semibold shadow-2xs">
                         <span className="w-2 h-2 rounded-full bg-[#6846B5] animate-ping" />
                         Em espera na recepção ({item.waitTime})
@@ -89,13 +89,13 @@ export function DashboardAgendaTimeline() {
                 </div>
 
                 <div className="flex items-center gap-2 self-end md:self-auto shrink-0">
-                  <Link
-                    href={`/nutre/pacientes/${item.patientId}`}
+                  <NutreLink
+                    href={`/pacientes/${item.patientId}`}
                     className="h-10 px-4 rounded-lg bg-[#6846B5] hover:bg-[#57389B] text-[#FFFFFF] text-xs sm:text-sm font-semibold flex items-center gap-2 shadow-sm transition-all hover:scale-[1.01] active:scale-95"
                   >
                     <Play className="w-4 h-4 fill-current" />
                     <span>Iniciar Atendimento</span>
-                  </Link>
+                  </NutreLink>
                 </div>
               </div>
             );
@@ -129,12 +129,12 @@ export function DashboardAgendaTimeline() {
 
                 <div>
                   <div className="flex flex-wrap items-center gap-2">
-                    <Link
-                      href={`/nutre/pacientes/${item.patientId}`}
+                    <NutreLink
+                      href={`/pacientes/${item.patientId}`}
                       className="font-semibold text-sm text-[#1D1928] hover:text-[#6846B5] transition-colors"
                     >
                       {item.patientName}
-                    </Link>
+                    </NutreLink>
 
                     {isCompleted ? (
                       <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#D1E9CE] text-[#0C200F] text-[10px] font-semibold">
@@ -153,8 +153,8 @@ export function DashboardAgendaTimeline() {
               </div>
 
               <div className="flex items-center gap-2 self-end md:self-auto shrink-0">
-                <Link
-                  href={`/nutre/pacientes/${item.patientId}`}
+                <NutreLink
+                  href={`/pacientes/${item.patientId}`}
                   className="h-8 px-2.5 rounded-md bg-[#F8F1FF] hover:bg-[#EDE5FA] text-[#1D1928] text-xs font-medium flex items-center gap-1.5 transition-colors border border-[#EAE5F2]"
                 >
                   {item.actionIcon === "FileText" && <FileText className="w-3.5 h-3.5 text-[#6846B5]" />}
@@ -162,7 +162,7 @@ export function DashboardAgendaTimeline() {
                   {item.actionIcon === "FolderOpen" && <FolderOpen className="w-3.5 h-3.5 text-[#7A7483]" />}
                   {item.actionIcon === "Scale" && <Scale className="w-3.5 h-3.5 text-[#6846B5]" />}
                   <span>{item.actionLabel}</span>
-                </Link>
+                </NutreLink>
               </div>
             </div>
           );

@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import { Plus_Jakarta_Sans } from "next/font/google";
+import { headers } from "next/headers";
 import "./nutre.css";
 import { NutreShell } from "@/components/nutre/nutre-shell";
+import { NutreNavigationProvider } from "@/components/nutre/nutre-navigation-context";
 
 const plusJakartaSans = Plus_Jakarta_Sans({
   variable: "--font-plus-jakarta",
@@ -16,14 +18,22 @@ export const metadata: Metadata = {
     "Plataforma profissional de gestão nutricional clínica com prontuários, planos alimentares e acompanhamento de pacientes.",
 };
 
-export default function NutreLayout({
+export default async function NutreLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const headerList = await headers();
+  const host = headerList.get("host") || "";
+  const isNutreSubdomain =
+    /^nutre\.camini\.dev\.br(:\d+)?$/i.test(host) ||
+    headerList.get("x-nutre-subdomain") === "true";
+
   return (
-    <div className={`${plusJakartaSans.variable} font-sans`}>
-      <NutreShell>{children}</NutreShell>
-    </div>
+    <NutreNavigationProvider initialIsSubdomain={isNutreSubdomain}>
+      <div className={`${plusJakartaSans.variable} font-sans`}>
+        <NutreShell>{children}</NutreShell>
+      </div>
+    </NutreNavigationProvider>
   );
 }
