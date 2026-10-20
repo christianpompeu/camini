@@ -14,7 +14,8 @@
     {"file":"20261020195803_observatorio_b1_2_revoke_trigger_exec.sql","sha256":"865A81FD51362D0785781BE2DF36FF85E6AFF72DA1248AAAED2A2354011CEC2F","hml_version":"20261020195819","production_version":null},
     {"file":"20261020195900_observatorio_b1_2_revoke_truncate.sql","sha256":"E9CB3E7205BE8C16EAE69846AA2D63344FA2EB283BADFBA34215A89596DB4B62","hml_version":"20261020202947","production_version":null},
     {"file":"20261020195912_observatorio_b1_2_proteger_insert_reavaliacao.sql","sha256":"E904844D830250748A8506BDB9E04962877D0DC2D5CA0A8FA0DC4DB2F636AFEE","hml_version":"20261020202955","production_version":null},
-    {"file":"20261020195924_observatorio_b1_2_fix_search_path.sql","sha256":"87E4E9DF6A039C5D5AE6FFE24DB0265D9E322ABD261B3295CA3A88B99967F3EB","hml_version":"20261020203156","production_version":null}
+    {"file":"20261020195924_observatorio_b1_2_fix_search_path.sql","sha256":"87E4E9DF6A039C5D5AE6FFE24DB0265D9E322ABD261B3295CA3A88B99967F3EB","hml_version":"20261020203156","production_version":null},
+    {"file":"20261020195940_observatorio_b1_2_fix_reavaliacao_trigger.sql","sha256":"0E2AF7E0CE26C71A4A92683A5EFD1CEE4BCAACE365357E3F57AD40ABB765C003","hml_version":"20261020204158","production_version":null}
   ],
   "promotion_rule": "Promover somente os arquivos com checksum aprovado; nunca reaplicar o baseline ja registrado em producao."
 }

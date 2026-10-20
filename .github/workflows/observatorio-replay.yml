@@ -15,7 +15,9 @@ on:
       - "supabase/migrations/20261020195900_observatorio_b1_2_revoke_truncate.sql"
       - "supabase/migrations/20261020195912_observatorio_b1_2_proteger_insert_reavaliacao.sql"
       - "supabase/migrations/20261020195924_observatorio_b1_2_fix_search_path.sql"
+      - "supabase/migrations/20261020195940_observatorio_b1_2_fix_reavaliacao_trigger.sql"
       - "scripts/observatorio-replay-fixture.sql"
+      - "scripts/observatorio-reavaliacao-fixture.sql"
 
 jobs:
   replay:
@@ -71,6 +73,7 @@ jobs:
             psql -v ON_ERROR_STOP=1 -f "$migration"
           done
           psql -v ON_ERROR_STOP=1 -f supabase/migrations/20261020195924_observatorio_b1_2_fix_search_path.sql
+          psql -v ON_ERROR_STOP=1 -f supabase/migrations/20261020195940_observatorio_b1_2_fix_reavaliacao_trigger.sql
 
       - name: Schema, grants and security checks
         run: |
@@ -102,3 +105,6 @@ jobs:
             if (select count(*) from public.observatorio_fontes where dominio='replay.example') <> 1 then raise exception 'duplicate source'; end if;
           end $$;
           SQL
+
+      - name: Re-evaluation trigger coverage
+        run: psql -v ON_ERROR_STOP=1 -f scripts/observatorio-reavaliacao-fixture.sql
