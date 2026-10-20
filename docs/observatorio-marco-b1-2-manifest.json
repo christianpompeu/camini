@@ -1,0 +1,23 @@
+{
+  "repository": "christianpompeu/camini",
+  "branch": "feat/observatorio-fundacao",
+  "production_ref": "xywherqsudwsredplxmd",
+  "hml_ref": "hrpathjcxyzzwxgkhwnt",
+  "migrations": [
+    {"file":"20261020123117_observatorio_camini_grafo_v1.sql","sha256":"48C91EB3330AB8DD398B5E3831883C6A2374B29E88FF0F4562A67F252EFF52BE","hml_version":"20261020190046","production_version":"20261020123117"},
+    {"file":"20261020182907_observatorio_b1_rpc_indices.sql","sha256":"70132C92F1AD53F1E14A59A279B4DA18E7E8651B59D4AFD36B70BADA4D45E995","hml_version":"20261020190052","production_version":null},
+    {"file":"20261020192401_observatorio_b1_1_preservacao_editorial.sql","sha256":"FB6E8CFB484F2DD469E1E4E52FE86D6BEAF4FF04F8A2C0B8AA68919D0E1C643F","hml_version":"20261020192457","production_version":null},
+    {"file":"20261020192519_observatorio_b1_1_fix_audit_trigger.sql","sha256":"328FDE18B02AEB13F3A96AEE47F350343F034F86C7FDC482529BE5FB450F69A8","hml_version":"20261020192536","production_version":null},
+    {"file":"20261020195125_observatorio_b1_2_aprovacao_append_only.sql","sha256":"05AFF7D868BBF21679405AE71B142DD17431FEC13C02424ED18D1FA70372387C","hml_version":"20261020195153","production_version":null},
+    {"file":"20261020195308_observatorio_b1_2_index_aprovacoes.sql","sha256":"2E561293DE662B69B89D98C550628D5818660D411CA4C8F92A4F048620458AFA","hml_version":"20261020195344","production_version":null},
+    {"file":"20261020195525_observatorio_b1_2_restrict_collection_writer.sql","sha256":"9265FD5156911517F21FC25D961EA85652BF283A2A8F00771BDED750E37A18B5","hml_version":"20261020195604","production_version":null},
+    {"file":"20261020195803_observatorio_b1_2_revoke_trigger_exec.sql","sha256":"865A81FD51362D0785781BE2DF36FF85E6AFF72DA1248AAAED2A2354011CEC2F","hml_version":"20261020195819","production_version":null},
+    {"file":"20261020195900_observatorio_b1_2_revoke_truncate.sql","sha256":"E9CB3E7205BE8C16EAE69846AA2D63344FA2EB283BADFBA34215A89596DB4B62","hml_version":"20261020202947","production_version":null},
+    {"file":"20261020195912_observatorio_b1_2_proteger_insert_reavaliacao.sql","sha256":"E904844D830250748A8506BDB9E04962877D0DC2D5CA0A8FA0DC4DB2F636AFEE","hml_version":"20261020202955","production_version":null},
+    {"file":"20261020195924_observatorio_b1_2_fix_search_path.sql","sha256":"87E4E9DF6A039C5D5AE6FFE24DB0265D9E322ABD261B3295CA3A88B99967F3EB","hml_version":"20261020203156","production_version":null},
+    {"file":"20261020195940_observatorio_b1_2_fix_reavaliacao_trigger.sql","sha256":"0E2AF7E0CE26C71A4A92683A5EFD1CEE4BCAACE365357E3F57AD40ABB765C003","hml_version":"20261020204158","production_version":null},
+    {"file":"20261020195970_observatorio_b1_2_isolar_coletor.sql","sha256":"8EEEA20BCD0CE3517A005795AA244F36F41A66ABFB9F56079E30CA50ABBCA36F","hml_version":"20261020205634","production_version":null,"remote_name":"observatorio_b1_2_isolar_coletor_v2"},
+    {"file":"20261020195980_observatorio_b1_2_isolar_coletor_rls.sql","sha256":"588541A565F798035BC803F278FF0DA9B03E3A9EF61C46FC71815D6E13D0B5BE","hml_version":"20261020205656","production_version":null}
+  ],
+  "promotion_rule": "Promover somente os arquivos com checksum aprovado; nunca reaplicar o baseline ja registrado em producao."
+}
