@@ -115,7 +115,7 @@ export function PatientProfileTabs({ patient }: PatientProfileTabsProps) {
                       Resumo Executivo da Última Consulta
                     </h2>
                     <span className="text-xs text-[#7A7483]">
-                      Registrada em {patient.executiveSummary.lastConductDate} • Dra. Camila Pompeu
+                      Registrada em {patient.executiveSummary.lastConductDate} • Profissional de demonstração
                     </span>
                   </div>
                 </div>
@@ -373,7 +373,7 @@ export function PatientProfileTabs({ patient }: PatientProfileTabsProps) {
                 Aguardando pesquisa de campo com a nutricionista
               </h3>
               <p className="text-xs text-[#6B6678] leading-relaxed">
-                Os formulários específicos de anamnese alimentar, histórico familiar e rastreamento metabólico serão integrados na próxima iteração após alinhamento com a Dra. Camila Pompeu.
+                Os formulários específicos de anamnese alimentar, histórico familiar e rastreamento metabólico serão avaliados em uma iteração futura.
               </p>
             </div>
 

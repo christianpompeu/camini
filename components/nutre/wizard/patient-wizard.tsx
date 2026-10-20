@@ -1,1057 +1,221 @@
 "use client";
 
-import React, { useState, useTransition } from "react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useEffect, useMemo, useState } from "react";
+import { ArrowLeft, ArrowRight, Check, CheckCircle2, Info, Pencil, Save, ShieldAlert } from "lucide-react";
+import type { WizardFormData } from "@/types/nutre";
 import {
-  ArrowLeft,
-  ArrowRight,
-  Bookmark,
-  X,
-  Badge,
-  CheckCircle2,
-  Lock,
-  Phone,
-  Mail,
-  MapPin,
-  Building2,
-  Video,
-  Edit,
-  AlertTriangle,
-  Info,
-  Calendar,
-  Sparkles,
-  ShieldAlert,
-} from "lucide-react";
-import { WizardFormData } from "@/types/nutre";
+  DEMO_WIZARD_FIXTURE,
+  NUTRE_DRAFT_STORAGE_KEY,
+  demoPatientStorageKey,
+  type StoredDemoPatient,
+} from "@/lib/nutre/demo-patient";
 import { useNutreNavigation } from "@/components/nutre/nutre-navigation-context";
 
+const STEPS = [
+  ["Identificação", "Dados e contatos"],
+  ["Contexto", "Objetivo e vínculo"],
+  ["Complementares", "Endereço e observações"],
+  ["Preferências", "Canais e opcionais"],
+  ["Revisão", "Conferência final"],
+] as const;
+
+const SERVICE_OPTIONS = ["Retorno estendido", "Análise de diário alimentar", "Encontro educativo"];
+const PACKAGE_OPTIONS = ["Pacote de 3 retornos", "Pacote de acompanhamento trimestral"];
+const CHANNEL_OPTIONS = ["E-mail", "Telefone", "WhatsApp"];
+
+function Field({ label, hint, error, children }: { label: string; hint?: string; error?: string; children: React.ReactNode }) {
+  return (
+    <label className="flex flex-col gap-1.5 text-sm font-semibold">
+      <span>{label}</span>
+      {children}
+      <span className={error ? "text-xs text-[#BA1A1A]" : "nutre-muted text-xs font-normal"}>{error || hint}</span>
+    </label>
+  );
+}
+
+function ToggleCard({ checked, label, description, onChange }: { checked: boolean; label: string; description?: string; onChange: () => void }) {
+  return (
+    <button
+      type="button"
+      role="checkbox"
+      aria-checked={checked}
+      onClick={onChange}
+      className={`flex w-full items-start gap-3 rounded-xl border p-3 text-left transition-all ${checked ? "border-[#6846B5] bg-[#F8F1FF]" : "border-[#EAE5F2] hover:border-[#B8A1E3]"}`}
+    >
+      <span className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-md border ${checked ? "border-[#6846B5] bg-[#6846B5] text-white" : "border-[#CBC3D4]"}`}>
+        {checked && <Check className="h-3.5 w-3.5" />}
+      </span>
+      <span><span className="block text-sm font-semibold">{label}</span>{description && <span className="nutre-muted mt-0.5 block text-xs font-normal">{description}</span>}</span>
+    </button>
+  );
+}
+
 export function PatientWizard() {
-  const router = useRouter();
-  const { resolveUrl, push } = useNutreNavigation();
-  const [, startTransition] = useTransition();
-
-  const [currentStep, setCurrentStep] = useState<number>(1);
+  const { push } = useNutreNavigation();
+  const [step, setStep] = useState(1);
+  const [data, setData] = useState<WizardFormData>(DEMO_WIZARD_FIXTURE);
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [showDraftToast, setShowDraftToast] = useState(false);
-  const [showFinishModal, setShowFinishModal] = useState(false);
+  const [message, setMessage] = useState("");
+  const [completedId, setCompletedId] = useState<string | null>(null);
 
-  const [formData, setFormData] = useState<WizardFormData>({
-    fullName: "Beatriz Helena Nogueira",
-    preferredName: "Bia Nogueira",
-    birthDate: "1995-05-14",
-    biologicalSex: "Feminino",
-    cpf: "342.891.208-11",
-    occupation: "Arquiteta e Urbanista • Modelo Híbrido",
-    maritalStatus: "Solteira (Mora sozinha)",
-    phone: "(11) 98721-4321",
-    whatsappAuto: true,
-    email: "beatriz.nogueira@exemplo.com.br",
-    patientApp: true,
-    cep: "04538-132",
-    street: "Rua Joaquim Floriano",
-    number: "820, Apto 114",
-    neighborhood: "Itaim Bibi",
-    city: "São Paulo",
-    state: "SP",
-    attendanceMode: "Presencial no Consultório",
-    primaryGoal: "Emagrecimento & Definição Corporal",
-    referralSource: "Indicação de outro paciente (Boca a boca)",
-    adminNotes:
-      "Paciente relata que já realizou dietas restritivas no passado e prefere prescrições sem contagem obsessiva de gramas na primeira fase. Solicita recibo discriminado para reembolso.",
-  });
+  useEffect(() => {
+    try {
+      const stored = sessionStorage.getItem(NUTRE_DRAFT_STORAGE_KEY);
+      // Drafts are client-only and must be reconciled after hydration.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      if (stored) setData({ ...DEMO_WIZARD_FIXTURE, ...JSON.parse(stored) });
+    } catch { /* sessão indisponível: o formulário continua somente em memória */ }
+  }, []);
 
-  // Calculate age dynamically
-  const calculateAge = (dateStr: string) => {
-    if (!dateStr) return { age: 29, label: "29 anos • Adulto Jovem" };
-    const birth = new Date(dateStr);
-    const now = new Date();
-    let age = now.getFullYear() - birth.getFullYear();
-    const m = now.getMonth() - birth.getMonth();
-    if (m < 0 || (m === 0 && now.getDate() < birth.getDate())) {
-      age--;
+  const age = useMemo(() => {
+    if (!data.birthDate) return null;
+    const birth = new Date(`${data.birthDate}T12:00:00`);
+    const today = new Date();
+    let value = today.getFullYear() - birth.getFullYear();
+    if (today.getMonth() < birth.getMonth() || (today.getMonth() === birth.getMonth() && today.getDate() < birth.getDate())) value--;
+    return value;
+  }, [data.birthDate]);
+
+  const update = <K extends keyof WizardFormData>(key: K, value: WizardFormData[K]) => {
+    setData((current) => ({ ...current, [key]: value }));
+    setErrors((current) => { const next = { ...current }; delete next[key]; return next; });
+  };
+
+  const toggleList = (key: "tags" | "preferredChannels" | "optionalServices" | "optionalPackages", value: string) => {
+    update(key, data[key].includes(value) ? data[key].filter((item) => item !== value) : [...data[key], value]);
+  };
+
+  const validate = (target = step) => {
+    const next: Record<string, string> = {};
+    if (target === 1) {
+      if (!data.fullName.trim()) next.fullName = "Informe um nome para continuar.";
+      if (!data.birthDate) next.birthDate = "Informe a data de nascimento.";
+      if (!data.phone.trim()) next.phone = "Informe um telefone de demonstração.";
+      if (!data.email.includes("@")) next.email = "Informe um e-mail válido.";
     }
-    return {
-      age,
-      label: `${age} anos • ${age < 18 ? "Menor de idade" : age < 60 ? "Adulto" : "Idoso"}`,
-    };
-  };
-
-  const computedAge = calculateAge(formData.birthDate);
-
-  const handleInputChange = (
-    field: keyof WizardFormData,
-    value: string | boolean
-  ) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
-    if (errors[field]) {
-      setErrors((prev) => {
-        const next = { ...prev };
-        delete next[field];
-        return next;
-      });
+    if (target === 2) {
+      if (!data.primaryGoal) next.primaryGoal = "Selecione um objetivo cadastral.";
+      if (!data.attendanceLocation) next.attendanceLocation = "Selecione o local de atendimento.";
     }
+    if (target === 4 && data.preferredChannels.length === 0) next.preferredChannels = "Selecione ao menos um canal.";
+    setErrors(next);
+    return Object.keys(next).length === 0;
   };
 
-  const simulateCepLookup = () => {
-    setFormData((prev) => ({
-      ...prev,
-      street: "Rua Joaquim Floriano",
-      neighborhood: "Itaim Bibi",
-      city: "São Paulo",
-      state: "SP",
-    }));
+  const goTo = (target: number) => {
+    if (target > step && !validate()) return;
+    setStep(target);
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  const validateStep = (step: number) => {
-    const newErrors: Record<string, string> = {};
-
-    if (step === 1) {
-      if (!formData.fullName.trim()) {
-        newErrors.fullName = "Nome completo é obrigatório.";
-      }
-      if (!formData.birthDate) {
-        newErrors.birthDate = "Data de nascimento é obrigatória.";
-      }
-      if (!formData.cpf.trim()) {
-        newErrors.cpf = "CPF é obrigatório.";
-      }
-    } else if (step === 2) {
-      if (!formData.phone.trim()) {
-        newErrors.phone = "Telefone celular é obrigatório.";
-      }
-      if (!formData.email.trim() || !formData.email.includes("@")) {
-        newErrors.email = "E-mail válido é obrigatório.";
-      }
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+  const saveDraft = () => {
+    try {
+      sessionStorage.setItem(NUTRE_DRAFT_STORAGE_KEY, JSON.stringify(data));
+      setMessage("Rascunho temporário salvo somente nesta sessão do navegador.");
+    } catch { setMessage("Não foi possível usar o armazenamento temporário nesta sessão."); }
   };
 
-  const handleAdvance = () => {
-    if (!validateStep(currentStep)) return;
-
-    if (currentStep < 4) {
-      setCurrentStep((prev) => prev + 1);
-      window.scrollTo({ top: 0, behavior: "smooth" });
-    } else {
-      // Step 4 final action - Show explicit demonstrative completion dialog
-      setShowFinishModal(true);
-    }
+  const finish = () => {
+    const id = `demo-${crypto.randomUUID()}`;
+    const record: StoredDemoPatient = { id, createdAt: new Date().toISOString(), temporary: true, data };
+    try {
+      sessionStorage.setItem(demoPatientStorageKey(id), JSON.stringify(record));
+      sessionStorage.removeItem(NUTRE_DRAFT_STORAGE_KEY);
+      setCompletedId(id);
+    } catch { setMessage("O navegador bloqueou o armazenamento temporário. O perfil não foi criado."); }
   };
 
-  const handleBack = () => {
-    if (currentStep > 1) {
-      setCurrentStep((prev) => prev - 1);
-      window.scrollTo({ top: 0, behavior: "smooth" });
-    } else {
-      startTransition(() => {
-        push("/pacientes");
-      });
-    }
-  };
-
-  const handleDraftClick = () => {
-    setShowDraftToast(true);
-    setTimeout(() => setShowDraftToast(false), 3000);
-  };
-
-  const stepMeta = [
-    { num: 1, title: "1. Dados Pessoais", sub: "Identificação e bio" },
-    { num: 2, title: "2. Contatos & Canais", sub: "WhatsApp, e-mail e endereço" },
-    { num: 3, title: "3. Info de Entrada", sub: "Modalidade e objetivo" },
-    { num: 4, title: "4. Revisão & Confirmação", sub: "Resumo demonstrativo" },
-  ];
+  if (completedId) {
+    return (
+      <section className="mx-auto flex min-h-[70vh] max-w-2xl items-center py-10">
+        <div className="nutre-card w-full rounded-3xl p-6 text-center shadow-sm sm:p-10">
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-[#D1E9CE] text-[#354935]"><CheckCircle2 className="h-8 w-8" /></div>
+          <p className="mt-5 text-xs font-bold uppercase tracking-[.18em] text-[#6846B5]">Demonstração concluída</p>
+          <h1 className="mt-2 text-2xl font-bold sm:text-3xl">Fluxo demonstrativo concluído</h1>
+          <p className="nutre-muted mx-auto mt-3 max-w-lg text-sm leading-relaxed">Nenhum dado foi enviado para banco, contrato, cobrança ou integração. Este perfil fictício existe apenas no <code>sessionStorage</code> desta aba e está associado ao ID <strong>{completedId}</strong>.</p>
+          <div className="mt-7 grid gap-3 sm:grid-cols-3">
+            <button type="button" onClick={() => push(`/pacientes/${completedId}`)} className="rounded-xl bg-[#6846B5] px-4 py-3 text-sm font-bold text-white transition-all hover:bg-[#57389B]">Abrir perfil demo</button>
+            <button type="button" onClick={() => { setCompletedId(null); setStep(1); setData(DEMO_WIZARD_FIXTURE); }} className="nutre-card rounded-xl px-4 py-3 text-sm font-bold transition-all hover:bg-[#F8F1FF]">Novo cadastro</button>
+            <button type="button" onClick={() => push("/pacientes")} className="rounded-xl px-4 py-3 text-sm font-bold text-[#6846B5] transition-all hover:bg-[#F8F1FF]">Voltar a pacientes</button>
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   return (
-    <div className="space-y-6 pb-24">
-      {/* Toast Notification */}
-      {showDraftToast && (
-        <div className="fixed top-20 right-6 z-50 p-4 rounded-xl bg-[#6846B5] text-[#FFFFFF] shadow-xl border border-[#EBDDFF] flex items-center gap-3 animate-in fade-in slide-in-from-top-2">
-          <Bookmark className="w-5 h-5 text-[#EBDDFF]" />
-          <div className="text-xs">
-            <div className="font-bold">Rascunho Demonstrativo Salvo</div>
-            <div className="text-[#EDE5FA]">Os dados preenchidos foram preservados na sessão.</div>
-          </div>
+    <div className="mx-auto max-w-6xl space-y-5 pb-28">
+      <header className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
+        <div>
+          <div className="mb-2 flex flex-wrap gap-2"><span className="rounded-full bg-[#EDE5FA] px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-[#6846B5]">Etapa {step} de 5</span><span className="nutre-card rounded-full px-3 py-1 text-[11px] font-semibold"><ShieldAlert className="mr-1 inline h-3.5 w-3.5 text-[#6846B5]" />Somente dados fictícios</span></div>
+          <h1 className="text-2xl font-bold sm:text-3xl">Cadastrar paciente</h1>
+          <p className="nutre-muted mt-1 max-w-2xl text-sm">Cadastro administrativo demonstrativo. Avaliação clínica, anamnese, antropometria, bioquímica, prescrição e acompanhamento não fazem parte deste fluxo.</p>
         </div>
-      )}
+        <button type="button" onClick={saveDraft} className="nutre-card inline-flex h-10 items-center justify-center gap-2 rounded-xl px-4 text-sm font-bold transition-all hover:bg-[#F8F1FF]"><Save className="h-4 w-4 text-[#6846B5]" />Salvar rascunho temporário</button>
+      </header>
 
-      {/* Header & Meta */}
-      <section className="py-2 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-        <div className="space-y-1">
-          <nav aria-label="Breadcrumb" className="flex items-center gap-1.5 text-xs text-[#6B6678]">
-            <Link href={resolveUrl("/nutre/pacientes")} className="hover:text-[#6846B5] transition-colors">
-              Pacientes
-            </Link>
-            <span className="text-[#CBC3D4]">/</span>
-            <span className="text-[#1D1928] font-semibold">Novo Cadastro</span>
-          </nav>
+      {message && <div role="status" className="rounded-xl border border-[#B8A1E3] bg-[#F8F1FF] p-3 text-sm"><Info className="mr-2 inline h-4 w-4 text-[#6846B5]" />{message}</div>}
 
-          <div className="flex flex-wrap items-center gap-2 mt-1">
-            <span className="px-2.5 py-0.5 rounded-full bg-[#EBDDFF] text-[#230E48] text-[11px] font-bold tracking-wide uppercase">
-              ETAPA {currentStep} DE 4 — {stepMeta[currentStep - 1].title.toUpperCase().replace(/^\d+\.\s*/, "")}
-            </span>
-            <span className="text-xs text-[#7A7483] flex items-center gap-1 bg-[#FFFFFF] px-2.5 py-0.5 rounded-full border border-[#EAE5F2]">
-              <ShieldAlert className="w-3.5 h-3.5 text-[#6846B5]" />
-              Protótipo Demonstrativo — Sem persistência real de dados
-            </span>
-          </div>
+      <nav aria-label="Etapas do cadastro" className="nutre-card rounded-2xl p-3 shadow-sm">
+        <ol className="grid grid-cols-5 gap-2">
+          {STEPS.map(([title, subtitle], index) => { const number = index + 1; const active = number === step; return (
+            <li key={title}><button type="button" onClick={() => goTo(number)} aria-current={active ? "step" : undefined} className={`flex w-full items-center gap-2 rounded-xl p-2 text-left transition-all ${active ? "bg-[#6846B5] text-white" : "hover:bg-[#F8F1FF]"}`}><span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold ${active ? "bg-white/20" : number < step ? "bg-[#D1E9CE] text-[#354935]" : "bg-[#EDE5FA] text-[#6846B5]"}`}>{number < step ? <Check className="h-4 w-4" /> : number}</span><span className="hidden min-w-0 lg:block"><strong className="block truncate text-xs">{title}</strong><small className={active ? "text-white/75" : "nutre-muted"}>{subtitle}</small></span></button></li>
+          ); })}
+        </ol>
+        <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-[#EDE5FA]"><div className="h-full rounded-full bg-[#6846B5] transition-all" style={{ width: `${step * 20}%` }} /></div>
+      </nav>
 
-          <h1 className="font-heading text-2xl sm:text-3xl text-[#1D1928] font-bold tracking-tight">
-            Cadastrar Novo Paciente
-          </h1>
+      <section className="nutre-card rounded-2xl p-5 shadow-sm sm:p-7">
+        {step === 1 && <div className="space-y-6"><SectionTitle number="01" title="Identificação e contatos" subtitle="Somente dados cadastrais necessários ao fluxo demonstrativo." /><div className="grid gap-4 md:grid-cols-2">
+          <Field label="Nome completo *" error={errors.fullName}><input className="nutre-input" aria-invalid={!!errors.fullName} value={data.fullName} onChange={(e) => update("fullName", e.target.value)} /></Field>
+          <Field label="Nome preferido"><input className="nutre-input" value={data.preferredName} onChange={(e) => update("preferredName", e.target.value)} /></Field>
+          <Field label="Data de nascimento *" hint={age === null ? "A idade será calculada a partir da data." : `${age} anos na data atual.`} error={errors.birthDate}><input type="date" className="nutre-input" aria-invalid={!!errors.birthDate} value={data.birthDate} onChange={(e) => update("birthDate", e.target.value)} /></Field>
+          <Field label="Sexo informado"><select className="nutre-input" value={data.biologicalSex} onChange={(e) => update("biologicalSex", e.target.value as WizardFormData["biologicalSex"])}><option>Feminino</option><option>Masculino</option><option>Outro</option></select></Field>
+          <Field label="CPF" hint="Use apenas o placeholder fictício nesta demonstração."><input className="nutre-input" value={data.cpf} onChange={(e) => update("cpf", e.target.value)} /></Field>
+          <Field label="Telefone *" error={errors.phone}><input className="nutre-input" aria-invalid={!!errors.phone} value={data.phone} onChange={(e) => update("phone", e.target.value)} /></Field>
+          <Field label="E-mail *" error={errors.email}><input type="email" className="nutre-input" aria-invalid={!!errors.email} value={data.email} onChange={(e) => update("email", e.target.value)} /></Field>
+          <div className="grid gap-4 rounded-xl border border-dashed border-[#CBC3D4] p-4 md:col-span-2 md:grid-cols-2"><Field label="Responsável (quando aplicável)"><input className="nutre-input" value={data.responsibleName} onChange={(e) => update("responsibleName", e.target.value)} placeholder="Não informado" /></Field><Field label="CPF do responsável"><input className="nutre-input" value={data.responsibleCpf} onChange={(e) => update("responsibleCpf", e.target.value)} placeholder="000.000.000-00" /></Field></div>
+        </div></div>}
 
-          <p className="text-xs sm:text-sm text-[#494552] max-w-3xl leading-relaxed">
-            Preencha os dados cadastrais para abrir o prontuário eletrônico. A anamnese clínica detalhada e o plano alimentar serão consolidados durante a consulta inicial.
-          </p>
-        </div>
+        {step === 2 && <div className="space-y-6"><SectionTitle number="02" title="Contexto e vínculo de atendimento" subtitle="Objetivo cadastral, tratamentos/protocolos associados, tags e local." /><div className="grid gap-4 md:grid-cols-2">
+          <Field label="Objetivo principal *" error={errors.primaryGoal}><select className="nutre-input" value={data.primaryGoal} onChange={(e) => update("primaryGoal", e.target.value)}><option value="">Selecione</option><option>Organização da rotina alimentar</option><option>Educação alimentar</option><option>Acompanhamento nutricional geral</option></select></Field>
+          <Field label="Local de atendimento *" error={errors.attendanceLocation}><select className="nutre-input" value={data.attendanceLocation} onChange={(e) => update("attendanceLocation", e.target.value)}><option value="">Nenhum local selecionado</option><option>Unidade demonstrativa</option><option>Atendimento online demonstrativo</option></select></Field>
+          <Field label="Tratamento ou protocolo associado" hint="Vínculo administrativo; não equivale a prescrição clínica."><input className="nutre-input" value={data.associatedTreatment} onChange={(e) => update("associatedTreatment", e.target.value)} /></Field>
+          <Field label="Situação do tratamento"><select className="nutre-input" value={data.treatmentStatus} onChange={(e) => update("treatmentStatus", e.target.value as WizardFormData["treatmentStatus"])}><option>Não contratado</option><option>Proposta demonstrativa</option><option>Contratado (demonstração)</option></select></Field>
+          <Field label="Condições relatadas" hint="Relato cadastral; não representa diagnóstico confirmado."><textarea className="nutre-input min-h-24" value={data.reportedConditions} onChange={(e) => update("reportedConditions", e.target.value)} /></Field>
+          <div><span className="mb-2 block text-sm font-semibold">Tags</span><div className="grid gap-2"><ToggleCard checked={data.tags.includes("Primeiro atendimento")} label="Primeiro atendimento" onChange={() => toggleList("tags", "Primeiro atendimento")} /><ToggleCard checked={data.tags.includes("Demonstração")} label="Demonstração" onChange={() => toggleList("tags", "Demonstração")} /></div></div>
+        </div><div className="rounded-xl border border-[#B8A1E3] bg-[#F8F1FF] p-4"><strong className="text-sm">Plano alimentar clínico</strong><p className="nutre-muted mt-1 text-xs">Não definido. Planos alimentares são separados de tratamentos contratados e serão criados somente no módulo clínico futuro.</p></div></div>}
 
-        {/* Header Actions */}
-        <div className="flex items-center gap-2.5 self-start lg:self-center">
-          <button
-            type="button"
-            onClick={handleDraftClick}
-            className="h-9 px-3 rounded-lg bg-[#FFFFFF] hover:bg-[#F8F1FF] text-[#494552] hover:text-[#1D1928] text-xs font-semibold flex items-center gap-1.5 border border-[#EAE5F2] shadow-2xs transition-all cursor-pointer"
-          >
-            <Bookmark className="w-3.5 h-3.5 text-[#6846B5]" />
-            <span>Salvar Rascunho</span>
-          </button>
+        {step === 3 && <div className="space-y-6"><SectionTitle number="03" title="Endereço, foto e observações" subtitle="Informações complementares; nenhum dado de avaliação nutricional." /><div className="grid gap-4 md:grid-cols-6">
+          <div className="md:col-span-2"><Field label="CEP"><input className="nutre-input" value={data.cep} onChange={(e) => update("cep", e.target.value)} /></Field></div><div className="md:col-span-4"><Field label="Rua"><input className="nutre-input" value={data.street} onChange={(e) => update("street", e.target.value)} /></Field></div>
+          <div className="md:col-span-2"><Field label="Número"><input className="nutre-input" value={data.number} onChange={(e) => update("number", e.target.value)} /></Field></div><div className="md:col-span-4"><Field label="Complemento"><input className="nutre-input" value={data.complement} onChange={(e) => update("complement", e.target.value)} /></Field></div>
+          <div className="md:col-span-3"><Field label="Bairro"><input className="nutre-input" value={data.neighborhood} onChange={(e) => update("neighborhood", e.target.value)} /></Field></div><div className="md:col-span-2"><Field label="Cidade"><input className="nutre-input" value={data.city} onChange={(e) => update("city", e.target.value)} /></Field></div><div><Field label="UF"><input className="nutre-input" maxLength={2} value={data.state} onChange={(e) => update("state", e.target.value.toUpperCase())} /></Field></div>
+          <div className="md:col-span-3"><Field label="Foto opcional" hint="O arquivo não será enviado; apenas o nome é exibido nesta sessão."><input type="file" accept="image/*" className="nutre-input text-xs" onChange={(e) => update("photoName", e.target.files?.[0]?.name || "")} /></Field></div><div className="md:col-span-3"><Field label="Observações cadastrais" hint="Não inclua anamnese ou informação clínica real."><textarea className="nutre-input min-h-24" value={data.adminNotes} onChange={(e) => update("adminNotes", e.target.value)} /></Field></div>
+        </div></div>}
 
-          <Link
-            href={resolveUrl("/nutre/pacientes")}
-            className="h-9 px-3 rounded-lg text-[#7A7483] hover:text-[#1D1928] hover:bg-[#F8F1FF] text-xs font-medium flex items-center gap-1 transition-colors"
-          >
-            <X className="w-4 h-4" />
-            <span>Cancelar e voltar</span>
-          </Link>
-        </div>
+        {step === 4 && <div className="space-y-6"><SectionTitle number="04" title="Preferências e serviços opcionais" subtitle="Representação de opções; sem cobrança, contrato ou integração financeira." /><div><h3 className="text-sm font-bold">Canais preferidos *</h3><p className="nutre-muted mb-3 text-xs">A preferência não representa consentimento genérico de privacidade.</p><div className="grid gap-2 sm:grid-cols-3">{CHANNEL_OPTIONS.map((item) => <ToggleCard key={item} checked={data.preferredChannels.includes(item)} label={item} onChange={() => toggleList("preferredChannels", item)} />)}</div>{errors.preferredChannels && <p className="mt-2 text-xs text-[#BA1A1A]">{errors.preferredChannels}</p>}</div>
+          <ToggleCard checked={data.appointmentReminders} label="Lembretes de agendamento" description="Preferência demonstrativa; nenhuma mensagem será enviada." onChange={() => update("appointmentReminders", !data.appointmentReminders)} />
+          <div className="grid gap-5 md:grid-cols-2"><div><h3 className="mb-2 text-sm font-bold">Serviços opcionais</h3><div className="space-y-2">{SERVICE_OPTIONS.map((item) => <ToggleCard key={item} checked={data.optionalServices.includes(item)} label={item} onChange={() => toggleList("optionalServices", item)} />)}</div></div><div><h3 className="mb-2 text-sm font-bold">Pacotes opcionais</h3><div className="space-y-2">{PACKAGE_OPTIONS.map((item) => <ToggleCard key={item} checked={data.optionalPackages.includes(item)} label={item} onChange={() => toggleList("optionalPackages", item)} />)}</div></div></div>
+          <div className="rounded-xl border border-[#DCA76B] bg-[#FEF3C7] p-4 text-sm text-[#6B4300]"><Info className="mr-2 inline h-4 w-4" />As seleções são apenas ilustrativas. Não geram preço, cobrança, contrato, recibo ou integração financeira.</div>
+        </div>}
+
+        {step === 5 && <div className="space-y-6"><SectionTitle number="05" title="Revisão" subtitle="Confira somente as informações coletadas nas etapas anteriores." /><div className="grid gap-4 md:grid-cols-2">
+          <ReviewCard title="Identificação" onEdit={() => setStep(1)} rows={[["Nome", data.fullName], ["Nascimento", data.birthDate], ["Contato", `${data.phone} • ${data.email}`], ["Responsável", data.responsibleName || "Não informado"]]} />
+          <ReviewCard title="Contexto e vínculo" onEdit={() => setStep(2)} rows={[["Objetivo", data.primaryGoal], ["Tratamento/protocolo", data.associatedTreatment || "Não associado"], ["Situação", data.treatmentStatus], ["Local", data.attendanceLocation], ["Plano alimentar clínico", "Não definido"]]} />
+          <ReviewCard title="Complementares" onEdit={() => setStep(3)} rows={[["Endereço", `${data.street}, ${data.number} — ${data.city}/${data.state}`], ["Foto", data.photoName || "Não adicionada"], ["Observações", data.adminNotes || "Não informadas"]]} />
+          <ReviewCard title="Preferências e opcionais" onEdit={() => setStep(4)} rows={[["Canais", data.preferredChannels.join(", ")], ["Serviços", data.optionalServices.join(", ") || "Nenhum"], ["Pacotes", data.optionalPackages.join(", ") || "Nenhum"], ["Financeiro", "Não criado"]]} />
+        </div><div className="rounded-xl bg-[#F8F1FF] p-4 text-sm"><ShieldAlert className="mr-2 inline h-4 w-4 text-[#6846B5]" />Ao concluir, será criado apenas um perfil temporário associado a um ID de demonstração nesta sessão.</div></div>}
       </section>
 
-      {/* Visual Stepper Tabs */}
-      <section className="p-4 rounded-xl bg-[#FFFFFF] border border-[#EAE5F2] shadow-2xs">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-          {stepMeta.map((step) => {
-            const isCurrent = currentStep === step.num;
-            const isCompleted = currentStep > step.num;
-
-            return (
-              <button
-                key={step.num}
-                type="button"
-                onClick={() => {
-                  if (step.num < currentStep || validateStep(currentStep)) {
-                    setCurrentStep(step.num);
-                  }
-                }}
-                className={`flex items-center gap-3 p-2.5 rounded-lg text-left transition-all cursor-pointer border ${isCurrent
-                    ? "bg-[#F8F1FF] border-[#B8A1E3] shadow-2xs"
-                    : "border-transparent hover:bg-[#F8F1FF]/50"
-                  }`}
-              >
-                <div
-                  className={`w-7 h-7 rounded-full flex items-center justify-center font-tabular text-xs font-bold shrink-0 transition-colors ${isCurrent
-                      ? "bg-[#6846B5] text-[#FFFFFF]"
-                      : isCompleted
-                        ? "bg-[#D1E9CE] text-[#0C200F]"
-                        : "bg-[#F3EAFF] text-[#7A7483]"
-                    }`}
-                >
-                  {isCompleted ? <CheckCircle2 className="w-4 h-4 text-[#354935]" /> : step.num}
-                </div>
-                <div className="min-w-0 flex-1">
-                  <div
-                    className={`text-xs font-semibold truncate ${isCurrent ? "text-[#6846B5]" : "text-[#1D1928]"
-                      }`}
-                  >
-                    {step.title}
-                  </div>
-                  <div className="text-[11px] text-[#7A7483] truncate">{step.sub}</div>
-                </div>
-              </button>
-            );
-          })}
-        </div>
-
-        {/* Progress Bar */}
-        <div className="mt-3 w-full bg-[#F3EAFF] h-1.5 rounded-full overflow-hidden">
-          <div
-            className="bg-[#6846B5] h-full rounded-full transition-all duration-300"
-            style={{ width: `${(currentStep / 4) * 100}%` }}
-          />
-        </div>
-      </section>
-
-      {/* ==================== ETAPA 1: DADOS PESSOAIS ==================== */}
-      {currentStep === 1 && (
-        <section className="space-y-4 animate-in fade-in duration-200">
-          <div className="rounded-xl bg-[#FFFFFF] p-5 sm:p-7 shadow-2xs border border-[#EAE5F2] space-y-6">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 gap-2 border-b border-[#EDE5FA]/60">
-              <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-lg bg-[#EBDDFF] flex items-center justify-center text-[#230E48] font-bold text-xs">
-                  01
-                </div>
-                <div>
-                  <h2 className="font-heading text-lg font-semibold text-[#1D1928]">
-                    Etapa 1: Dados Pessoais
-                  </h2>
-                  <p className="text-xs text-[#6B6678]">
-                    Parâmetros essenciais para o prontuário eletrônico e relatórios clínicos.
-                  </p>
-                </div>
-              </div>
-              <span className="text-[11px] text-[#6846B5] bg-[#F8F1FF] px-2.5 py-1 rounded-full border border-[#EDE5FA]">
-                Ambiente de demonstração • Dados fictícios
-              </span>
-            </div>
-
-            {/* Inputs Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
-              {/* Nome Completo */}
-              <div className="md:col-span-7 flex flex-col gap-1.5">
-                <label className="text-xs font-semibold text-[#1D1928]" htmlFor="fullName">
-                  Nome Completo do(a) Paciente <span className="text-[#BA1A1A]">*</span>
-                </label>
-                <input
-                  id="fullName"
-                  type="text"
-                  value={formData.fullName}
-                  onChange={(e) => handleInputChange("fullName", e.target.value)}
-                  placeholder="Ex: Beatriz Helena Nogueira"
-                  className={`h-10 px-3 rounded-lg bg-[#F8F1FF] text-sm text-[#1D1928] border ${errors.fullName ? "border-[#BA1A1A] ring-1 ring-[#BA1A1A]" : "border-[#EAE5F2]"
-                    } focus:outline-none focus:bg-[#FFFFFF] focus:border-[#6846B5] transition-all`}
-                />
-                {errors.fullName ? (
-                  <span className="text-[11px] text-[#BA1A1A] font-medium">{errors.fullName}</span>
-                ) : (
-                  <span className="text-[11px] text-[#7A7483]">
-                    Conforme documento oficial para prescrições e atestados.
-                  </span>
-                )}
-              </div>
-
-              {/* Nome Social */}
-              <div className="md:col-span-5 flex flex-col gap-1.5">
-                <label className="text-xs font-semibold text-[#1D1928]" htmlFor="preferredName">
-                  Como prefere ser chamado(a) <span className="text-[#7A7483] font-normal">(Opcional)</span>
-                </label>
-                <input
-                  id="preferredName"
-                  type="text"
-                  value={formData.preferredName}
-                  onChange={(e) => handleInputChange("preferredName", e.target.value)}
-                  placeholder="Ex: Bia"
-                  className="h-10 px-3 rounded-lg bg-[#F8F1FF] text-sm text-[#1D1928] border border-[#EAE5F2] focus:outline-none focus:bg-[#FFFFFF] focus:border-[#6846B5] transition-all"
-                />
-                <span className="text-[11px] text-[#7A7483]">
-                  Será utilizado na comunicação pelo WhatsApp e no aplicativo.
-                </span>
-              </div>
-
-              {/* Data de Nascimento */}
-              <div className="md:col-span-4 flex flex-col gap-1.5">
-                <label className="text-xs font-semibold text-[#1D1928]" htmlFor="birthDate">
-                  Data de Nascimento <span className="text-[#BA1A1A]">*</span>
-                </label>
-                <input
-                  id="birthDate"
-                  type="date"
-                  value={formData.birthDate}
-                  onChange={(e) => handleInputChange("birthDate", e.target.value)}
-                  className={`h-10 px-3 rounded-lg bg-[#F8F1FF] text-sm text-[#1D1928] font-tabular border ${errors.birthDate ? "border-[#BA1A1A] ring-1 ring-[#BA1A1A]" : "border-[#EAE5F2]"
-                    } focus:outline-none focus:bg-[#FFFFFF] focus:border-[#6846B5] transition-all`}
-                />
-                <div className="flex items-center gap-1.5 text-xs text-[#6846B5] font-semibold font-tabular">
-                  <span>{computedAge.label}</span>
-                </div>
-              </div>
-
-              {/* Sexo Biológico */}
-              <div className="md:col-span-4 flex flex-col gap-1.5">
-                <label className="text-xs font-semibold text-[#1D1928]">
-                  Gênero / Sexo Biológico <span className="text-[#BA1A1A]">*</span>
-                </label>
-                <div className="flex items-center gap-1 h-10 p-1 rounded-lg bg-[#F8F1FF] border border-[#EAE5F2]">
-                  {(["Feminino", "Masculino", "Outro"] as const).map((sex) => (
-                    <button
-                      key={sex}
-                      type="button"
-                      onClick={() => handleInputChange("biologicalSex", sex)}
-                      className={`flex-1 h-full rounded-md text-xs font-semibold transition-all cursor-pointer ${formData.biologicalSex === sex
-                          ? "bg-[#FFFFFF] text-[#6846B5] shadow-2xs border border-[#EDE5FA]"
-                          : "text-[#7A7483] hover:text-[#1D1928]"
-                        }`}
-                    >
-                      {sex}
-                    </button>
-                  ))}
-                </div>
-                <span className="text-[11px] text-[#7A7483]">
-                  Utilizado para cálculo da taxa metabólica basal.
-                </span>
-              </div>
-
-              {/* CPF */}
-              <div className="md:col-span-4 flex flex-col gap-1.5">
-                <label className="text-xs font-semibold text-[#1D1928]" htmlFor="cpf">
-                  CPF <span className="text-[#BA1A1A]">*</span>
-                </label>
-                <input
-                  id="cpf"
-                  type="text"
-                  value={formData.cpf}
-                  onChange={(e) => handleInputChange("cpf", e.target.value)}
-                  placeholder="000.000.000-00"
-                  className={`h-10 px-3 rounded-lg bg-[#F8F1FF] text-sm text-[#1D1928] font-tabular border ${errors.cpf ? "border-[#BA1A1A] ring-1 ring-[#BA1A1A]" : "border-[#EAE5F2]"
-                    } focus:outline-none focus:bg-[#FFFFFF] focus:border-[#6846B5] transition-all`}
-                />
-                <span className="text-[11px] text-[#7A7483]">
-                  Utilizado para emissão de recibos e notas fiscais de saúde.
-                </span>
-              </div>
-
-              {/* Profissão */}
-              <div className="md:col-span-6 flex flex-col gap-1.5">
-                <label className="text-xs font-semibold text-[#1D1928]" htmlFor="occupation">
-                  Profissão / Atividade Principal
-                </label>
-                <input
-                  id="occupation"
-                  type="text"
-                  value={formData.occupation}
-                  onChange={(e) => handleInputChange("occupation", e.target.value)}
-                  placeholder="Ex: Arquiteta e Urbanista"
-                  className="h-10 px-3 rounded-lg bg-[#F8F1FF] text-sm text-[#1D1928] border border-[#EAE5F2] focus:outline-none focus:bg-[#FFFFFF] focus:border-[#6846B5] transition-all"
-                />
-                <span className="text-[11px] text-[#7A7483]">
-                  Relevante para estimativa do fator de atividade física diária (PAL).
-                </span>
-              </div>
-
-              {/* Estado Civil */}
-              <div className="md:col-span-6 flex flex-col gap-1.5">
-                <label className="text-xs font-semibold text-[#1D1928]" htmlFor="maritalStatus">
-                  Estado Civil / Rotina Familiar
-                </label>
-                <select
-                  id="maritalStatus"
-                  value={formData.maritalStatus}
-                  onChange={(e) => handleInputChange("maritalStatus", e.target.value)}
-                  className="h-10 px-3 rounded-lg bg-[#F8F1FF] text-sm text-[#1D1928] border border-[#EAE5F2] focus:outline-none focus:bg-[#FFFFFF] focus:border-[#6846B5] cursor-pointer transition-all"
-                >
-                  <option value="Solteira (Mora sozinha)">Solteira (Mora sozinha / Cozinha suas refeições)</option>
-                  <option value="Casada / União Estável">Casada / União Estável (Refeições compartilhadas)</option>
-                  <option value="Com filhos na rotina doméstica">Com filhos na rotina doméstica</option>
-                  <option value="Outro perfil familiar">Outro perfil domiciliar</option>
-                </select>
-                <span className="text-[11px] text-[#7A7483]">
-                  Ajuda na personalização das porções para a despensa da paciente.
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* Info Banner */}
-          <div className="p-4 rounded-xl bg-[#F8F1FF] border-l-4 border-l-[#6846B5] border border-[#EDE5FA] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-            <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-full bg-[#FFFFFF] flex items-center justify-center text-[#6846B5] shadow-2xs shrink-0">
-                <Info className="w-4 h-4" />
-              </div>
-              <div>
-                <h4 className="text-xs font-bold text-[#1D1928]">Identificação Unívoca da Paciente</h4>
-                <p className="text-[11px] text-[#6B6678]">
-                  Os dados são protegidos por criptografia e isolamento modular.
-                </p>
-              </div>
-            </div>
-            <span className="px-3 py-1 rounded-full bg-[#FFFFFF] text-[#6846B5] font-tabular text-xs font-bold shadow-2xs border border-[#EDE5FA] shrink-0">
-              Prontuário #NUT-2024-0189
-            </span>
-          </div>
-        </section>
-      )}
-
-      {/* ==================== ETAPA 2: CONTATOS & NOTIFICAÇÕES ==================== */}
-      {currentStep === 2 && (
-        <section className="space-y-4 animate-in fade-in duration-200">
-          <div className="rounded-xl bg-[#FFFFFF] p-5 sm:p-7 shadow-2xs border border-[#EAE5F2] space-y-6">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 gap-2 border-b border-[#EDE5FA]/60">
-              <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-lg bg-[#EBDDFF] flex items-center justify-center text-[#230E48] font-bold text-xs">
-                  02
-                </div>
-                <div>
-                  <h2 className="font-heading text-lg font-semibold text-[#1D1928]">
-                    Etapa 2: Contatos &amp; Canais
-                  </h2>
-                  <p className="text-xs text-[#6B6678]">
-                    Canais de contato, preferências e endereço residencial demonstrativo.
-                  </p>
-                </div>
-              </div>
-              <span className="text-[11px] text-[#93AA91] bg-[#D1E9CE]/50 px-2.5 py-1 rounded-full font-semibold">
-                Preferências ativas
-              </span>
-            </div>
-
-            {/* Contacts Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
-              {/* WhatsApp */}
-              <div className="md:col-span-6 flex flex-col gap-1.5">
-                <label className="text-xs font-semibold text-[#1D1928]" htmlFor="phone">
-                  WhatsApp / Celular Principal <span className="text-[#BA1A1A]">*</span>
-                </label>
-                <div className="relative">
-                  <Phone className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[#93AA91]" />
-                  <input
-                    id="phone"
-                    type="text"
-                    value={formData.phone}
-                    onChange={(e) => handleInputChange("phone", e.target.value)}
-                    placeholder="(11) 90000-0000"
-                    className={`h-10 pl-9 pr-3 w-full rounded-lg bg-[#F8F1FF] text-sm text-[#1D1928] font-tabular border ${errors.phone ? "border-[#BA1A1A] ring-1 ring-[#BA1A1A]" : "border-[#EAE5F2]"
-                      } focus:outline-none focus:bg-[#FFFFFF] focus:border-[#6846B5] transition-all`}
-                  />
-                </div>
-                {errors.phone && (
-                  <span className="text-[11px] text-[#BA1A1A] font-medium">{errors.phone}</span>
-                )}
-
-                {/* Auto WhatsApp Toggle */}
-                <div className="mt-2 p-3 rounded-lg bg-[#F8F1FF] flex items-start gap-2.5 border border-[#EDE5FA]/60">
-                  <input
-                    id="whatsappAuto"
-                    type="checkbox"
-                    checked={formData.whatsappAuto}
-                    onChange={(e) => handleInputChange("whatsappAuto", e.target.checked)}
-                    className="mt-0.5 w-4 h-4 rounded text-[#6846B5] accent-[#6846B5] cursor-pointer"
-                  />
-                  <label htmlFor="whatsappAuto" className="text-xs cursor-pointer select-none">
-                    <span className="font-semibold text-[#1D1928] block">
-                      Lembretes automáticos via WhatsApp
-                    </span>
-                    <span className="text-[11px] text-[#6B6678]">
-                      Enviar confirmação de consulta 24h antes e avisos de ingestão de água.
-                    </span>
-                  </label>
-                </div>
-              </div>
-
-              {/* E-mail */}
-              <div className="md:col-span-6 flex flex-col gap-1.5">
-                <label className="text-xs font-semibold text-[#1D1928]" htmlFor="email">
-                  E-mail para Envio de Planos &amp; Relatórios <span className="text-[#BA1A1A]">*</span>
-                </label>
-                <div className="relative">
-                  <Mail className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[#7A7483]" />
-                  <input
-                    id="email"
-                    type="email"
-                    value={formData.email}
-                    onChange={(e) => handleInputChange("email", e.target.value)}
-                    placeholder="paciente@exemplo.com.br"
-                    className={`h-10 pl-9 pr-3 w-full rounded-lg bg-[#F8F1FF] text-sm text-[#1D1928] border ${errors.email ? "border-[#BA1A1A] ring-1 ring-[#BA1A1A]" : "border-[#EAE5F2]"
-                      } focus:outline-none focus:bg-[#FFFFFF] focus:border-[#6846B5] transition-all`}
-                  />
-                </div>
-                {errors.email && (
-                  <span className="text-[11px] text-[#BA1A1A] font-medium">{errors.email}</span>
-                )}
-
-                {/* App Portal Access */}
-                <div className="mt-2 p-3 rounded-lg bg-[#F8F1FF] flex items-start gap-2.5 border border-[#EDE5FA]/60">
-                  <input
-                    id="patientApp"
-                    type="checkbox"
-                    checked={formData.patientApp}
-                    onChange={(e) => handleInputChange("patientApp", e.target.checked)}
-                    className="mt-0.5 w-4 h-4 rounded text-[#6846B5] accent-[#6846B5] cursor-pointer"
-                  />
-                  <label htmlFor="patientApp" className="text-xs cursor-pointer select-none">
-                    <span className="font-semibold text-[#1D1928] block">
-                      Convidar para o App Nutre do Paciente
-                    </span>
-                    <span className="text-[11px] text-[#6B6678]">
-                      Libera acesso ao diário fotográfico, lista de compras e metas.
-                    </span>
-                  </label>
-                </div>
-              </div>
-            </div>
-
-            {/* Endereço Residencial */}
-            <div className="pt-2 border-t border-[#EDE5FA]/60 space-y-3">
-              <div className="flex items-center justify-between">
-                <h3 className="text-xs font-bold text-[#1D1928] flex items-center gap-1.5">
-                  <MapPin className="w-3.5 h-3.5 text-[#6846B5]" />
-                  Endereço Residencial (Demonstrativo)
-                </h3>
-                <span className="text-[11px] text-[#7A7483]">Preenchimento automático via CEP</span>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-12 gap-3">
-                <div className="md:col-span-3 flex flex-col gap-1">
-                  <label className="text-xs text-[#494552] font-medium" htmlFor="cep">
-                    CEP
-                  </label>
-                  <div className="relative">
-                    <input
-                      id="cep"
-                      type="text"
-                      value={formData.cep}
-                      onChange={(e) => handleInputChange("cep", e.target.value)}
-                      className="h-10 px-3 w-full rounded-lg bg-[#F8F1FF] text-sm text-[#1D1928] font-tabular border border-[#EAE5F2] focus:outline-none focus:bg-[#FFFFFF] focus:border-[#6846B5]"
-                    />
-                    <button
-                      type="button"
-                      onClick={simulateCepLookup}
-                      className="absolute right-2 top-1/2 -translate-y-1/2 text-xs font-semibold text-[#6846B5] hover:text-[#57389B] p-1 cursor-pointer"
-                    >
-                      Buscar
-                    </button>
-                  </div>
-                </div>
-
-                <div className="md:col-span-6 flex flex-col gap-1">
-                  <label className="text-xs text-[#494552] font-medium" htmlFor="street">
-                    Logradouro / Rua
-                  </label>
-                  <input
-                    id="street"
-                    type="text"
-                    value={formData.street}
-                    onChange={(e) => handleInputChange("street", e.target.value)}
-                    className="h-10 px-3 rounded-lg bg-[#F8F1FF] text-sm text-[#1D1928] border border-[#EAE5F2] focus:outline-none focus:bg-[#FFFFFF] focus:border-[#6846B5]"
-                  />
-                </div>
-
-                <div className="md:col-span-3 flex flex-col gap-1">
-                  <label className="text-xs text-[#494552] font-medium" htmlFor="number">
-                    Número &amp; Compl.
-                  </label>
-                  <input
-                    id="number"
-                    type="text"
-                    value={formData.number}
-                    onChange={(e) => handleInputChange("number", e.target.value)}
-                    className="h-10 px-3 rounded-lg bg-[#F8F1FF] text-sm text-[#1D1928] border border-[#EAE5F2] focus:outline-none focus:bg-[#FFFFFF] focus:border-[#6846B5]"
-                  />
-                </div>
-
-                <div className="md:col-span-4 flex flex-col gap-1">
-                  <label className="text-xs text-[#494552] font-medium" htmlFor="neighborhood">
-                    Bairro
-                  </label>
-                  <input
-                    id="neighborhood"
-                    type="text"
-                    value={formData.neighborhood}
-                    onChange={(e) => handleInputChange("neighborhood", e.target.value)}
-                    className="h-10 px-3 rounded-lg bg-[#F8F1FF] text-sm text-[#1D1928] border border-[#EAE5F2] focus:outline-none focus:bg-[#FFFFFF] focus:border-[#6846B5]"
-                  />
-                </div>
-
-                <div className="md:col-span-5 flex flex-col gap-1">
-                  <label className="text-xs text-[#494552] font-medium" htmlFor="city">
-                    Cidade
-                  </label>
-                  <input
-                    id="city"
-                    type="text"
-                    value={formData.city}
-                    onChange={(e) => handleInputChange("city", e.target.value)}
-                    className="h-10 px-3 rounded-lg bg-[#F8F1FF] text-sm text-[#1D1928] border border-[#EAE5F2] focus:outline-none focus:bg-[#FFFFFF] focus:border-[#6846B5]"
-                  />
-                </div>
-
-                <div className="md:col-span-3 flex flex-col gap-1">
-                  <label className="text-xs text-[#494552] font-medium" htmlFor="state">
-                    Estado / UF
-                  </label>
-                  <input
-                    id="state"
-                    type="text"
-                    value={formData.state}
-                    onChange={(e) => handleInputChange("state", e.target.value)}
-                    className="h-10 px-3 rounded-lg bg-[#F8F1FF] text-sm text-[#1D1928] font-tabular border border-[#EAE5F2] focus:outline-none focus:bg-[#FFFFFF] focus:border-[#6846B5] uppercase"
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-      )}
-
-      {/* ==================== ETAPA 3: INFORMAÇÕES DE ENTRADA ==================== */}
-      {currentStep === 3 && (
-        <section className="space-y-4 animate-in fade-in duration-200">
-          <div className="rounded-xl bg-[#FFFFFF] p-5 sm:p-7 shadow-2xs border border-[#EAE5F2] space-y-6">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 gap-2 border-b border-[#EDE5FA]/60">
-              <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-lg bg-[#EBDDFF] flex items-center justify-center text-[#230E48] font-bold text-xs">
-                  03
-                </div>
-                <div>
-                  <h2 className="font-heading text-lg font-semibold text-[#1D1928]">
-                    Etapa 3: Informações de Entrada
-                  </h2>
-                  <p className="text-xs text-[#6B6678]">
-                    Classificação de entrada clínica para guiar o prontuário e as metas.
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Attendance Mode Cards */}
-            <div className="space-y-2">
-              <label className="text-xs font-semibold text-[#1D1928]">
-                Modalidade Preferencial de Atendimento <span className="text-[#BA1A1A]">*</span>
-              </label>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
-                <button
-                  type="button"
-                  onClick={() =>
-                    handleInputChange("attendanceMode", "Presencial no Consultório")
-                  }
-                  className={`p-4 rounded-xl text-left transition-all border-2 cursor-pointer relative ${formData.attendanceMode === "Presencial no Consultório"
-                      ? "bg-[#F8F1FF] border-[#6846B5] shadow-xs"
-                      : "bg-[#FFFFFF] border-[#EAE5F2] hover:border-[#B8A1E3]"
-                    }`}
-                >
-                  <div className="flex items-center gap-2">
-                    <Building2 className="w-4 h-4 text-[#6846B5]" />
-                    <span className="font-bold text-sm text-[#1D1928]">
-                      Presencial no Consultório
-                    </span>
-                  </div>
-                  <p className="text-xs text-[#494552] mt-1.5">
-                    Inclui bioimpedância InBody 770 e avaliação de dobras cutâneas no local.
-                  </p>
-                  <span className="absolute top-3 right-3 px-2 py-0.5 rounded bg-[#E9DDFF] text-[#23005C] text-[10px] font-bold">
-                    Recomendado
-                  </span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() =>
-                    handleInputChange("attendanceMode", "Teleconsulta / Online")
-                  }
-                  className={`p-4 rounded-xl text-left transition-all border-2 cursor-pointer relative ${formData.attendanceMode === "Teleconsulta / Online"
-                      ? "bg-[#F8F1FF] border-[#6846B5] shadow-xs"
-                      : "bg-[#FFFFFF] border-[#EAE5F2] hover:border-[#B8A1E3]"
-                    }`}
-                >
-                  <div className="flex items-center gap-2">
-                    <Video className="w-4 h-4 text-[#685490]" />
-                    <span className="font-bold text-sm text-[#1D1928]">
-                      Teleconsulta / Online
-                    </span>
-                  </div>
-                  <p className="text-xs text-[#494552] mt-1.5">
-                    Atendimento remoto com envio prévio de fotos guiadas para o Body Scan.
-                  </p>
-                </button>
-              </div>
-            </div>
-
-            {/* Goals & Referral */}
-            <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
-              <div className="md:col-span-6 flex flex-col gap-1.5">
-                <label className="text-xs font-semibold text-[#1D1928]" htmlFor="primaryGoal">
-                  Objetivo Principal Inicial <span className="text-[#BA1A1A]">*</span>
-                </label>
-                <select
-                  id="primaryGoal"
-                  value={formData.primaryGoal}
-                  onChange={(e) => handleInputChange("primaryGoal", e.target.value)}
-                  className="h-10 px-3 rounded-lg bg-[#F8F1FF] text-sm text-[#1D1928] border border-[#EAE5F2] focus:outline-none focus:bg-[#FFFFFF] focus:border-[#6846B5] cursor-pointer"
-                >
-                  <option value="Emagrecimento & Definição Corporal">Emagrecimento &amp; Definição Corporal</option>
-                  <option value="Hipertrofia & Desempenho Esportivo">Hipertrofia &amp; Desempenho Esportivo</option>
-                  <option value="Saúde Geral, Longevidade & Imunidade">Saúde Geral, Longevidade &amp; Imunidade</option>
-                  <option value="SOP & Equilíbrio Hormonal">SOP &amp; Equilíbrio Hormonal</option>
-                  <option value="Nutrição Gestacional / Lactação">Nutrição Gestacional / Lactação</option>
-                </select>
-              </div>
-
-              <div className="md:col-span-6 flex flex-col gap-1.5">
-                <label className="text-xs font-semibold text-[#1D1928]" htmlFor="referralSource">
-                  Como conheceu o consultório?
-                </label>
-                <select
-                  id="referralSource"
-                  value={formData.referralSource}
-                  onChange={(e) => handleInputChange("referralSource", e.target.value)}
-                  className="h-10 px-3 rounded-lg bg-[#F8F1FF] text-sm text-[#1D1928] border border-[#EAE5F2] focus:outline-none focus:bg-[#FFFFFF] focus:border-[#6846B5] cursor-pointer"
-                >
-                  <option value="Indicação de outro paciente (Boca a boca)">Indicação de outro paciente (Boca a boca)</option>
-                  <option value="Instagram da Dra. Camila Pompeu (@dranutri)">Instagram da Dra. Camila Pompeu (@dranutri)</option>
-                  <option value="Indicação Médica (Ginecologista / Endocrino)">Indicação Médica</option>
-                  <option value="Busca Google / Maps">Busca Google / Maps</option>
-                </select>
-              </div>
-
-              {/* Administrative Notes */}
-              <div className="md:col-span-12 flex flex-col gap-1.5">
-                <label className="text-xs font-semibold text-[#1D1928]" htmlFor="adminNotes">
-                  Notas Administrativas Internas &amp; Restrições Iniciais
-                </label>
-                <textarea
-                  id="adminNotes"
-                  rows={3}
-                  value={formData.adminNotes}
-                  onChange={(e) => handleInputChange("adminNotes", e.target.value)}
-                  className="p-3 rounded-lg bg-[#F8F1FF] text-sm text-[#1D1928] border border-[#EAE5F2] focus:outline-none focus:bg-[#FFFFFF] focus:border-[#6846B5] transition-all resize-y"
-                  placeholder="Observações da recepção ou restrições alimentares informadas no primeiro contato..."
-                />
-              </div>
-            </div>
-          </div>
-        </section>
-      )}
-
-      {/* ==================== ETAPA 4: REVISÃO & CONFIRMAÇÃO ==================== */}
-      {currentStep === 4 && (
-        <section className="space-y-4 animate-in fade-in duration-200">
-          <div className="rounded-xl bg-[#FFFFFF] p-5 sm:p-7 shadow-2xs border border-[#EAE5F2] space-y-6">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 gap-2 border-b border-[#EDE5FA]/60">
-              <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-lg bg-[#EBDDFF] flex items-center justify-center text-[#230E48] font-bold text-xs">
-                  04
-                </div>
-                <div>
-                  <h2 className="font-heading text-lg font-semibold text-[#1D1928]">
-                    Etapa 4: Revisão &amp; Confirmação
-                  </h2>
-                  <p className="text-xs text-[#6B6678]">
-                    Confira o resumo geral dos dados antes de inicializar o prontuário no sistema Nutre.
-                  </p>
-                </div>
-              </div>
-              <span className="px-2.5 py-0.5 rounded bg-[#E9DDFF] text-[#23005C] text-xs font-semibold">
-                Resumo Consolidado
-              </span>
-            </div>
-
-            {/* 3 Review Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {/* Card 1 */}
-              <div className="p-4 rounded-xl bg-[#F8F1FF] border border-[#EDE5FA] flex flex-col justify-between gap-3">
-                <div className="space-y-1.5">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[11px] font-bold text-[#6846B5] uppercase tracking-wider">
-                      1. Dados Pessoais
-                    </span>
-                    <CheckCircle2 className="w-4 h-4 text-[#93AA91]" />
-                  </div>
-                  <div className="font-bold text-sm text-[#1D1928]">{formData.fullName}</div>
-                  <div className="text-xs text-[#494552]">
-                    Nome Social: {formData.preferredName || "Não informado"}
-                  </div>
-                  <div className="text-xs text-[#7A7483]">
-                    {computedAge.label} • Sexo: {formData.biologicalSex}
-                  </div>
-                  <div className="text-xs text-[#7A7483]">CPF: {formData.cpf}</div>
-                  <div className="text-xs text-[#7A7483]">{formData.occupation}</div>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() => setCurrentStep(1)}
-                  className="w-full mt-2 py-1.5 px-3 rounded-lg border border-[#6846B5]/30 bg-[#FFFFFF] text-[#6846B5] hover:bg-[#6846B5] hover:text-[#FFFFFF] text-xs font-semibold flex items-center justify-center gap-1 transition-all cursor-pointer"
-                >
-                  <Edit className="w-3.5 h-3.5" />
-                  <span>Editar Dados Pessoais</span>
-                </button>
-              </div>
-
-              {/* Card 2 */}
-              <div className="p-4 rounded-xl bg-[#F8F1FF] border border-[#EDE5FA] flex flex-col justify-between gap-3">
-                <div className="space-y-1.5">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[11px] font-bold text-[#685490] uppercase tracking-wider">
-                      2. Contatos &amp; Endereço
-                    </span>
-                    <CheckCircle2 className="w-4 h-4 text-[#93AA91]" />
-                  </div>
-                  <div className="font-bold text-sm text-[#1D1928]">{formData.phone}</div>
-                  <div className="text-xs text-[#494552] truncate">{formData.email}</div>
-                  <div className="text-xs text-[#7A7483]">
-                    {formData.street}, {formData.number}
-                  </div>
-                  <div className="text-xs text-[#7A7483]">
-                    {formData.neighborhood} • {formData.city} - {formData.state}
-                  </div>
-                  <div className="flex items-center gap-1.5 pt-1">
-                    {formData.whatsappAuto && (
-                      <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-[#D1E9CE] text-[#0C200F]">
-                        WhatsApp Ativo
-                      </span>
-                    )}
-                    {formData.patientApp && (
-                      <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-[#EBDDFF] text-[#230E48]">
-                        App Convidado
-                      </span>
-                    )}
-                  </div>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() => setCurrentStep(2)}
-                  className="w-full mt-2 py-1.5 px-3 rounded-lg border border-[#685490]/30 bg-[#FFFFFF] text-[#685490] hover:bg-[#685490] hover:text-[#FFFFFF] text-xs font-semibold flex items-center justify-center gap-1 transition-all cursor-pointer"
-                >
-                  <Edit className="w-3.5 h-3.5" />
-                  <span>Editar Contatos</span>
-                </button>
-              </div>
-
-              {/* Card 3 */}
-              <div className="p-4 rounded-xl bg-[#F8F1FF] border border-[#EDE5FA] flex flex-col justify-between gap-3">
-                <div className="space-y-1.5">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[11px] font-bold text-[#6846B5] uppercase tracking-wider">
-                      3. Entrada &amp; Modalidade
-                    </span>
-                    <CheckCircle2 className="w-4 h-4 text-[#93AA91]" />
-                  </div>
-                  <div className="font-bold text-sm text-[#6846B5]">
-                    {formData.attendanceMode}
-                  </div>
-                  <div className="text-xs text-[#1D1928] font-medium">{formData.primaryGoal}</div>
-                  <div className="text-xs text-[#7A7483]">{formData.referralSource}</div>
-                  <p className="text-[11px] text-[#7A7483] italic line-clamp-2 mt-1">
-                    &ldquo;{formData.adminNotes}&rdquo;
-                  </p>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() => setCurrentStep(3)}
-                  className="w-full mt-2 py-1.5 px-3 rounded-lg border border-[#6846B5]/30 bg-[#FFFFFF] text-[#6846B5] hover:bg-[#6846B5] hover:text-[#FFFFFF] text-xs font-semibold flex items-center justify-center gap-1 transition-all cursor-pointer"
-                >
-                  <Edit className="w-3.5 h-3.5" />
-                  <span>Editar Informações</span>
-                </button>
-              </div>
-            </div>
-
-            {/* Mandatory Demonstration Notice */}
-            <div className="p-4 rounded-xl bg-[#EDE5FA]/70 border border-[#B8A1E3]/40 flex items-start gap-3">
-              <ShieldAlert className="w-5 h-5 text-[#6846B5] shrink-0 mt-0.5" />
-              <div className="text-xs space-y-1">
-                <h4 className="font-bold text-[#1D1928]">
-                  Ambiente de demonstração — sem persistência em banco de dados
-                </h4>
-                <p className="text-[#494552] leading-relaxed">
-                  Conforme as diretrizes do projeto Nutre (Marco 01), os cadastros não são gravados no banco de dados nem em tabelas externas. Ao clicar em finalizar, você receberá a confirmação de validação da interface.
-                </p>
-              </div>
-            </div>
-          </div>
-        </section>
-      )}
-
-      {/* Sticky Bottom Floating Action Bar */}
-      <div className="fixed bottom-0 left-0 lg:left-[260px] right-0 bg-[#FFFFFF]/95 backdrop-blur-md shadow-[0_-4px_20px_rgba(40,36,51,0.06)] z-30 px-4 sm:px-6 py-3 border-t border-[#EAE5F2]">
-        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
-          <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-start">
-            <button
-              id="btn-back"
-              type="button"
-              onClick={handleBack}
-              className="h-9 px-3 rounded-lg bg-[#F8F1FF] hover:bg-[#EDE5FA] text-[#1D1928] text-xs sm:text-sm font-semibold flex items-center gap-1.5 transition-colors cursor-pointer border border-[#EAE5F2]"
-            >
-              <ArrowLeft className="w-4 h-4" />
-              <span>{currentStep === 1 ? "Voltar para Lista" : "Etapa Anterior"}</span>
-            </button>
-
-            <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#EDE5FA] text-[#6846B5] text-xs font-semibold">
-              <span>Etapa {currentStep} de 4</span>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2.5 w-full sm:w-auto justify-end">
-            <button
-              type="button"
-              onClick={handleDraftClick}
-              className="h-9 px-3 rounded-lg bg-[#F8F1FF] hover:bg-[#EDE5FA] text-[#494552] text-xs font-medium transition-colors border border-[#EAE5F2] hidden sm:block"
-            >
-              Salvar Rascunho
-            </button>
-
-            <button
-              id="btn-advance"
-              type="button"
-              onClick={handleAdvance}
-              className="h-10 px-5 rounded-lg bg-[#6846B5] hover:bg-[#57389B] text-[#FFFFFF] text-xs sm:text-sm font-semibold flex items-center gap-2 transition-all shadow-sm hover:shadow-md cursor-pointer active:scale-95"
-            >
-              <span>
-                {currentStep === 4
-                  ? "Finalizar Cadastro Demonstrativo"
-                  : `Avançar para ${stepMeta[currentStep].title.replace(/^\d+\.\s*/, "")}`}
-              </span>
-              <ArrowRight className="w-4 h-4" />
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* Completion Modal - Explicit Demonstration Notice */}
-      {showFinishModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div
-            className="fixed inset-0 bg-[#1E1B26]/50 backdrop-blur-xs"
-            onClick={() => setShowFinishModal(false)}
-          />
-          <div className="relative w-full max-w-lg bg-[#FFFFFF] rounded-2xl shadow-2xl border border-[#EAE5F2] p-6 space-y-4 z-10 animate-in fade-in zoom-in-95 duration-150">
-            <div className="w-12 h-12 rounded-full bg-[#D1E9CE] text-[#0C200F] flex items-center justify-center mx-auto">
-              <CheckCircle2 className="w-6 h-6 text-[#354935]" />
-            </div>
-
-            <div className="text-center space-y-2">
-              <h3 className="font-heading text-lg font-bold text-[#1D1928]">
-                Fluxo de Cadastro Validado com Sucesso!
-              </h3>
-              <p className="text-xs sm:text-sm text-[#494552] leading-relaxed">
-                As 4 etapas do wizard foram concluídas e validadas perfeitamente.
-              </p>
-              <div className="p-3 bg-[#F8F1FF] rounded-xl border border-[#EDE5FA] text-xs text-[#6B6678] text-left">
-                <strong>Importante:</strong> Este é um <em>ambiente de demonstração (Marco 01)</em>. Nenhum dado foi persistido no banco de dados e nenhuma integração de backend foi realizada, conforme as diretrizes arquiteturais.
-              </div>
-            </div>
-
-            <div className="pt-2 flex flex-col sm:flex-row items-center gap-2 justify-end">
-              <button
-                type="button"
-                onClick={() => {
-                  setShowFinishModal(false);
-                  startTransition(() => {
-                    push("/pacientes");
-                  });
-                }}
-                className="w-full sm:w-auto h-9 px-4 rounded-lg bg-[#F8F1FF] hover:bg-[#EDE5FA] text-[#1D1928] text-xs font-semibold border border-[#EAE5F2] transition-colors"
-              >
-                Ir para Lista de Pacientes
-              </button>
-
-              <button
-                type="button"
-                onClick={() => {
-                  setShowFinishModal(false);
-                  startTransition(() => {
-                    push("/pacientes/beatriz-nogueira");
-                  });
-                }}
-                className="w-full sm:w-auto h-9 px-4 rounded-lg bg-[#6846B5] hover:bg-[#57389B] text-[#FFFFFF] text-xs font-semibold shadow-2xs transition-colors"
-              >
-                Ver Prontuário Demonstrativo
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <footer className="fixed inset-x-0 bottom-0 z-30 border-t border-[#EAE5F2] bg-[var(--nutre-card)]/95 p-3 backdrop-blur-md lg:left-[260px]"><div className="mx-auto flex max-w-6xl items-center justify-between gap-3"><button type="button" onClick={() => step === 1 ? push("/pacientes") : goTo(step - 1)} className="inline-flex h-11 items-center gap-2 rounded-xl px-4 text-sm font-bold transition-all hover:bg-[#F8F1FF]"><ArrowLeft className="h-4 w-4" />{step === 1 ? "Voltar" : "Etapa anterior"}</button><span className="nutre-muted hidden text-xs sm:block">Etapa {step} de 5</span><button type="button" onClick={() => step === 5 ? finish() : goTo(step + 1)} className="inline-flex h-11 items-center gap-2 rounded-xl bg-[#6846B5] px-5 text-sm font-bold text-white shadow-sm transition-all hover:bg-[#57389B] active:scale-95">{step === 5 ? "Concluir simulação" : "Continuar"}{step < 5 && <ArrowRight className="h-4 w-4" />}</button></div></footer>
     </div>
   );
+}
+
+function SectionTitle({ number, title, subtitle }: { number: string; title: string; subtitle: string }) {
+  return <div className="flex items-start gap-3 border-b border-[#EAE5F2] pb-4"><span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#EDE5FA] text-xs font-extrabold text-[#6846B5]">{number}</span><div><h2 className="text-lg font-bold">{title}</h2><p className="nutre-muted text-xs">{subtitle}</p></div></div>;
+}
+
+function ReviewCard({ title, rows, onEdit }: { title: string; rows: string[][]; onEdit: () => void }) {
+  return <article className="rounded-xl border border-[#EAE5F2] p-4"><div className="mb-3 flex items-center justify-between"><h3 className="font-bold">{title}</h3><button type="button" onClick={onEdit} className="inline-flex items-center gap-1 text-xs font-bold text-[#6846B5] hover:underline"><Pencil className="h-3.5 w-3.5" />Editar</button></div><dl className="space-y-2">{rows.map(([label, value]) => <div key={label} className="grid grid-cols-[8rem_1fr] gap-2 text-xs"><dt className="nutre-muted">{label}</dt><dd className="font-semibold">{value}</dd></div>)}</dl></article>;
 }

@@ -38,6 +38,8 @@
   --nutre-amber-dark: #92400e;
 
   /* Surfaces & Containers */
+  --nutre-bg: #f5f1fc;
+  --nutre-card: #ffffff;
   --nutre-surface: #fdf7ff;
   --nutre-surface-lowest: #ffffff;
   --nutre-surface-low: #f8f1ff;
@@ -57,6 +59,11 @@
   --nutre-outline-variant: #cbc3d4;
   --nutre-border: #eae5f2;
   --nutre-border-subtle: #e2dced;
+  --nutre-focus: #8b6fd0;
+  --nutre-sidebar-bg: #241b35;
+  --nutre-sidebar-bg-hover: #352649;
+  --nutre-sidebar-text: #f7f1ff;
+  --nutre-sidebar-muted: #c7b9dc;
 
   /* Errors */
   --nutre-error: #ba1a1a;
@@ -65,8 +72,76 @@
   
   font-family: var(--font-sans, "Geist", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif);
   color: var(--nutre-on-surface);
-  background-color: var(--nutre-surface);
+  background-color: var(--nutre-bg);
+  color-scheme: light;
 }
+
+html[data-nutre-theme="dark"] .nutre-theme {
+  --nutre-bg: #1e1b26;
+  --nutre-card: #2b2635;
+  --nutre-surface: #1e1b26;
+  --nutre-surface-lowest: #2b2635;
+  --nutre-surface-low: #332d3e;
+  --nutre-surface-container: #393143;
+  --nutre-surface-high: #403749;
+  --nutre-surface-highest: #493f54;
+  --nutre-on-surface: #f5effc;
+  --nutre-on-surface-variant: #d2c8dc;
+  --nutre-graphite: #f5effc;
+  --nutre-muted: #b9aec4;
+  --nutre-outline: #a99db5;
+  --nutre-outline-variant: #5a5065;
+  --nutre-border: #463d51;
+  --nutre-border-subtle: #51475d;
+  --nutre-primary: #cbb4ff;
+  --nutre-primary-hover: #dac8ff;
+  --nutre-sidebar-bg: #16121e;
+  --nutre-sidebar-bg-hover: #2d233b;
+  --nutre-sidebar-text: #fbf7ff;
+  --nutre-sidebar-muted: #cbbddd;
+  color-scheme: dark;
+}
+
+.nutre-theme {
+  background: var(--nutre-bg);
+  color: var(--nutre-on-surface);
+}
+
+/* Compatibility bridge for the pre-existing Nutre prototype. These selectors are
+   scoped to Nutre and map its former literal palette onto local semantic tokens. */
+.nutre-theme [class~="bg-[#FFFFFF]"],
+.nutre-theme[class~="bg-[#FDF7FF]"] { background-color: var(--nutre-card) !important; }
+.nutre-theme [class~="bg-[#F8F1FF]"] { background-color: var(--nutre-surface-low) !important; }
+.nutre-theme [class~="bg-[#F3EAFF]"] { background-color: var(--nutre-surface-container) !important; }
+.nutre-theme [class~="bg-[#EDE5FA]"] { background-color: var(--nutre-surface-high) !important; }
+.nutre-theme [class~="text-[#1D1928]"] { color: var(--nutre-on-surface) !important; }
+.nutre-theme [class~="text-[#282433]"],
+.nutre-theme [class~="text-[#494552]"] { color: var(--nutre-on-surface-variant) !important; }
+.nutre-theme [class~="text-[#6B6678]"],
+.nutre-theme [class~="text-[#7A7483]"] { color: var(--nutre-muted) !important; }
+.nutre-theme [class~="border-[#EAE5F2]"],
+.nutre-theme [class~="border-[#EDE5FA]"] { border-color: var(--nutre-border) !important; }
+
+.nutre-shell { background: var(--nutre-bg); color: var(--nutre-on-surface); }
+.nutre-card { background: var(--nutre-card); border: 1px solid var(--nutre-border); }
+.nutre-muted { color: var(--nutre-muted); }
+.nutre-input {
+  width: 100%; border: 1px solid var(--nutre-border); border-radius: .625rem;
+  background: var(--nutre-surface-low); color: var(--nutre-on-surface);
+  padding: .625rem .75rem; outline: none; transition: border-color .2s, box-shadow .2s, background .2s;
+}
+.nutre-input:focus { border-color: var(--nutre-focus); box-shadow: 0 0 0 3px color-mix(in srgb, var(--nutre-focus) 20%, transparent); background: var(--nutre-card); }
+.nutre-input[aria-invalid="true"] { border-color: var(--nutre-error); }
+.nutre-sidebar { background: var(--nutre-sidebar-bg); color: var(--nutre-sidebar-text); border-color: color-mix(in srgb, white 12%, transparent); }
+.nutre-sidebar .nutre-sidebar-muted { color: var(--nutre-sidebar-muted); }
+.nutre-sidebar .nutre-sidebar-link { color: var(--nutre-sidebar-muted); }
+.nutre-sidebar .nutre-sidebar-link:hover { color: var(--nutre-sidebar-text); background: var(--nutre-sidebar-bg-hover); }
+.nutre-sidebar .nutre-sidebar-link.is-active { color: #fff; background: #6846b5; }
+
+.nutre-theme-toggle { display: inline-flex; gap: .125rem; padding: .1875rem; border: 1px solid var(--nutre-border); border-radius: .625rem; background: var(--nutre-surface-low); }
+.nutre-theme-toggle button { display: inline-flex; align-items: center; gap: .3rem; padding: .3rem .45rem; border-radius: .4rem; color: var(--nutre-muted); font-size: .6875rem; font-weight: 700; transition: all .2s; }
+.nutre-theme-toggle button:hover { color: var(--nutre-on-surface); background: var(--nutre-card); }
+.nutre-theme-toggle button.is-active { color: var(--nutre-primary); background: var(--nutre-card); box-shadow: 0 1px 3px rgb(0 0 0 / .12); }
 
 /* Headings with Plus Jakarta Sans */
 .nutre-theme h1,

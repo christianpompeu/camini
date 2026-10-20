@@ -2,8 +2,7 @@ import React from "react";
 import { notFound } from "next/navigation";
 import { MOCK_PATIENTS } from "@/data/nutre/mock-patients";
 import { getPatientDetail } from "@/data/nutre/mock-patient-details";
-import { PatientProfileHeader } from "@/components/nutre/profile/patient-profile-header";
-import { PatientProfileTabs } from "@/components/nutre/profile/patient-profile-tabs";
+import { PatientProfilePageClient } from "@/components/nutre/profile/patient-profile-page-client";
 
 export function generateStaticParams() {
   return MOCK_PATIENTS.map((patient) => ({
@@ -19,14 +18,8 @@ export default async function NutrePatientProfilePage({
   const { id } = await params;
   const patient = getPatientDetail(id);
 
-  if (!patient) {
+  if (!patient && !id.startsWith("demo-")) {
     notFound();
   }
-
-  return (
-    <div className="space-y-6">
-      <PatientProfileHeader patient={patient} />
-      <PatientProfileTabs patient={patient} />
-    </div>
-  );
+  return <PatientProfilePageClient id={id} patient={patient} />;
 }

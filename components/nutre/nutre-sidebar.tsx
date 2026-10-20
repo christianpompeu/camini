@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React from "react";
 import Link from "next/link";
 import { useNutreNavigation } from "./nutre-navigation-context";
 import {
@@ -89,14 +89,14 @@ export function NutreSidebar({
 
       {/* Sidebar Container */}
       <aside
-        className={`fixed top-0 bottom-0 left-0 bg-[#FFFFFF] border-r border-[#EAE5F2] shadow-[0_1px_8px_rgba(40,36,51,0.04)] z-50 flex flex-col justify-between transition-all duration-300 ease-in-out
+        className={`nutre-sidebar fixed top-0 bottom-0 left-0 border-r shadow-[0_1px_8px_rgba(0,0,0,0.18)] z-50 flex flex-col justify-between transition-all duration-300 ease-in-out
           ${isCollapsed ? "w-[72px]" : "w-[260px]"}
           ${isMobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}
         `}
       >
         <div className="flex flex-col flex-1 overflow-y-auto">
           {/* Header Brand */}
-          <div className="h-14 px-4 flex items-center justify-between border-b border-[#EDE5FA]/70 shrink-0">
+          <div className="h-14 px-4 flex items-center justify-between border-b border-white/10 shrink-0">
             <Link
               href={resolveUrl("/nutre")}
               className="flex items-center gap-2.5 overflow-hidden group"
@@ -108,14 +108,14 @@ export function NutreSidebar({
               {!isCollapsed && (
                 <div className="flex flex-col min-w-0">
                   <div className="flex items-center gap-1.5">
-                    <span className="font-bold text-[15px] tracking-tight text-[#1D1928] leading-none">
+                    <span className="font-bold text-[15px] tracking-tight text-white leading-none">
                       NUTRE
                     </span>
                     <span className="px-1.5 py-0.5 rounded text-[9px] font-semibold bg-[#EDE5FA] text-[#6846B5] uppercase tracking-wider">
                       Clínico
                     </span>
                   </div>
-                  <span className="text-[10px] text-[#7A7483] font-medium tracking-wide mt-0.5 truncate">
+                  <span className="nutre-sidebar-muted text-[10px] font-medium tracking-wide mt-0.5 truncate">
                     Gestão Nutricional
                   </span>
                 </div>
@@ -136,7 +136,7 @@ export function NutreSidebar({
             {navGroups.map((group) => (
               <div key={group.title} className="space-y-1">
                 {!isCollapsed && (
-                  <div className="px-3 pb-1 text-[11px] font-semibold text-[#7A7483] uppercase tracking-wider">
+                  <div className="nutre-sidebar-muted px-3 pb-1 text-[11px] font-semibold uppercase tracking-wider">
                     {group.title}
                   </div>
                 )}
@@ -151,16 +151,16 @@ export function NutreSidebar({
                         href={resolvedHref}
                         onClick={onCloseMobile}
                         title={isCollapsed ? item.label : undefined}
-                        className={`flex items-center justify-between px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+                        className={`nutre-sidebar-link flex items-center justify-between px-3 py-2 rounded-lg text-sm font-medium transition-all ${
                           active
-                            ? "bg-[#6846B5] text-[#FFFFFF] shadow-2xs font-semibold"
-                            : "text-[#494552] hover:bg-[#F8F1FF] hover:text-[#1D1928]"
+                            ? "is-active shadow-2xs font-semibold"
+                            : ""
                         } ${isCollapsed ? "justify-center px-0" : ""}`}
                       >
                         <div className="flex items-center gap-3">
                           <Icon
                             className={`w-[18px] h-[18px] shrink-0 ${
-                              active ? "text-[#FFFFFF]" : "text-[#7A7483]"
+                              active ? "text-white" : "nutre-sidebar-muted"
                             }`}
                           />
                           {!isCollapsed && <span>{item.label}</span>}
@@ -186,14 +186,14 @@ export function NutreSidebar({
         </div>
 
         {/* Bottom Section */}
-        <div className="p-3 border-t border-[#EDE5FA]/70 space-y-2 shrink-0 bg-[#FFFFFF]">
+        <div className="p-3 border-t border-white/10 space-y-2 shrink-0">
           {!isCollapsed && (
-            <div className="p-2.5 rounded-xl bg-[#F8F1FF] border border-[#EDE5FA] space-y-1">
+            <div className="p-2.5 rounded-xl bg-white/6 border border-white/10 space-y-1">
               <div className="flex items-center gap-1.5 text-[#6846B5] text-xs font-semibold">
                 <ShieldCheck className="w-3.5 h-3.5" />
                 <span>Protótipo Demonstrativo</span>
               </div>
-              <p className="text-[11px] text-[#494552] leading-tight">
+              <p className="nutre-sidebar-muted text-[11px] leading-tight">
                 Ambiente conceitual para validação clínica. Sem diagnósticos reais.
               </p>
               <span className="inline-block mt-1 text-[10px] font-medium text-[#7A7483] bg-[#EDE5FA] px-1.5 py-0.5 rounded">
@@ -207,7 +207,7 @@ export function NutreSidebar({
             <button
               onClick={onToggleCollapse}
               type="button"
-              className="w-full hidden lg:flex items-center justify-center gap-2 py-1.5 text-xs text-[#7A7483] hover:text-[#1D1928] hover:bg-[#F8F1FF] rounded-lg transition-colors cursor-pointer"
+              className="nutre-sidebar-muted w-full hidden lg:flex items-center justify-center gap-2 py-1.5 text-xs hover:text-white hover:bg-white/8 rounded-lg transition-colors cursor-pointer"
             >
               {isCollapsed ? (
                 <ChevronRight className="w-4 h-4" />

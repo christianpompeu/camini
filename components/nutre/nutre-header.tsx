@@ -14,6 +14,7 @@ import {
   Home,
   ExternalLink,
 } from "lucide-react";
+import { NutreThemeToggle } from "./nutre-theme-toggle";
 import { CommandSearchModal } from "./command-search-modal";
 import { useNutreNavigation } from "./nutre-navigation-context";
 
@@ -98,6 +99,7 @@ export function NutreHeader({
 
         {/* Right Section: Today status, "+ Novo", notifications, practitioner */}
         <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+          <NutreThemeToggle />
           {/* Mobile search trigger icon */}
           <button
             onClick={() => setIsSearchOpen(true)}
@@ -174,10 +176,10 @@ export function NutreHeader({
               </div>
               <div className="hidden lg:flex flex-col">
                 <span className="text-xs font-semibold text-[#1D1928] leading-tight">
-                  Dra. Camila Pompeu
+                  Profissional de demonstração
                 </span>
                 <span className="text-[10px] text-[#7A7483] leading-tight">
-                  CRN-3 48.912 • Clínica
+                  Perfil genérico • Ambiente demo
                 </span>
               </div>
               <ChevronDown className="w-3.5 h-3.5 text-[#7A7483] hidden sm:block" />
@@ -192,10 +194,10 @@ export function NutreHeader({
                 <div className="absolute right-0 mt-2 w-56 bg-[#FFFFFF] rounded-xl shadow-xl border border-[#EAE5F2] p-2 z-50 space-y-1 animate-in fade-in zoom-in-95 duration-100">
                   <div className="px-3 py-2 border-b border-[#F8F1FF]">
                     <div className="text-xs font-bold text-[#1D1928]">
-                      Dra. Camila Pompeu
+                      Profissional de demonstração
                     </div>
                     <div className="text-[11px] text-[#6B6678]">
-                      camila.ramos@nutre.clinica.br
+                      usuario.demo@example.invalid
                     </div>
                     <div className="text-[10px] text-[#93AA91] font-semibold mt-0.5">
                       Consultório 2 • Conectada

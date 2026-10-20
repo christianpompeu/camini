@@ -4,6 +4,7 @@ import { headers } from "next/headers";
 import "./nutre.css";
 import { NutreShell } from "@/components/nutre/nutre-shell";
 import { NutreNavigationProvider } from "@/components/nutre/nutre-navigation-context";
+import { NutreThemeProvider } from "@/components/nutre/nutre-theme-provider";
 import { isNutreHost } from "@/lib/nutre/navigation";
 
 const plusJakartaSans = Plus_Jakarta_Sans({
@@ -32,10 +33,20 @@ export default async function NutreLayout({
   const isNutreSubdomain = isNutreHost(host);
 
   return (
-    <NutreNavigationProvider initialIsSubdomain={isNutreSubdomain}>
-      <div className={`${plusJakartaSans.variable} font-sans`}>
-        <NutreShell>{children}</NutreShell>
-      </div>
-    </NutreNavigationProvider>
+    <>
+      <script
+        id="nutre-theme-initializer"
+        dangerouslySetInnerHTML={{
+          __html: `try{const p=localStorage.getItem('nutre-theme')||'system';const d=p==='dark'||(p==='system'&&matchMedia('(prefers-color-scheme: dark)').matches);document.documentElement.dataset.nutreTheme=d?'dark':'light'}catch(e){}`,
+        }}
+      />
+      <NutreThemeProvider>
+        <NutreNavigationProvider initialIsSubdomain={isNutreSubdomain}>
+          <div className={`${plusJakartaSans.variable} font-sans`}>
+            <NutreShell>{children}</NutreShell>
+          </div>
+        </NutreNavigationProvider>
+      </NutreThemeProvider>
+    </>
   );
 }
