@@ -140,7 +140,6 @@ export interface RodadaInput {
   resumo?: string | null;
   diagnostico?: Record<string, Json>;
 }
-
 export interface FonteInput {
   nome: string;
   tipo: TipoFonte;
@@ -225,4 +224,3 @@ export interface ResultadoIngestao {
   relacoes: ContagemOperacoes;
   evidencias: ContagemOperacoes;
 }
-
