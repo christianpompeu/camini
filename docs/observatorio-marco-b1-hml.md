@@ -81,3 +81,70 @@ indisponível e não foi necessário para a validação.
    registros já existentes, investigar os `run_key`s e só então decidir entre
    retry idempotente ou restauração. Nenhuma promoção foi executada neste
    marco.
+
+## Marco B1.1 — endurecimento pré-produção
+
+### Migrations aplicadas no HML
+
+- `observatorio_b1_1_preservacao_editorial` cria a trilha append-only
+  `observatorio_decisoes_historico`, triggers de auditoria para eventos,
+  relações e evidências, e substitui a RPC com regras monotônicas.
+- `observatorio_b1_1_fix_audit_trigger` corrige o trigger para evidências,
+  cuja chave é composta e não possui coluna `id`. A primeira execução foi
+  detectada e revertida pelo rollback da RPC; a migration corretiva foi
+  aplicada antes dos testes subsequentes.
+
+O HML contém quatro nomes do Observatório; produção continua contendo os
+quatro nomes do Radar mais apenas o baseline do Observatório. Não houve escrita
+em produção.
+
+### Regras editoriais implementadas
+
+- Estados `checado`, `contestado`, `verificado`, `normalizado`, `revisado`,
+  `fundido`, `descartado`, `confirmado` e `rejeitado` não sofrem downgrade.
+- Conteúdo bruto (`titulo`, `descricao`, `resumo`, `dados`, notas e metadados)
+  pode ser atualizado; metadados são mesclados com `||`.
+- Evidências existentes não são apagadas e sua justificativa humana só é
+  preenchida quando estava vazia.
+- Nova `causal_comprovada` é recusada com `42501` sem relação existente,
+  `validacao_humana=true`, `validado_por`, `validado_em` e evidência `apoia`.
+
+### Rastreabilidade e testes HML
+
+`observatorio_decisoes_historico` registra `INSERT`, `UPDATE` e `DELETE`,
+estado anterior/novo, `run_key`, ator e timestamp. RLS e grants mantêm a
+trilha privada. Os testes reais passaram:
+
+| Caso | Evidência | Resultado |
+|---|---|---|
+| Concorrência divergente | 1 rodada/fonte/matéria/evento; status `checado`, `verificado`, `normalizado` | Passou |
+| Registro revisado | `revisao=revisado`, confiança `0.88`, confirmação e evidência preservadas | Passou |
+| Atualização legítima | Conteúdo e metadados atualizados | Passou |
+| Causalidade sem validação | `42501`, `causal_count=0`, sem rodada temporária | Passou |
+| Payload incompleto | `22023` para `{}` | Passou |
+| Rollback inválido | `23503`, sem alterações parciais | Passou |
+| Permissões | `anon_rpc=false`, `service_rpc=true`, auditoria sem SELECT público | Passou |
+
+Consulta de segurança: `has_table_privilege(anon,audit,SELECT)=false`,
+`has_function_privilege(anon,rpc,EXECUTE)=false` e
+`has_function_privilege(service_role,rpc,EXECUTE)=true`. O advisor reporta
+somente RLS sem policy nas 11 tabelas privadas, comportamento intencional.
+
+### Matriz de riscos e recomendação
+
+| Risco | Mitigação | Estado |
+|---|---|---|
+| Downgrade/perda de decisão | Regras monotônicas + auditoria append-only | Mitigado |
+| Causalidade automática | Gate de validação humana e evidência | Mitigado |
+| Divergência HML/produção | Promoção por nome + checksum, sem reaplicar baseline | Pendente |
+| Correção de migration | Fix explícito registrado; replay limpo obrigatório | Pendente |
+| Exposição | RLS, grants restritos e RPC invoker | Mitigado |
+
+**Recomendação: não promover imediatamente.** A solução está tecnicamente
+aprovada no HML, mas a promoção deve aguardar replay limpo das quatro
+migrations do Observatório em CI/banco descartável, comparação de checksum com
+Git e aprovação explícita. Em produção, aplicar somente B1, B1.1 e o fix B1.1;
+nunca reaplicar `20261020123117_observatorio_camini_grafo_v1`.
+
+Rollback: bloquear ingestões, reverter código e usar PITR/backup ou migration
+compensatória aprovada; preservar a tabela de histórico.
