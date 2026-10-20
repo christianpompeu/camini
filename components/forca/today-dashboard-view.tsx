@@ -367,7 +367,7 @@ export function TodayDashboardView({
       </article>
 
       {/* Ações Inferiores */}
-      <section className="pt-2 space-y-2.5 pb-4" data-purpose="main-actions">
+      <section className="pt-2 space-y-2.5 pb-10" data-purpose="main-actions">
         <button
           onClick={() => onOpenWorkoutPreview(suggestedWorkout)}
           className="w-full bg-[#18181A] hover:bg-black dark:bg-white dark:hover:bg-zinc-100 text-white dark:text-zinc-950 font-semibold text-[15px] py-3.5 px-4 rounded-xl text-center active:scale-[0.99] transition shadow-xs cursor-pointer select-none"

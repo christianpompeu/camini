@@ -197,7 +197,7 @@ export function HistoryList({
       {/* Lista Filtrada de Sessões */}
       {filteredSessions.length === 0 ? (
         <div className="p-8 text-center border border-dashed border-border rounded-xl text-muted-foreground flex flex-col items-center gap-3">
-          <History className="w-10 h-10 opacity-20 text-muted-foreground" />
+          <HistoryIcon className="w-10 h-10 opacity-20 text-muted-foreground" />
           <p className="text-sm">Nenhuma sessão encontrada para os filtros selecionados.</p>
           {hasActiveFilters && (
             <Button
