@@ -55,6 +55,7 @@ export interface SessionExercise {
   occurrenceId?: string;
   definitionId: string;
   exerciseName: string;
+  name?: string; // compatibilidade
   measurementType: MeasurementType;
   loadConvention: LoadConvention;
   targetMuscles: string;
@@ -71,9 +72,13 @@ export interface SessionExercise {
   prescribedNotes?: string;
   mediaUrl?: string;
   mediaType?: "video" | "image";
+  isSubstitute?: boolean;
+  substitutionReason?: string;
+  originalExerciseName?: string;
   sets: SetRecord[];
   draft?: SetDraft; // preserva digitado não concluído
 }
+
 
 export interface WorkoutVersionSnapshot {
   versionId: string;
@@ -208,6 +213,18 @@ interface WorkoutStore {
   updateSessionObservation: (sessionId: string, observation: string) => void;
   
   nextExercise: () => void;
+  setActiveExerciseIndex: (index: number) => void;
+  replaceExerciseInActiveSession: (
+    exerciseIndex: number,
+    newExercise: {
+      id: string;
+      name: string;
+      measurementType: MeasurementType;
+      loadConvention: LoadConvention;
+      targetMuscles: string;
+      reason?: string;
+    }
+  ) => void;
   finishWorkout: (isPartial?: boolean) => boolean;
   discardWorkout: () => void;
 
@@ -247,6 +264,7 @@ export const useWorkoutStore = create<WorkoutStore>()(
           occurrenceId: ex.occurrenceId,
           definitionId: ex.id,
           exerciseName: ex.name,
+          name: ex.name,
           measurementType: ex.measurementType,
           loadConvention: ex.loadConvention,
           targetMuscles: ex.targetMuscles || workoutDef.focus,
@@ -512,6 +530,55 @@ export const useWorkoutStore = create<WorkoutStore>()(
             },
           });
         }
+      },
+
+      setActiveExerciseIndex: (index: number) => {
+        const { activeWorkout } = get();
+        if (!activeWorkout) return;
+        if (index >= 0 && index < activeWorkout.exercises.length) {
+          const targetEx = activeWorkout.exercises[index];
+          const restMs = (targetEx?.prescribedRestSeconds || 90) * 1000;
+          set({
+            activeWorkout: {
+              ...activeWorkout,
+              activeExerciseIndex: index,
+            },
+            restTimer: {
+              status: "idle",
+              endsAt: null,
+              remainingMsWhenPaused: null,
+              durationMs: restMs,
+            },
+          });
+        }
+      },
+
+      replaceExerciseInActiveSession: (exerciseIndex, newExercise) => {
+        const { activeWorkout } = get();
+        if (!activeWorkout || !activeWorkout.exercises[exerciseIndex]) return;
+
+        const currentEx = activeWorkout.exercises[exerciseIndex];
+        const updatedExercises = [...activeWorkout.exercises];
+        updatedExercises[exerciseIndex] = {
+          ...currentEx,
+          definitionId: newExercise.id,
+          exerciseName: newExercise.name,
+          name: newExercise.name,
+          measurementType: newExercise.measurementType,
+          loadConvention: newExercise.loadConvention,
+          targetMuscles: newExercise.targetMuscles,
+          isSubstitute: true,
+          substitutionReason: newExercise.reason,
+          originalExerciseName: currentEx.originalExerciseName || currentEx.exerciseName,
+          draft: undefined,
+        };
+
+        set({
+          activeWorkout: {
+            ...activeWorkout,
+            exercises: updatedExercises,
+          },
+        });
       },
 
       finishWorkout: (isPartial = false) => {

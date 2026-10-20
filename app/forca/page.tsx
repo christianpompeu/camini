@@ -1,18 +1,8 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import {
-  ArrowLeft,
-  Dumbbell,
-  TrendingUp,
-  History,
-  CheckCircle2,
-  ChevronRight,
-  RotateCcw,
-  Play,
-  Layers,
-} from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 
 import { Navbar } from "@/components/layout/navbar";
 import { Button } from "@/components/ui/button";
@@ -25,23 +15,36 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { WorkoutCard } from "@/components/workout/workout-card";
-import { ActiveSetCard } from "@/components/workout/active-set-card";
-import { RestTimer } from "@/components/workout/rest-timer";
-import { ExerciseHero } from "@/components/workout/exercise-hero";
+
+// Componentes da Linha Stitch Monochrome Discipline
+import { TodayDashboardView } from "@/components/forca/today-dashboard-view";
+import { WorkoutPreviewView } from "@/components/forca/workout-preview-view";
+import { ActiveSessionView } from "@/components/forca/active-session-view";
+import { RestScreenView } from "@/components/forca/rest-screen-view";
+import { WorkoutSequenceModal } from "@/components/forca/workout-sequence-modal";
+import { ExerciseReplacerDialog } from "@/components/forca/exercise-replacer-dialog";
+import { EarlyFinishDialog } from "@/components/forca/early-finish-dialog";
+import { SessionSummaryView } from "@/components/forca/session-summary-view";
+import { SettingsDialog } from "@/components/forca/settings-dialog";
+import { ForcaBottomNav, ForcaNavItemId } from "@/components/forca/forca-bottom-nav";
+import { FloatingWorkoutBar } from "@/components/workout/floating-workout-bar";
+
+// Componentes de Apoio e Gestão
 import { SetEditorDialog } from "@/components/workout/set-editor-dialog";
 import { HistoryList } from "@/components/workout/history-list";
 import { HistorySessionDetail } from "@/components/workout/history-session-detail";
 import { ExportDataPanel } from "@/components/workout/export-data-panel";
-import { BottomNavigation, NavItem } from "@/components/workout/bottom-navigation";
 import { ExerciseCatalogView } from "@/components/catalog/exercise-catalog-view";
 import { WorkoutPlanListView } from "@/components/plans/workout-plan-list-view";
 import { WorkoutPlanEditorView } from "@/components/plans/workout-plan-editor-view";
 import { WorkoutPlanReviewView } from "@/components/plans/workout-plan-review-view";
 import { WorkoutDivisionDetailView } from "@/components/plans/workout-division-detail-view";
-import { useWorkoutStore, SetRecord, EditSetContext } from "@/store/useWorkoutStore";
+
+// Stores & Hooks
+import { useWorkoutStore, SetRecord, EditSetContext, SessionExercise } from "@/store/useWorkoutStore";
 import { useWorkoutPlanStore } from "@/store/useWorkoutPlanStore";
 import { useExerciseCatalogStore } from "@/store/useExerciseCatalogStore";
+import { useRestCountdown } from "@/hooks/useRestCountdown";
 import { WorkoutPlan, WorkoutDivision } from "@/types/workout-plan";
 
 export interface WorkoutExerciseDef {
@@ -99,23 +102,23 @@ export const WORKOUT_PROGRAM: WorkoutDef[] = [
     title: "Puxar",
     focus: "Costas, Bíceps",
     exerciseCount: 5,
-    lastExecuted: "Há 4 dias",
-    estimatedMinutes: 50,
+    lastExecuted: "-",
+    estimatedMinutes: 45,
     exercises: [
-      { id: "levantamento_terra_com_barra", name: "Levantamento terra com barra", measurementType: "reps", loadConvention: "total", expectedSets: 3, targetMuscles: "Costas e Posteriores" },
+      { id: "levantamento_terra", name: "Levantamento Terra convencional", measurementType: "reps", loadConvention: "total", expectedSets: 3, targetMuscles: "Cadeia Posterior" },
       { id: "remada_curvada_com_barra", name: "Remada curvada com barra", measurementType: "reps", loadConvention: "total", expectedSets: 3, targetMuscles: "Dorsais" },
       { id: "remada_unilateral_com_halter", name: "Remada unilateral com halter", measurementType: "reps", loadConvention: "per_implement", expectedSets: 3, targetMuscles: "Dorsais" },
       { id: "crucifixo_inverso_inclinado_com_halteres", name: "Crucifixo inverso inclinado com halteres", measurementType: "reps", loadConvention: "per_implement", expectedSets: 2, targetMuscles: "Deltoide Posterior" },
-      { id: "rosca_direta_com_barra", name: "Rosca direta com barra", measurementType: "reps", loadConvention: "total", expectedSets: 2, targetMuscles: "Bíceps" },
+      { id: "rosca_direta_com_barra", name: "Rosca direta com barra", measurementType: "reps", loadConvention: "total", expectedSets: 3, targetMuscles: "Bíceps" },
     ],
   },
   {
     letter: "D",
-    title: "Full Body",
-    focus: "Técnico e Moderado",
+    title: "Full Body Técnico",
+    focus: "Técnico e Equilíbrio",
     exerciseCount: 5,
     lastExecuted: "-",
-    estimatedMinutes: 45,
+    estimatedMinutes: 40,
     exercises: [
       { id: "agachamento_goblet", name: "Agachamento Goblet", measurementType: "reps", loadConvention: "total", expectedSets: 3, targetMuscles: "Quadríceps" },
       { id: "supino_no_chao_com_halteres", name: "Supino no chão com halteres", measurementType: "reps", loadConvention: "per_implement", expectedSets: 3, targetMuscles: "Peitoral" },
@@ -142,23 +145,33 @@ export const WORKOUT_PROGRAM: WorkoutDef[] = [
 ];
 
 export default function ForcaAppPage() {
-  const [activeTab, setActiveTab] = useState<NavItem["id"]>("treinos");
+  const [activeTab, setActiveTab] = useState<ForcaNavItemId | "fichas">("hoje");
+  const [todaySubView, setTodaySubView] = useState<"dashboard" | "preview" | "active-session" | "rest" | "summary">("dashboard");
+  const [selectedPreviewWorkout, setSelectedPreviewWorkout] = useState<WorkoutDef>(WORKOUT_PROGRAM[0]);
+  
+  // Modais de Sessão
+  const [isSequenceModalOpen, setIsSequenceModalOpen] = useState(false);
+  const [replacingExercise, setReplacingExercise] = useState<SessionExercise | null>(null);
+  const [isEarlyFinishDialogOpen, setIsEarlyFinishDialogOpen] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [defaultRestSeconds, setDefaultRestSeconds] = useState(90);
+
+  // Histórico & Edição
   const [editingContext, setEditingContext] = useState<EditSetContext | null>(null);
   const [selectedSessionId, setSelectedSessionId] = useState<string | null>(null);
-  const [lastFinishedId, setLastFinishedId] = useState<string | null>(null);
-  const [isSessionMinimized, setIsSessionMinimized] = useState(false);
+  const [summarySessionId, setSummarySessionId] = useState<string | null>(null);
+
+  // Gestão de Fichas (F2.2)
+  const [planViewMode, setPlanViewMode] = useState<"list" | "editor" | "review" | "division-detail">("list");
+  const [selectedPlan, setSelectedPlan] = useState<WorkoutPlan | null>(null);
+  const [selectedDivision, setSelectedDivision] = useState<WorkoutDivision | null>(null);
+
+  // Confirmação para troca de treino ativo
   const [pendingSwitchWorkout, setPendingSwitchWorkout] = useState<{
     letter: string;
     title: string;
     onConfirm: () => void;
   } | null>(null);
-  const [showDiscardConfirm, setShowDiscardConfirm] = useState(false);
-  const [showEarlyFinishConfirm, setShowEarlyFinishConfirm] = useState(false);
-
-  // Estados de navegação interna de Fichas
-  const [planViewMode, setPlanViewMode] = useState<"list" | "editor" | "review" | "division-detail">("list");
-  const [selectedPlan, setSelectedPlan] = useState<WorkoutPlan | null>(null);
-  const [selectedDivision, setSelectedDivision] = useState<WorkoutDivision | null>(null);
 
   const {
     hasHydrated,
@@ -166,7 +179,8 @@ export default function ForcaAppPage() {
     completedWorkouts,
     startWorkout,
     logSet,
-    nextExercise,
+    setActiveExerciseIndex,
+    replaceExerciseInActiveSession,
     finishWorkout,
     discardWorkout,
     startTimer,
@@ -188,12 +202,58 @@ export default function ForcaAppPage() {
   } = useWorkoutPlanStore();
 
   const { getExerciseById } = useExerciseCatalogStore();
+  const restCountdown = useRestCountdown();
   const activePlan = getActivePlan();
 
+  // Data formatada para a aba Hoje
+  const currentDateFormatted = new Intl.DateTimeFormat("pt-BR", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+  }).format(new Date()).toUpperCase();
+
+  // Se houver treino ativo e o usuário estiver na aba Hoje no modo dashboard,
+  // ajusta o subview automaticamente caso o cronômetro esteja correndo
+  useEffect(() => {
+    if (activeWorkout && !activeWorkout.isCompleted) {
+      if (restCountdown.isTimerRunning && todaySubView === "dashboard") {
+        // mantém no dashboard ou exibe dock
+      }
+    }
+  }, [activeWorkout, restCountdown.isTimerRunning, todaySubView]);
+
+  if (!hasHydrated || !plansHydrated) return null;
+
+  const currentExerciseIndex = activeWorkout?.activeExerciseIndex || 0;
+  const currentExercise = activeWorkout?.exercises[currentExerciseIndex];
+  const currentSetNumber = (currentExercise?.sets?.length || 0) + 1;
+  const lastSet = currentExercise?.sets?.length
+    ? currentExercise.sets[currentExercise.sets.length - 1]
+    : null;
+
+  const currentDraft = currentExercise?.draft || {
+    weight: lastSet
+      ? lastSet.weight
+      : currentExercise?.loadConvention === "bodyweight"
+      ? 0
+      : 20,
+    reps: lastSet
+      ? (lastSet.reps || lastSet.durationSeconds || lastSet.distanceMeters || 8)
+      : currentExercise?.measurementType === "duration"
+      ? 60
+      : currentExercise?.measurementType === "distance"
+      ? 20
+      : 8,
+    rir: undefined,
+    isWarmup: currentSetNumber === 1 && currentExercise?.loadConvention !== "bodyweight",
+    isExtra: currentSetNumber > (currentExercise?.expectedSets || 4),
+  };
+
+  // Iniciar treino baseline
   const handleStartBaselineWorkout = (workout: WorkoutDef) => {
     if (activeWorkout && activeWorkout.letter === workout.letter && !activeWorkout.isCompleted) {
-      setIsSessionMinimized(false);
-      setActiveTab("treinos");
+      setTodaySubView("active-session");
+      setActiveTab("hoje");
       return;
     }
 
@@ -201,16 +261,21 @@ export default function ForcaAppPage() {
       setPendingSwitchWorkout({
         letter: workout.letter,
         title: workout.title,
-        onConfirm: () => startWorkout(workout),
+        onConfirm: () => {
+          startWorkout(workout);
+          setTodaySubView("active-session");
+          setActiveTab("hoje");
+        },
       });
       return;
     }
 
     startWorkout(workout);
-    setIsSessionMinimized(false);
-    setActiveTab("treinos");
+    setTodaySubView("active-session");
+    setActiveTab("hoje");
   };
 
+  // Iniciar divisão de plano personalizado
   const handleStartPlanDivision = (plan: WorkoutPlan, division: WorkoutDivision) => {
     const isSameSession =
       activeWorkout &&
@@ -219,8 +284,8 @@ export default function ForcaAppPage() {
         activeWorkout.letter === (division.letter || division.name.charAt(0)));
 
     if (isSameSession) {
-      setIsSessionMinimized(false);
-      setActiveTab("treinos");
+      setTodaySubView("active-session");
+      setActiveTab("hoje");
       return;
     }
 
@@ -264,6 +329,8 @@ export default function ForcaAppPage() {
         divisionId: division.id,
         exercises: sessionExercises,
       });
+      setTodaySubView("active-session");
+      setActiveTab("hoje");
     };
 
     if (activeWorkout && !activeWorkout.isCompleted) {
@@ -276,578 +343,353 @@ export default function ForcaAppPage() {
     }
 
     startFn();
-    setIsSessionMinimized(false);
-    setActiveTab("treinos");
   };
 
-  const handleConfirmSwitchWorkout = () => {
-    if (!pendingSwitchWorkout) return;
-    discardWorkout();
-    pendingSwitchWorkout.onConfirm();
-    setPendingSwitchWorkout(null);
-    setIsSessionMinimized(false);
-    setActiveTab("treinos");
-  };
-
-  const handleConfirmDiscard = () => {
-    discardWorkout();
-    setShowDiscardConfirm(false);
-    setIsSessionMinimized(false);
-  };
-
-  const handleConfirmEarlyFinish = () => {
-    if (!activeWorkout) return;
-    const currentId = activeWorkout.id;
-    const ok = finishWorkout(true);
-    if (ok) {
-      setLastFinishedId(currentId);
-      setIsSessionMinimized(false);
-    }
-    setShowEarlyFinishConfirm(false);
-  };
-
-  const currentExerciseIndex = activeWorkout?.activeExerciseIndex || 0;
-  const currentExercise = activeWorkout?.exercises[currentExerciseIndex];
-  const currentSetNumber = (currentExercise?.sets?.length || 0) + 1;
-  const isSessionCompleted = activeWorkout?.isCompleted;
-
-  const handleCompleteSet = ({
-    weight,
-    reps,
-    rir,
-    isWarmup,
-    isExtra,
-  }: {
+  // Concluir série na sessão ativa
+  const handleCompleteActiveSet = (data: {
     weight: number;
     reps: number;
     rir?: number;
     isWarmup: boolean;
-    isExtra?: boolean;
+    isExtra: boolean;
   }) => {
     if (!currentExercise) return;
-    const type = isWarmup ? "warmup" : "work";
+    const type = data.isWarmup ? "warmup" : "work";
     const setPayload: Partial<SetRecord> & { type: "warmup" | "work"; weight: number; isExtra?: boolean } = {
-      weight,
+      weight: data.weight,
       type,
-      isExtra,
-      rir,
+      isExtra: data.isExtra,
+      rir: data.rir,
     };
+
     if (currentExercise.measurementType === "reps") {
-      setPayload.reps = reps;
+      setPayload.reps = data.reps;
     } else if (currentExercise.measurementType === "duration") {
-      setPayload.durationSeconds = reps;
+      setPayload.durationSeconds = data.reps;
     } else if (currentExercise.measurementType === "distance") {
-      setPayload.distanceMeters = reps;
+      setPayload.distanceMeters = data.reps;
     }
-    logSet(setPayload);
-    startTimer(90);
+
+    const success = logSet(setPayload);
+    if (success) {
+      startTimer(defaultRestSeconds);
+      // Avança para tela de descanso
+      setTodaySubView("rest");
+    }
   };
 
-  const lastSet = currentExercise?.sets?.length ? currentExercise.sets[currentExercise.sets.length - 1] : null;
-  const currentDraft = currentExercise?.draft || {
-    weight: lastSet
-      ? lastSet.weight
-      : currentExercise?.loadConvention === "bodyweight"
-      ? 0
-      : 20,
-    reps: lastSet
-      ? (lastSet.reps || lastSet.durationSeconds || lastSet.distanceMeters || 8)
-      : currentExercise?.measurementType === "duration"
-      ? 60
-      : currentExercise?.measurementType === "distance"
-      ? 20
-      : 8,
-    rir: undefined,
-    isWarmup: currentSetNumber === 1 && currentExercise?.loadConvention !== "bodyweight",
-    isExtra: currentSetNumber > (currentExercise?.expectedSets || 4),
+  // Salvar treino parcial
+  const handleConfirmSavePartial = () => {
+    if (!activeWorkout) return;
+    const currentId = activeWorkout.id;
+    const ok = finishWorkout(true);
+    if (ok) {
+      setSummarySessionId(currentId);
+      setTodaySubView("summary");
+    }
+    setIsEarlyFinishDialogOpen(false);
   };
 
-  if (!hasHydrated || !plansHydrated) return null; // Aguarda hidratação do storage
+  // Salvar treino completo
+  const handleFinishCompleteWorkout = () => {
+    if (!activeWorkout) return;
+    const currentId = activeWorkout.id;
+    const ok = finishWorkout(false);
+    if (ok) {
+      setSummarySessionId(currentId);
+      setTodaySubView("summary");
+    }
+    setIsEarlyFinishDialogOpen(false);
+  };
 
+  // Descartar treino ativo
+  const handleConfirmDiscardSession = () => {
+    discardWorkout();
+    setIsEarlyFinishDialogOpen(false);
+    setTodaySubView("dashboard");
+  };
+
+  // Encontrar sessão histórica selecionada
   const activeDetailSession =
     (selectedSessionId && completedWorkouts.find((w) => w.id === selectedSessionId)) ||
-    (lastFinishedId && completedWorkouts.find((w) => w.id === lastFinishedId)) ||
+    (summarySessionId && completedWorkouts.find((w) => w.id === summarySessionId)) ||
     null;
 
   return (
-    <div className="min-h-screen bg-background text-foreground flex flex-col pb-28">
-      {/* Barra de Navegação Superior Global */}
+    <div className="min-h-screen bg-background text-foreground flex flex-col selection:bg-zinc-200 dark:selection:bg-zinc-800">
+      {/* Barra de Navegação Superior Global do Camini Hub */}
       <Navbar />
 
-      {/* Sub-header Contextual do Módulo */}
-      <div className="border-b border-border bg-muted/20 px-4 sm:px-8 py-2.5">
-        <div className="max-w-6xl mx-auto flex items-center justify-between text-xs">
-          <div className="flex items-center gap-2 text-muted-foreground">
+      {/* Sub-header de identificação */}
+      <div className="border-b border-border/80 bg-muted/15 px-4 sm:px-6 py-2">
+        <div className="max-w-md mx-auto flex items-center justify-between text-xs">
+          <div className="flex items-center gap-1.5 text-muted-foreground">
             <Link
               href="/"
               className="hover:text-foreground transition-colors flex items-center gap-1 font-medium"
             >
               <ArrowLeft className="w-3.5 h-3.5" />
-              <span>Camini Hub</span>
+              <span>Camini</span>
             </Link>
             <span>/</span>
-            <span className="font-semibold text-foreground">FORÇA</span>
+            <span className="font-semibold text-foreground tracking-tight">FORÇA</span>
           </div>
 
           <div className="flex items-center gap-2">
-            {activeWorkout && !isSessionCompleted && (
-              <Badge variant="outline" className="text-[11px] gap-1.5 hidden sm:flex">
-                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                Treino Ativo: Treino {activeWorkout.letter}
+            {activeWorkout && !activeWorkout.isCompleted && (
+              <Badge variant="outline" className="text-[10px] gap-1 px-1.5 py-0 border-emerald-500/40 text-emerald-600 dark:text-emerald-400">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                Treino {activeWorkout.letter}
               </Badge>
             )}
           </div>
         </div>
       </div>
 
-      <main className="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-8 py-6 sm:py-8 space-y-8">
-        {/* ABA: TREINOS (SELEÇÃO E EXECUÇÃO) */}
-        {activeTab === "treinos" && (
-          <div className="space-y-8 animate-in fade-in duration-200">
-            {/* Header da Seção de Treinos */}
-            <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 border-b border-border pb-5">
-              <div>
-                <div className="flex items-center gap-2 text-muted-foreground mb-1">
-                  <Dumbbell className="w-4 h-4 text-primary" />
-                  <span className="text-xs font-bold uppercase tracking-wider">
-                    {activePlan ? "Ficha Ativa" : "Programa Atual"}
-                  </span>
-                </div>
-                <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-foreground">
-                  {activePlan ? activePlan.name : "Fichas de Treino A-E"}
-                </h1>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    setActiveTab("fichas");
-                    setPlanViewMode("list");
-                  }}
-                  className="text-xs font-semibold gap-1.5 h-8"
-                >
-                  <Layers className="w-3.5 h-3.5 text-primary" />
-                  Minhas Fichas
-                </Button>
-              </div>
-            </div>
-
-            {/* Banner de Status da Ficha (Ativa vs Padrão) */}
-            {activePlan ? (
-              <div className="p-4 sm:p-5 rounded-2xl border border-primary/20 bg-primary/5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-xs">
-                <div className="space-y-0.5">
-                  <div className="flex items-center gap-2">
-                    <Badge variant="default" className="text-[10px] font-semibold">
-                      Versão {activePlan.version} Ativa
-                    </Badge>
-                    <h3 className="font-bold text-sm text-foreground">
-                      {activePlan.name}
-                    </h3>
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    {activePlan.goal || "Prescrição personalizada ativa"} • {activePlan.divisions.length} divisões de treino.
-                  </p>
-                </div>
-                <div className="flex items-center gap-2 w-full sm:w-auto">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      const newDraft = createNewVersionFromPlan(activePlan.id);
-                      if (newDraft) {
-                        setSelectedPlan(newDraft);
-                        setPlanViewMode("editor");
-                        setActiveTab("fichas");
-                      }
-                    }}
-                    className="text-xs font-semibold h-8"
-                  >
-                    Editar Ficha (Novo Rascunho)
-                  </Button>
-                </div>
-              </div>
-            ) : (
-              <div className="p-4 sm:p-5 rounded-2xl border border-amber-500/20 bg-amber-500/5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-xs">
-                <div className="space-y-0.5">
-                  <div className="flex items-center gap-2">
-                    <Badge variant="secondary" className="text-[10px] font-semibold text-amber-600 bg-amber-500/10">
-                      Treinos Provisórios A–E
-                    </Badge>
-                    <h3 className="font-bold text-sm text-foreground">
-                      Prescrição Provisória
-                    </h3>
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    Você está executando os treinos padrão provisórios. Crie sua ficha pessoal versionada com exercícios do catálogo.
-                  </p>
-                </div>
-                <div className="flex items-center gap-2 w-full sm:w-auto">
-                  <Button
-                    type="button"
-                    variant="default"
-                    size="sm"
-                    onClick={() => {
-                      const draft = importDraftFromBaseline();
-                      setSelectedPlan(draft);
-                      setPlanViewMode("editor");
-                      setActiveTab("fichas");
-                    }}
-                    className="text-xs font-semibold h-8 bg-amber-600 hover:bg-amber-700 text-white"
-                  >
-                    ⚡ Criar rascunho dos treinos atuais
-                  </Button>
-                </div>
-              </div>
+      <main className="flex-1 max-w-md w-full mx-auto px-4 py-4 space-y-4">
+        {/* ============================================================== */}
+        {/* ABA: HOJE (STITCH MONOCHROME DISCIPLINE CORE)                   */}
+        {/* ============================================================== */}
+        {activeTab === "hoje" && (
+          <div className="space-y-4">
+            {/* SUB-VIEW: DASHBOARD HOJE (Tela 02) */}
+            {todaySubView === "dashboard" && (
+              <TodayDashboardView
+                currentDateFormatted={currentDateFormatted}
+                activePlan={activePlan}
+                suggestedWorkout={WORKOUT_PROGRAM[0]}
+                hasActiveSession={Boolean(activeWorkout && !activeWorkout.isCompleted)}
+                activeSessionLetter={activeWorkout?.letter}
+                activeSessionTitle={activeWorkout?.title}
+                totalCompletedWorkouts={completedWorkouts.length}
+                lastCompletedDate={
+                  completedWorkouts.length > 0
+                    ? new Date(completedWorkouts[0].startTime).toLocaleDateString("pt-BR")
+                    : undefined
+                }
+                onOpenWorkoutPreview={(w) => {
+                  setSelectedPreviewWorkout(w);
+                  setTodaySubView("preview");
+                }}
+                onResumeSession={() => setTodaySubView("active-session")}
+                onOpenPlans={() => {
+                  setPlanViewMode("list");
+                  setActiveTab("fichas");
+                }}
+                onOpenSchedule={() => {
+                  setPlanViewMode("list");
+                  setActiveTab("fichas");
+                }}
+                onOpenDownloads={() => setIsSettingsOpen(true)}
+                onOpenSettings={() => setIsSettingsOpen(true)}
+              />
             )}
 
-            {/* Banner de Sessão Ativa em Andamento (quando minimizada) */}
-            {activeWorkout && isSessionMinimized && (
-              <div className="p-4 sm:p-5 rounded-2xl border border-emerald-500/30 bg-emerald-500/10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-xs">
-                <div className="space-y-0.5">
-                  <div className="flex items-center gap-2">
-                    <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
-                    <h3 className="font-bold text-sm text-foreground">
-                      Sessão em andamento: Treino {activeWorkout.letter}
-                    </h3>
-                    <Badge variant="secondary" className="text-[10px] font-semibold">
-                      {activeWorkout.title}
-                    </Badge>
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    Exercício {currentExerciseIndex + 1} de {activeWorkout.exercises.length}:{" "}
-                    <strong className="text-foreground">{currentExercise?.exerciseName}</strong>. Suas séries e rascunhos continuam salvos.
-                  </p>
-                </div>
-                <div className="flex items-center gap-2 w-full sm:w-auto">
-                  <Button
-                    type="button"
-                    variant="default"
-                    size="sm"
-                    onClick={() => setIsSessionMinimized(false)}
-                    className="text-xs font-semibold gap-1.5 h-9 shrink-0 w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 text-white"
-                  >
-                    <Play className="w-3.5 h-3.5 fill-current" />
-                    Retomar treino em andamento
-                  </Button>
-                </div>
-              </div>
+            {/* SUB-VIEW: PRÉ-VISUALIZAÇÃO DA FICHA (Tela 03) */}
+            {todaySubView === "preview" && (
+              <WorkoutPreviewView
+                workout={selectedPreviewWorkout}
+                onBack={() => setTodaySubView("dashboard")}
+                onStart={handleStartBaselineWorkout}
+                onViewExerciseDetails={() => {
+                  setActiveTab("exercicios");
+                }}
+              />
             )}
 
-            {/* Grid dos Cards de Treino (Exibido se não houver sessão ativa ou se estiver minimizada) */}
-            {(!activeWorkout || isSessionMinimized) && activePlan && (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-                {activePlan.divisions.map((div, idx) => {
-                  const letter = div.letter || String.fromCharCode(65 + idx);
-                  const isActive = Boolean(
-                    activeWorkout &&
-                      (activeWorkout.divisionId === div.id || activeWorkout.letter === letter)
-                  );
-                  return (
-                    <WorkoutCard
-                      key={div.id}
-                      letter={letter}
-                      title={div.name}
-                      focus={div.notes || `${div.prescribedExercises.length} exercícios prescritos`}
-                      exerciseCount={div.prescribedExercises.length}
-                      lastExecuted="-"
-                      estimatedMinutes={div.estimatedMinutes || Math.max(30, div.prescribedExercises.length * 10)}
-                      isActiveSession={isActive}
-                      onViewDetail={() => {
-                        setSelectedPlan(activePlan);
-                        setSelectedDivision(div);
-                        setPlanViewMode("division-detail");
-                        setActiveTab("fichas");
-                      }}
-                      onStart={() => handleStartPlanDivision(activePlan, div)}
-                    />
-                  );
-                })}
-              </div>
+            {/* SUB-VIEW: SESSÃO ATIVA (Tela 04) */}
+            {todaySubView === "active-session" && activeWorkout && currentExercise && (
+              <ActiveSessionView
+                workoutLetter={activeWorkout.letter}
+                workoutTitle={activeWorkout.title}
+                exerciseIndex={currentExerciseIndex}
+                totalExercises={activeWorkout.exercises.length}
+                currentExercise={currentExercise}
+                currentSetNumber={currentSetNumber}
+                isExtra={Boolean(currentDraft.isExtra)}
+                draftWeight={currentDraft.weight ?? 0}
+                draftReps={currentDraft.reps ?? 8}
+                draftRir={currentDraft.rir}
+                draftIsWarmup={Boolean(currentDraft.isWarmup)}
+                draftIsExtra={Boolean(currentDraft.isExtra)}
+                lastCompletedSet={lastSet}
+                onUpdateDraft={(updates) =>
+                  updateDraft({
+                    ...currentDraft,
+                    ...updates,
+                    weight: updates.weight ?? currentDraft.weight ?? 0,
+                    reps: updates.reps ?? currentDraft.reps ?? 8,
+                    isWarmup: updates.isWarmup ?? Boolean(currentDraft.isWarmup),
+                  })
+                }
+                onCompleteSet={handleCompleteActiveSet}
+                onOpenSequence={() => setIsSequenceModalOpen(true)}
+                onOpenLibrary={() => setActiveTab("exercicios")}
+                onEditPreviousSet={(s) => {
+                  setEditingContext({
+                    mode: "active",
+                    sessionId: activeWorkout.id,
+                    exerciseDefinitionId: currentExercise.definitionId,
+                    exerciseName: currentExercise.exerciseName,
+                    setRecord: s,
+                    measurementType: currentExercise.measurementType,
+                    loadConvention: currentExercise.loadConvention,
+                  });
+                }}
+                onEarlyFinishRequest={() => setIsEarlyFinishDialogOpen(true)}
+              />
             )}
 
-            {(!activeWorkout || isSessionMinimized) && !activePlan && (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-                {WORKOUT_PROGRAM.map((workout) => (
-                  <WorkoutCard
-                    key={workout.letter}
-                    letter={workout.letter}
-                    title={workout.title}
-                    focus={workout.focus}
-                    exerciseCount={workout.exerciseCount}
-                    lastExecuted={workout.lastExecuted}
-                    estimatedMinutes={workout.estimatedMinutes}
-                    isActiveSession={Boolean(activeWorkout && activeWorkout.letter === workout.letter)}
-                    onStart={() => handleStartBaselineWorkout(workout)}
-                  />
-                ))}
-              </div>
+            {/* SUB-VIEW: DESCANSO (Telas 05 e 33) */}
+            {todaySubView === "rest" && activeWorkout && currentExercise && (
+              <RestScreenView
+                exerciseName={currentExercise.exerciseName}
+                nextSetNumber={currentSetNumber}
+                totalSets={currentExercise.expectedSets}
+                plannedWeight={currentDraft.weight ?? 0}
+                plannedReps={currentDraft.reps ?? 8}
+                measurementType={currentExercise.measurementType}
+                timeRemainingFormatted={restCountdown.formattedTime}
+                isPaused={restCountdown.isPaused}
+                onTogglePause={restCountdown.togglePause}
+                onAdd30s={restCountdown.add30Seconds}
+                onSkipRest={() => {
+                  restCountdown.skipRest();
+                  setTodaySubView("active-session");
+                }}
+                onOpenSequence={() => setIsSequenceModalOpen(true)}
+                onOpenLibrary={() => setActiveTab("exercicios")}
+              />
             )}
 
-            {/* Sessão em Andamento do Treino Selecionado */}
-            {activeWorkout && !isSessionMinimized && (
-            <div className="pt-2 border-t border-border space-y-6">
-              {/* Barra de Retorno: Minimizar / Ver todas as fichas */}
-              <div className="flex items-center justify-between pb-1">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setIsSessionMinimized(true)}
-                  className="gap-1.5 text-xs text-muted-foreground hover:text-foreground -ml-2 h-8"
-                >
-                  <ArrowLeft className="w-3.5 h-3.5" />
-                  <span>Ver todas as fichas (minimizar treino)</span>
-                </Button>
-              </div>
-
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                <div>
-                  <div className="flex items-center gap-2">
-                    <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground">
-                      Sessão Ativa: Treino {activeWorkout.letter}
-                    </h2>
-                    <Badge variant="secondary" className="font-semibold text-xs">
-                      {activeWorkout.title}
-                    </Badge>
-                  </div>
-                  <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
-                    Exercício {currentExerciseIndex + 1} de {activeWorkout.exercises.length}:{" "}
-                    <strong className="text-foreground">
-                      {currentExercise?.exerciseName}
-                    </strong>
-                  </p>
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setShowDiscardConfirm(true)}
-                    className="gap-1.5 text-xs h-9 text-destructive border-destructive/20 hover:bg-destructive/10"
-                  >
-                    <RotateCcw className="w-3.5 h-3.5" />
-                    Descartar Sessão
-                  </Button>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-                {/* Coluna Principal: Registro de Cargas e Séries */}
-                <div className="lg:col-span-7 space-y-4">
-                    {currentExercise && (
-                      <div className="space-y-3 mb-4">
-                        <ExerciseHero
-                          exerciseId={currentExercise.definitionId}
-                          name={currentExercise.exerciseName}
-                          category={currentExercise.targetMuscles}
-                          sets={`${currentExercise.expectedSets} Séries`}
-                          reps={
-                            currentExercise.prescribedRepsMin && currentExercise.prescribedRepsMax
-                              ? `${currentExercise.prescribedRepsMin} a ${currentExercise.prescribedRepsMax} reps`
-                              : currentExercise.prescribedReps
-                              ? `${currentExercise.prescribedReps} repetições`
-                              : currentExercise.prescribedDurationSeconds
-                              ? `${currentExercise.prescribedDurationSeconds} seg`
-                              : currentExercise.prescribedDistanceMeters
-                              ? `${currentExercise.prescribedDistanceMeters} m`
-                              : "Conforme Prescrição"
-                          }
-                        />
-                        {currentExercise.prescribedNotes && (
-                          <div className="p-3 bg-muted/40 rounded-xl border border-border text-xs text-muted-foreground flex items-center gap-2">
-                            <span className="font-semibold text-foreground">Prescrição:</span>
-                            <span>{currentExercise.prescribedNotes}</span>
-                          </div>
-                        )}
-                      </div>
-                    )}
-
-                    {/* Lista de Séries Concluídas (Permite Correção) */}
-                    {currentExercise && currentExercise.sets.length > 0 && (
-                      <div className="space-y-2 mb-6">
-                        <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground ml-1">
-                          Séries Registradas
-                        </h3>
-                        {currentExercise.sets.map((setRecord, idx) => {
-                          const isExtra = Boolean(setRecord.isExtra || setRecord.type === "extra");
-                          const isWarmup = setRecord.type === "warmup";
-                          return (
-                            <div
-                              key={setRecord.id}
-                              className="flex items-center justify-between p-3 rounded-xl border border-border bg-muted/10"
-                            >
-                              <div className="flex items-center gap-3">
-                                <Badge variant="outline" className="w-16 justify-center">
-                                  Série {idx + 1}
-                                </Badge>
-                                <span className="text-sm font-semibold">
-                                  {currentExercise.loadConvention !== "bodyweight"
-                                    ? `${setRecord.weight} kg x `
-                                    : setRecord.weight > 0
-                                    ? `+${setRecord.weight} kg x `
-                                    : ""}
-                                  {currentExercise.measurementType === "duration"
-                                    ? `${setRecord.durationSeconds || setRecord.reps} seg`
-                                    : currentExercise.measurementType === "distance"
-                                    ? `${setRecord.distanceMeters || setRecord.reps} m`
-                                    : `${setRecord.reps} reps`}
-                                </span>
-                                {isWarmup && (
-                                  <Badge variant="secondary" className="text-[10px] text-amber-600 bg-amber-500/10">
-                                    Aquec
-                                  </Badge>
-                                )}
-                                {isExtra && (
-                                  <Badge variant="default" className="text-[10px]">
-                                    Extra
-                                  </Badge>
-                                )}
-                                {setRecord.editedAt && (
-                                  <Badge variant="outline" className="text-[10px] text-blue-500 border-blue-500/40">
-                                    C
-                                  </Badge>
-                                )}
-                              </div>
-                              <div className="flex gap-2">
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className="h-8 text-xs"
-                                  onClick={() =>
-                                    setEditingContext({
-                                      mode: "active",
-                                      sessionId: activeWorkout.id,
-                                      exerciseDefinitionId: currentExercise.definitionId,
-                                      exerciseName: currentExercise.exerciseName,
-                                      setRecord,
-                                      measurementType: currentExercise.measurementType,
-                                      loadConvention: currentExercise.loadConvention,
-                                    })
-                                  }
-                                >
-                                  Corrigir
-                                </Button>
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    )}
-
-                    {/* Formulário da Série Ativa */}
-                    <ActiveSetCard
-                      key={`set-${currentExerciseIndex}-${currentSetNumber}`}
-                      exerciseName={currentExercise?.exerciseName}
-                      targetMuscles={currentExercise?.targetMuscles}
-                      currentSet={currentSetNumber}
-                      totalSets={currentExercise?.expectedSets || 4}
-                      weight={currentDraft.weight}
-                      reps={currentDraft.reps}
-                      rir={currentDraft.rir}
-                      isWarmup={currentDraft.isWarmup}
-                      isExtra={currentDraft.isExtra}
-                      measurementType={currentExercise?.measurementType || "reps"}
-                      loadConvention={currentExercise?.loadConvention || "total"}
-                      onDraftChange={updateDraft}
-                      onCompleteSet={handleCompleteSet}
-                    />
-
-                    {/* Botão de Avançar Exercício */}
-                    <div className="flex items-center justify-between p-4 rounded-xl border border-border bg-card">
-                      <div className="text-xs text-muted-foreground">
-                        <span>Próximo exercício: </span>
-                        <span className="font-semibold text-foreground">
-                          {activeWorkout.exercises[currentExerciseIndex + 1]?.exerciseName || "Conclusão do Treino"}
-                        </span>
-                      </div>
-                      <div className="flex flex-col gap-2">
-                        <Button
-                          variant="default"
-                          size="sm"
-                          onClick={() => {
-                            if (currentExerciseIndex < activeWorkout.exercises.length - 1) {
-                              nextExercise();
-                            } else {
-                              const currentId = activeWorkout.id;
-                              const ok = finishWorkout(false);
-                              if (ok) {
-                                setLastFinishedId(currentId);
-                                setIsSessionMinimized(false);
-                              }
-                            }
-                          }}
-                          className="gap-1.5 h-9 font-semibold"
-                        >
-                          <span>
-                            {currentExerciseIndex < activeWorkout.exercises.length - 1
-                              ? "Próximo Exercício"
-                              : "Finalizar Treino"}
-                          </span>
-                          <ChevronRight className="w-4 h-4" />
-                        </Button>
-
-                        {currentExerciseIndex < activeWorkout.exercises.length - 1 && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => setShowEarlyFinishConfirm(true)}
-                            className="text-xs text-muted-foreground underline underline-offset-2"
-                          >
-                            Finalizar Incompleto
-                          </Button>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Coluna Secundária: Descanso com Temporizador */}
-                  <div className="lg:col-span-5 space-y-4">
-                    <RestTimer />
-
-                    {/* Lista Rápida dos Exercícios da Sessão */}
-                    <div className="p-4 rounded-xl border border-border bg-card space-y-3">
-                      <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                        Sequência do Treino {activeWorkout.letter}
-                      </h3>
-                      <ul className="space-y-1.5 text-xs">
-                        {activeWorkout.exercises.map((ex, idx) => {
-                          const isCurrent = idx === currentExerciseIndex;
-                          const isDone = idx < currentExerciseIndex;
-                          return (
-                            <li
-                              key={ex.exerciseName}
-                              className={`p-2.5 rounded-lg flex items-center justify-between transition-colors ${
-                                isCurrent
-                                  ? "bg-primary text-primary-foreground font-semibold"
-                                  : isDone
-                                  ? "text-muted-foreground line-through bg-muted/30"
-                                  : "text-foreground bg-muted/10"
-                              }`}
-                            >
-                              <div className="flex items-center gap-2 truncate mr-2">
-                                <span className="font-mono text-[11px] opacity-70">
-                                  #{idx + 1}
-                                </span>
-                                <span className="truncate">{ex.exerciseName}</span>
-                              </div>
-                              {isDone && <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />}
-                            </li>
-                          );
-                        })}
-                      </ul>
-                    </div>
-                  </div>
-                </div>
-              </div>
+            {/* SUB-VIEW: RESUMO PÓS-TREINO (Telas 10 e 32) */}
+            {todaySubView === "summary" && activeDetailSession && (
+              <SessionSummaryView
+                session={activeDetailSession}
+                onSaveObservation={(obs) => {
+                  updateSessionObservation(activeDetailSession.id, obs);
+                }}
+                onGoToHistory={(sId) => {
+                  setSelectedSessionId(sId);
+                  setActiveTab("historico");
+                }}
+                onGoHome={() => {
+                  setSummarySessionId(null);
+                  setTodaySubView("dashboard");
+                }}
+              />
             )}
           </div>
         )}
 
-        {/* ABA: FICHAS (PROGRAMAS PESSOAIS VERSIONADOS F2.2) */}
+        {/* ============================================================== */}
+        {/* ABA: EXERCÍCIOS (BIBLIOTECA & DETALHE F2.1)                    */}
+        {/* ============================================================== */}
+        {activeTab === "exercicios" && (
+          <div className="pb-16 animate-in fade-in duration-200">
+            <ExerciseCatalogView
+              onGoToSession={() => {
+                setActiveTab("hoje");
+                if (activeWorkout) {
+                  setTodaySubView("active-session");
+                }
+              }}
+            />
+          </div>
+        )}
+
+        {/* ============================================================== */}
+        {/* ABA: HISTÓRICO                                                 */}
+        {/* ============================================================== */}
+        {activeTab === "historico" && (
+          <div className="space-y-4 pb-16 animate-in fade-in duration-200">
+            <div className="pt-2">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-zinc-500">
+                Histórico
+              </span>
+              <h1 className="text-2xl font-extrabold text-zinc-950 dark:text-white tracking-tight">
+                Sessões Anteriores
+              </h1>
+            </div>
+            <HistoryList onSessionClick={(session) => setSelectedSessionId(session.id)} />
+          </div>
+        )}
+
+        {/* ============================================================== */}
+        {/* ABA: PROGRESSO                                                 */}
+        {/* ============================================================== */}
+        {activeTab === "progresso" && (
+          <div className="space-y-4 pb-16 animate-in fade-in duration-200">
+            <div className="pt-2">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-zinc-500">
+                Progresso
+              </span>
+              <h1 className="text-2xl font-extrabold text-zinc-950 dark:text-white tracking-tight">
+                Consistência & Cargas
+              </h1>
+            </div>
+
+            {/* Cards de Métricas de Progresso */}
+            {(() => {
+              const totalSessions = completedWorkouts.length;
+              let totalVolume = 0;
+              let totalWorkSets = 0;
+
+              completedWorkouts.forEach((w) => {
+                w.exercises.forEach((ex) => {
+                  ex.sets.forEach((s) => {
+                    if (s.type !== "warmup") {
+                      totalWorkSets++;
+                      if (ex.measurementType === "reps" && ex.loadConvention !== "bodyweight") {
+                        totalVolume += (s.weight || 0) * (s.reps || 0);
+                      }
+                    }
+                  });
+                });
+              });
+
+              return (
+                <div className="space-y-3">
+                  <div className="grid grid-cols-3 gap-2">
+                    <div className="bg-[#F5F5F7] dark:bg-zinc-900 rounded-2xl p-3 text-center border border-transparent dark:border-zinc-800">
+                      <span className="text-[10px] font-bold uppercase text-zinc-400 block mb-0.5">Sessões</span>
+                      <span className="text-xl font-extrabold text-zinc-950 dark:text-white">{totalSessions}</span>
+                    </div>
+                    <div className="bg-[#F5F5F7] dark:bg-zinc-900 rounded-2xl p-3 text-center border border-transparent dark:border-zinc-800">
+                      <span className="text-[10px] font-bold uppercase text-zinc-400 block mb-0.5">Séries</span>
+                      <span className="text-xl font-extrabold text-zinc-950 dark:text-white">{totalWorkSets}</span>
+                    </div>
+                    <div className="bg-[#F5F5F7] dark:bg-zinc-900 rounded-2xl p-3 text-center border border-transparent dark:border-zinc-800">
+                      <span className="text-[10px] font-bold uppercase text-zinc-400 block mb-0.5">Volume</span>
+                      <span className="text-xl font-extrabold text-zinc-950 dark:text-white">
+                        {totalVolume > 0 ? `${Math.round(totalVolume / 1000)}k` : "—"}
+                      </span>
+                    </div>
+                  </div>
+
+                  <ExportDataPanel />
+                </div>
+              );
+            })()}
+          </div>
+        )}
+
+        {/* ============================================================== */}
+        {/* MODO SUB-TELA: FICHAS E PROGRAMAS (F2.2)                        */}
+        {/* ============================================================== */}
         {activeTab === "fichas" && (
-          <div className="space-y-6 animate-in fade-in duration-200">
+          <div className="space-y-4 pb-16 animate-in fade-in duration-200">
+            <header className="flex items-center gap-2 pt-2">
+              <button
+                type="button"
+                onClick={() => setActiveTab("hoje")}
+                className="w-8 h-8 rounded-xl bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center text-zinc-700 dark:text-zinc-300"
+              >
+                <ArrowLeft className="w-4 h-4" />
+              </button>
+              <h1 className="text-lg font-bold text-zinc-950 dark:text-white">Minhas Fichas</h1>
+            </header>
+
             {planViewMode === "list" && (
               <WorkoutPlanListView
                 onCreateNewPlan={() => {
@@ -904,7 +746,7 @@ export default function ForcaAppPage() {
                 onActivateSuccess={(activated) => {
                   setSelectedPlan(activated);
                   setPlanViewMode("list");
-                  setActiveTab("treinos");
+                  setActiveTab("hoje");
                 }}
               />
             )}
@@ -934,155 +776,80 @@ export default function ForcaAppPage() {
           </div>
         )}
 
-        {/* ABA: EXERCÍCIOS (CATÁLOGO INDEPENDENTE F2.1) */}
-        {activeTab === "exercicios" && (
-          <ExerciseCatalogView onGoToSession={() => setActiveTab("treinos")} />
-        )}
+        {/* ============================================================== */}
+        {/* MODAIS E DIÁLOGOS DA SESSÃO ATIVA                              */}
+        {/* ============================================================== */}
 
-        {/* ABA: HISTÓRICO */}
-        {activeTab === "historico" && (
-          <div className="space-y-6 animate-in fade-in duration-200">
-            <div className="border-b border-border pb-5">
-              <div className="flex items-center gap-2 text-muted-foreground mb-1">
-                <History className="w-4 h-4 text-primary" />
-                <span className="text-xs font-bold uppercase tracking-wider">
-                  Histórico de Execuções
-                </span>
-              </div>
-              <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-foreground">
-                Treinos Anteriores
-              </h1>
-              <p className="text-xs sm:text-sm text-muted-foreground mt-1">
-                Registros dos treinos e sobrecargas consolidadas.
-              </p>
-            </div>
-
-            <div className="space-y-3">
-              <HistoryList onSessionClick={(session) => setSelectedSessionId(session.id)} />
-            </div>
-          </div>
-        )}
-
-        {/* ABA: PROGRESSO */}
-        {activeTab === "progresso" && (
-          <div className="space-y-6 animate-in fade-in duration-200">
-            <div className="border-b border-border pb-5">
-              <div className="flex items-center gap-2 text-muted-foreground mb-1">
-                <TrendingUp className="w-4 h-4 text-primary" />
-                <span className="text-xs font-bold uppercase tracking-wider">
-                  Métricas Locais
-                </span>
-              </div>
-              <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-foreground">
-                Progresso do Mês
-              </h1>
-              <p className="text-xs sm:text-sm text-muted-foreground mt-1">
-                Métricas calculadas a partir das sessões armazenadas localmente.
-              </p>
-            </div>
-
-            {(() => {
-              const now = new Date();
-              const thisMonthWorkouts = completedWorkouts.filter(
-                (w) =>
-                  new Date(w.startTime).getMonth() === now.getMonth() &&
-                  new Date(w.startTime).getFullYear() === now.getFullYear()
+        {/* Tela 06: Sequência do Treino */}
+        {activeWorkout && (
+          <WorkoutSequenceModal
+            isOpen={isSequenceModalOpen}
+            workoutLetter={activeWorkout.letter}
+            workoutTitle={activeWorkout.title}
+            exercises={activeWorkout.exercises}
+            activeIndex={currentExerciseIndex}
+            onClose={() => setIsSequenceModalOpen(false)}
+            onSelectExercise={(idx) => {
+              setActiveExerciseIndex(idx);
+              setTodaySubView("active-session");
+            }}
+            onRequestReplaceExercise={(ex) => setReplacingExercise(ex)}
+            onRequestFinish={() => {
+              const allDone = activeWorkout.exercises.every(
+                (e) => (e.sets?.length || 0) >= e.expectedSets
               );
-              const completedCount = thisMonthWorkouts.filter((w) => w.status !== "partial").length;
-              const partialCount = thisMonthWorkouts.filter((w) => w.status === "partial").length;
+              if (allDone) {
+                handleFinishCompleteWorkout();
+              } else {
+                setIsEarlyFinishDialogOpen(true);
+              }
+            }}
+          />
+        )}
 
-              let totalWorkSets = 0;
-              let totalWarmupSets = 0;
-              let totalExtraSets = 0;
-              let totalTonnage = 0;
-
-              thisMonthWorkouts.forEach((w) => {
-                w.exercises.forEach((ex) => {
-                  ex.sets.forEach((s) => {
-                    const isWarmup = s.type === "warmup";
-                    const isExtra = Boolean(s.isExtra || s.type === "extra");
-                    if (isWarmup) totalWarmupSets++;
-                    else totalWorkSets++;
-                    if (isExtra) totalExtraSets++;
-
-                    if (!isWarmup && ex.measurementType === "reps" && ex.loadConvention !== "bodyweight") {
-                      const mult = ex.loadConvention === "per_implement" ? 2 : 1;
-                      totalTonnage += (s.weight || 0) * mult * (s.reps || 0);
-                    }
-                  });
+        {/* Tela 08: Substituição Pontual de Exercício */}
+        {replacingExercise && (
+          <ExerciseReplacerDialog
+            isOpen={Boolean(replacingExercise)}
+            targetExercise={replacingExercise}
+            onClose={() => setReplacingExercise(null)}
+            onConfirmReplacement={(oldEx, newEx) => {
+              const targetIdx = activeWorkout?.exercises.findIndex(
+                (e) => (e.occurrenceId && e.occurrenceId === oldEx.occurrenceId) || e.definitionId === oldEx.definitionId
+              );
+              if (targetIdx !== undefined && targetIdx >= 0) {
+                replaceExerciseInActiveSession(targetIdx, {
+                  id: newEx.id,
+                  name: newEx.name,
+                  measurementType: newEx.measurementType,
+                  loadConvention: newEx.loadConvention,
+                  targetMuscles: newEx.targetMuscles,
+                  reason: newEx.reason,
                 });
-              });
-
-              const workoutsWithDuration = thisMonthWorkouts.filter((w) => w.durationMs && w.durationMs > 0);
-              const avgDuration =
-                workoutsWithDuration.length > 0
-                  ? workoutsWithDuration.reduce((acc, w) => acc + (w.durationMs || 0), 0) /
-                    workoutsWithDuration.length
-                  : 0;
-
-              return (
-                <div className="space-y-4">
-                  <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
-                    <div className="p-5 rounded-xl border border-border bg-card flex flex-col items-center justify-center text-center">
-                      <span className="text-3xl sm:text-4xl font-extrabold text-primary mb-1">
-                        {thisMonthWorkouts.length}
-                      </span>
-                      <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                        Sessões Totais
-                      </span>
-                      <span className="text-[11px] text-muted-foreground mt-1">
-                        {completedCount} completas · {partialCount} parciais
-                      </span>
-                    </div>
-
-                    <div className="p-5 rounded-xl border border-border bg-card flex flex-col items-center justify-center text-center">
-                      <span className="text-3xl sm:text-4xl font-extrabold text-primary mb-1">
-                        {totalWorkSets}
-                      </span>
-                      <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                        Séries de Trabalho
-                      </span>
-                      <span className="text-[11px] text-muted-foreground mt-1">
-                        +{totalWarmupSets} aquec. · {totalExtraSets} extras
-                      </span>
-                    </div>
-
-                    <div className="p-5 rounded-xl border border-border bg-card flex flex-col items-center justify-center text-center">
-                      <span className="text-3xl sm:text-4xl font-extrabold text-primary mb-1">
-                        {totalTonnage > 0 ? `${Math.round(totalTonnage)} kg` : "0 kg"}
-                      </span>
-                      <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                        Volume Externo
-                      </span>
-                      <span className="text-[11px] text-muted-foreground mt-1">
-                        Apenas trabalho com reps
-                      </span>
-                    </div>
-
-                    <div className="p-5 rounded-xl border border-border bg-card flex flex-col items-center justify-center text-center">
-                      <span className="text-3xl sm:text-4xl font-extrabold text-primary mb-1">
-                        {avgDuration > 0 ? `${Math.floor(avgDuration / 60000)}m` : "-"}
-                      </span>
-                      <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                        Duração Média
-                      </span>
-                      <span className="text-[11px] text-muted-foreground mt-1">
-                        Tempo de sessão ativa
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              );
-            })()}
-
-            <ExportDataPanel />
-          </div>
+              }
+              setReplacingExercise(null);
+            }}
+          />
         )}
 
-        {/* Editor de Séries (Usado no Treino Ativo e no Histórico) */}
+        {/* Tela 09: Finalização Antecipada / Parcial */}
+        {activeWorkout && (
+          <EarlyFinishDialog
+            isOpen={isEarlyFinishDialogOpen}
+            workoutLetter={activeWorkout.letter}
+            workoutTitle={activeWorkout.title}
+            exercises={activeWorkout.exercises}
+            onClose={() => setIsEarlyFinishDialogOpen(false)}
+            onConfirmSavePartial={handleConfirmSavePartial}
+            onConfirmSaveComplete={handleFinishCompleteWorkout}
+            onConfirmDiscard={handleConfirmDiscardSession}
+          />
+        )}
+
+        {/* Tela 07: Editor de Séries Concluídas */}
         {editingContext && (
           <SetEditorDialog
-            open={!!editingContext}
+            open={Boolean(editingContext)}
             onOpenChange={(open) => !open && setEditingContext(null)}
             context={editingContext}
             onSave={(ctx, updates) => {
@@ -1104,56 +871,50 @@ export default function ForcaAppPage() {
           />
         )}
 
-        {/* Detalhe da Sessão Histórica ou Resumo Final */}
-        {activeDetailSession && (
+        {/* Detalhe da Sessão no Histórico */}
+        {activeDetailSession && todaySubView !== "summary" && (
           <HistorySessionDetail
             session={activeDetailSession}
-            open={!!activeDetailSession}
+            open={Boolean(activeDetailSession)}
             onOpenChange={(open) => {
-              if (!open) {
-                setSelectedSessionId(null);
-                setLastFinishedId(null);
-              }
+              if (!open) setSelectedSessionId(null);
             }}
-            onEditSet={(ctx) => {
-              setEditingContext(ctx);
-            }}
+            onEditSet={(ctx) => setEditingContext(ctx)}
             onUpdateObservation={(sessionId, obs) => {
               updateSessionObservation(sessionId, obs);
             }}
           />
         )}
 
-        {/* Diálogo de Confirmação para Trocar de Treino */}
+        {/* Modal de Ajustes / Configurações */}
+        <SettingsDialog
+          isOpen={isSettingsOpen}
+          onClose={() => setIsSettingsOpen(false)}
+          defaultRestSeconds={defaultRestSeconds}
+          onUpdateDefaultRest={(sec) => setDefaultRestSeconds(sec)}
+        />
+
+        {/* Diálogo de Confirmação para Trocar Treino Ativo */}
         <Dialog
           open={Boolean(pendingSwitchWorkout)}
           onOpenChange={(open) => !open && setPendingSwitchWorkout(null)}
         >
-          <DialogContent className="max-w-md">
+          <DialogContent className="max-w-md w-[95vw] rounded-2xl">
             <DialogHeader>
               <DialogTitle className="text-base font-bold">
                 Trocar de treino em andamento?
               </DialogTitle>
-              <DialogDescription className="text-xs text-muted-foreground pt-1.5 leading-relaxed">
-                Você já possui uma sessão ativa do{" "}
-                <strong className="text-foreground">
-                  Treino {activeWorkout?.letter} ({activeWorkout?.title})
-                </strong>{" "}
-                com registros em andamento.
-                <br /><br />
-                Iniciar o{" "}
-                <strong className="text-foreground">Treino {pendingSwitchWorkout?.letter}</strong>{" "}
-                {pendingSwitchWorkout?.title ? `(${pendingSwitchWorkout.title})` : ""}{" "}
-                irá descartar o progresso atual do Treino {activeWorkout?.letter}.
+              <DialogDescription className="text-xs text-muted-foreground pt-1 leading-relaxed">
+                Você já possui o <strong>Treino {activeWorkout?.letter}</strong> em andamento. Iniciar o <strong>Treino {pendingSwitchWorkout?.letter}</strong> irá descartar o progresso atual.
               </DialogDescription>
             </DialogHeader>
-            <DialogFooter className="flex-row justify-end gap-2 pt-3">
+            <DialogFooter className="flex-row justify-end gap-2 pt-2">
               <Button
                 type="button"
                 variant="outline"
                 size="sm"
                 onClick={() => setPendingSwitchWorkout(null)}
-                className="text-xs"
+                className="text-xs rounded-xl"
               >
                 Continuar Treino {activeWorkout?.letter}
               </Button>
@@ -1161,101 +922,46 @@ export default function ForcaAppPage() {
                 type="button"
                 variant="destructive"
                 size="sm"
-                onClick={handleConfirmSwitchWorkout}
-                className="text-xs font-semibold"
+                onClick={() => {
+                  discardWorkout();
+                  pendingSwitchWorkout?.onConfirm();
+                  setPendingSwitchWorkout(null);
+                }}
+                className="text-xs rounded-xl font-semibold"
               >
-                Encerrar e Iniciar Treino {pendingSwitchWorkout?.letter}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-
-        {/* Diálogo de Confirmação para Descartar Sessão */}
-        <Dialog
-          open={showDiscardConfirm}
-          onOpenChange={setShowDiscardConfirm}
-        >
-          <DialogContent className="max-w-md">
-            <DialogHeader>
-              <DialogTitle className="text-base font-bold text-destructive">
-                Descartar sessão ativa?
-              </DialogTitle>
-              <DialogDescription className="text-xs text-muted-foreground pt-1.5 leading-relaxed">
-                Tem certeza de que deseja descartar o progresso do{" "}
-                <strong className="text-foreground">Treino {activeWorkout?.letter}</strong>?
-                Todas as séries registradas nesta sessão serão excluídas.
-              </DialogDescription>
-            </DialogHeader>
-            <DialogFooter className="flex-row justify-end gap-2 pt-3">
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => setShowDiscardConfirm(false)}
-                className="text-xs"
-              >
-                Voltar ao treino
-              </Button>
-              <Button
-                type="button"
-                variant="destructive"
-                size="sm"
-                onClick={handleConfirmDiscard}
-                className="text-xs font-semibold"
-              >
-                Sim, descartar
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-
-        {/* Diálogo de Confirmação para Finalizar Incompleto */}
-        <Dialog
-          open={showEarlyFinishConfirm}
-          onOpenChange={setShowEarlyFinishConfirm}
-        >
-          <DialogContent className="max-w-md">
-            <DialogHeader>
-              <DialogTitle className="text-base font-bold">
-                Finalizar treino antecipadamente?
-              </DialogTitle>
-              <DialogDescription className="text-xs text-muted-foreground pt-1.5 leading-relaxed">
-                O treino será concluído e as séries já registradas serão salvas no histórico como uma sessão parcial.
-              </DialogDescription>
-            </DialogHeader>
-            <DialogFooter className="flex-row justify-end gap-2 pt-3">
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => setShowEarlyFinishConfirm(false)}
-                className="text-xs"
-              >
-                Continuar treinando
-              </Button>
-              <Button
-                type="button"
-                variant="default"
-                size="sm"
-                onClick={handleConfirmEarlyFinish}
-                className="text-xs font-semibold"
-              >
-                Salvar e finalizar
+                Encerrar e Iniciar Novo
               </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
       </main>
 
-      {/* Barra de Navegação Inferior Flutuante Fixa */}
-      <div className="fixed bottom-4 sm:bottom-6 inset-x-0 px-4 flex justify-center z-50 pointer-events-none">
-        <div className="pointer-events-auto">
-          <BottomNavigation
-            activeId={activeTab}
-            onChange={(id) => setActiveTab(id)}
-          />
-        </div>
-      </div>
+      {/* Dock Flutuante do Treino Ativo (Tela 31 - quando navegando fora da sessão ativa) */}
+      {activeWorkout && !activeWorkout.isCompleted && (activeTab !== "hoje" || todaySubView === "dashboard") && (
+        <FloatingWorkoutBar
+          workoutLetter={activeWorkout.letter}
+          currentExercise={currentExercise?.exerciseName}
+          currentSet={`Série ${currentSetNumber}/${currentExercise?.expectedSets || 4}`}
+          timerFormatted={restCountdown.formattedTime}
+          isTimerRunning={restCountdown.isTimerRunning}
+          onReturnToWorkout={() => {
+            setActiveTab("hoje");
+            setTodaySubView(restCountdown.isTimerRunning ? "rest" : "active-session");
+          }}
+        />
+      )}
+
+      {/* Barra de Navegação Inferior Canônica com 4 Abas do Stitch */}
+      <ForcaBottomNav
+        activeId={activeTab === "fichas" ? "hoje" : activeTab}
+        onChange={(tabId) => {
+          setActiveTab(tabId);
+          if (tabId === "hoje" && todaySubView === "summary") {
+            setTodaySubView("dashboard");
+          }
+        }}
+        hasActiveSession={Boolean(activeWorkout && !activeWorkout.isCompleted)}
+      />
     </div>
   );
 }

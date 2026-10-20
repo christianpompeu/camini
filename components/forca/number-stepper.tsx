@@ -1,5 +1,5 @@
+import React from "react";
 import { cn } from "@/lib/utils";
-import { Minus, Plus } from "lucide-react";
 
 export interface NumberStepperProps {
   value: number;
@@ -8,6 +8,7 @@ export interface NumberStepperProps {
   onDecrement?: () => void;
   unit?: string;
   className?: string;
+  min?: number;
 }
 
 export function NumberStepper({
@@ -17,40 +18,59 @@ export function NumberStepper({
   onDecrement,
   unit,
   className,
+  min = 0,
 }: NumberStepperProps) {
+  const isAtMin = value <= min;
+
   return (
-    <div className={cn("flex flex-col items-center gap-2", className)}>
-      {label && (
-        <span className="text-sm font-semibold tracking-wide text-muted-foreground uppercase">
-          {label}
-        </span>
+    <section
+      className={cn(
+        "border border-zinc-200 dark:border-zinc-800 rounded-[20px] p-4 bg-white dark:bg-zinc-900/80 shadow-xs transition-colors",
+        className
       )}
-      <div className="flex items-center justify-between w-full max-w-[240px] bg-white border-2 border-slate-100 rounded-2xl p-2 dark:bg-slate-900 dark:border-slate-800">
+    >
+      {label && (
+        <label className="block text-xs font-medium text-zinc-500 dark:text-zinc-400 mb-1 tracking-tight">
+          {label} {unit && !label.includes(unit) ? `· ${unit}` : ""}
+        </label>
+      )}
+      <div className="flex items-center justify-between px-1 py-0.5">
         <button
+          type="button"
           onClick={onDecrement}
-          className="w-12 h-12 flex shrink-0 items-center justify-center rounded-xl bg-slate-50 text-slate-700 active:bg-slate-200 transition-colors dark:bg-slate-800 dark:text-slate-300 dark:active:bg-slate-700"
-          aria-label="Diminuir"
+          disabled={isAtMin}
+          aria-label={`Diminuir ${label || "valor"}`}
+          className={cn(
+            "w-11 h-11 flex items-center justify-center text-3xl font-light rounded-xl transition-all duration-150 select-none",
+            isAtMin
+              ? "text-zinc-300 dark:text-zinc-700 cursor-not-allowed opacity-50"
+              : "text-zinc-900 dark:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800 active:scale-95 cursor-pointer"
+          )}
         >
-          <Minus size={24} strokeWidth={2.5} />
+          −
         </button>
-        <div className="flex items-baseline justify-center flex-1 gap-1 px-2 overflow-hidden">
-          <span className="text-4xl font-bold tracking-tight text-slate-900 dark:text-white truncate">
+
+        <div className="flex items-baseline justify-center gap-1.5 px-2 select-none">
+          <span className="text-[44px] font-extrabold tracking-tight text-zinc-950 dark:text-white leading-none tabular-nums">
             {value}
           </span>
-          {unit && (
-            <span className="text-base sm:text-lg font-medium text-slate-500 dark:text-slate-400 truncate">
+          {unit && label && !label.includes(unit) && (
+            <span className="text-sm font-semibold text-zinc-400 dark:text-zinc-500">
               {unit}
             </span>
           )}
         </div>
+
         <button
+          type="button"
           onClick={onIncrement}
-          className="w-12 h-12 flex shrink-0 items-center justify-center rounded-xl bg-slate-50 text-slate-700 active:bg-slate-200 transition-colors dark:bg-slate-800 dark:text-slate-300 dark:active:bg-slate-700"
-          aria-label="Aumentar"
+          aria-label={`Aumentar ${label || "valor"}`}
+          className="w-11 h-11 flex items-center justify-center text-3xl font-light text-zinc-900 dark:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-xl active:scale-95 transition-all duration-150 cursor-pointer select-none"
         >
-          <Plus size={24} strokeWidth={2.5} />
+          +
         </button>
       </div>
-    </div>
+    </section>
   );
 }
+

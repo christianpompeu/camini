@@ -1,51 +1,70 @@
 "use client";
 
+import React from "react";
 import { Dumbbell, History, BookOpen, TrendingUp } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-const NAV_ITEMS = [
-  { id: "treinos", label: "Treinos", icon: Dumbbell },
+export const FORCA_NAV_ITEMS = [
+  { id: "hoje", label: "Hoje", icon: Dumbbell },
   { id: "exercicios", label: "Exercícios", icon: BookOpen },
   { id: "historico", label: "Histórico", icon: History },
   { id: "progresso", label: "Progresso", icon: TrendingUp },
 ] as const;
 
-export type NavItemId = typeof NAV_ITEMS[number]["id"];
+export type ForcaNavItemId = (typeof FORCA_NAV_ITEMS)[number]["id"];
 
 interface ForcaBottomNavProps {
   activeId: string;
-  onChange: (id: NavItemId) => void;
+  onChange: (id: ForcaNavItemId) => void;
+  hasActiveSession?: boolean;
   className?: string;
 }
 
-export function ForcaBottomNav({ activeId, onChange, className }: ForcaBottomNavProps) {
+export function ForcaBottomNav({
+  activeId,
+  onChange,
+  hasActiveSession = false,
+  className,
+}: ForcaBottomNavProps) {
   return (
-    <nav className={cn("fixed bottom-4 sm:bottom-6 left-1/2 -translate-x-1/2 w-[calc(100%-2rem)] max-w-md bg-white border border-slate-100 rounded-2xl p-2 shadow-xl shadow-slate-200/50 dark:bg-slate-900 dark:border-slate-800 dark:shadow-none z-50", className)}>
-      <ul className="flex items-center justify-between gap-1">
-        {NAV_ITEMS.map((item) => {
-          const isActive = activeId === item.id;
+    <nav
+      aria-label="Navegação do módulo FORÇA"
+      className={cn(
+        "fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white/95 backdrop-blur-md border-t border-zinc-200/90 dark:bg-zinc-950/95 dark:border-zinc-800/90 px-3 py-2 z-40 transition-all",
+        className
+      )}
+      data-purpose="bottom-tab-bar"
+    >
+      <div className="grid grid-cols-4 items-center gap-1">
+        {FORCA_NAV_ITEMS.map((item) => {
+          const isActive = activeId === item.id || (item.id === "hoje" && activeId === "treinos");
           const Icon = item.icon;
 
           return (
-            <li key={item.id} className="flex-1">
-              <button
-                onClick={() => onChange(item.id)}
-                className={cn(
-                  "flex flex-col items-center justify-center gap-1 min-h-[56px] w-full py-2 px-1 rounded-xl text-xs font-semibold transition-all duration-200",
-                  isActive
-                    ? "bg-slate-900 text-white shadow-md dark:bg-white dark:text-slate-900"
-                    : "text-slate-500 hover:text-slate-900 hover:bg-slate-50 dark:text-slate-400 dark:hover:text-white dark:hover:bg-slate-800"
+            <button
+              key={item.id}
+              type="button"
+              onClick={() => onChange(item.id)}
+              aria-current={isActive ? "page" : undefined}
+              className={cn(
+                "flex flex-col items-center justify-center py-2 px-1 rounded-xl font-medium text-xs tracking-tight transition-all duration-150 select-none cursor-pointer relative",
+                isActive
+                  ? "bg-zinc-100 text-zinc-950 font-semibold dark:bg-zinc-800 dark:text-white shadow-2xs"
+                  : "text-zinc-500 hover:text-zinc-900 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:text-white dark:hover:bg-zinc-900"
+              )}
+            >
+              <div className="relative">
+                <Icon className="w-4 h-4 mb-0.5" strokeWidth={isActive ? 2.5 : 2} />
+                {item.id === "hoje" && hasActiveSession && !isActive && (
+                  <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-emerald-500 ring-2 ring-white dark:ring-zinc-950 animate-pulse" />
                 )}
-              >
-                <Icon className="w-5 h-5 shrink-0" strokeWidth={isActive ? 2.5 : 2} />
-                <span className="tracking-tight text-[10px] sm:text-xs">
-                  {item.label}
-                </span>
-              </button>
-            </li>
+              </div>
+              <span className="text-[11px] leading-tight">{item.label}</span>
+            </button>
           );
         })}
-      </ul>
+      </div>
     </nav>
   );
 }
+

@@ -1,58 +1,69 @@
 "use client";
 
 import React from "react";
-import { SkipForward, Timer } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import { ArrowRight, Timer } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 export interface FloatingWorkoutBarProps {
+  workoutLetter?: string;
   currentExercise?: string;
   currentSet?: string;
   timerFormatted?: string;
-  onNextAction?: () => void;
+  isTimerRunning?: boolean;
+  onReturnToWorkout?: () => void;
   className?: string;
 }
 
 export function FloatingWorkoutBar({
-  currentExercise = "Supino Inclinado Halteres",
+  workoutLetter,
+  currentExercise = "Agachamento Goblet",
   currentSet = "Série 2/4",
   timerFormatted = "01:15",
-  onNextAction,
+  isTimerRunning = false,
+  onReturnToWorkout,
   className = "",
 }: FloatingWorkoutBarProps) {
   return (
     <aside
       aria-label="Barra de treino ativa"
-      className={`bg-card/95 backdrop-blur-md border border-border shadow-md rounded-xl p-3.5 flex items-center justify-between gap-4 max-w-lg w-full ${className}`}
+      onClick={onReturnToWorkout}
+      className={cn(
+        "fixed bottom-16 left-1/2 -translate-x-1/2 w-[calc(100%-2rem)] max-w-md bg-[#18181A] text-white rounded-2xl p-3.5 shadow-lg z-30 flex items-center justify-between gap-3 cursor-pointer active:scale-[0.99] transition-all select-none",
+        className
+      )}
     >
       <div className="flex items-center gap-3 min-w-0">
-        <div className="w-10 h-10 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0">
-          <Timer className="w-5 h-5" />
+        <div className="w-9 h-9 rounded-xl bg-zinc-800 text-white flex items-center justify-center shrink-0">
+          <Timer className={cn("w-4 h-4", isTimerRunning && "text-emerald-400 animate-pulse")} />
         </div>
         <div className="min-w-0">
           <div className="flex items-center gap-2">
-            <span className="font-mono text-sm font-bold text-foreground tracking-tight">
-              {timerFormatted}
+            <span className="font-mono text-sm font-bold text-white tracking-tight tabular-nums">
+              {isTimerRunning ? `Descanso: ${timerFormatted}` : timerFormatted}
             </span>
-            <Badge variant="secondary" className="text-[10px] px-1.5 py-0 font-bold">
+            <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-zinc-800 font-semibold text-zinc-300">
               {currentSet}
-            </Badge>
+            </span>
           </div>
-          <p className="text-xs font-medium text-muted-foreground truncate mt-0.5 max-w-[170px] sm:max-w-xs">
+          <p className="text-xs text-zinc-400 truncate mt-0.5 max-w-[190px] sm:max-w-xs">
+            {workoutLetter ? `Treino ${workoutLetter} · ` : ""}
             {currentExercise}
           </p>
         </div>
       </div>
 
-      <Button
-        variant="default"
-        size="sm"
-        onClick={onNextAction}
-        className="shrink-0 gap-1.5 h-8 text-xs font-semibold"
+      <button
+        type="button"
+        onClick={(e) => {
+          e.stopPropagation();
+          onReturnToWorkout?.();
+        }}
+        className="shrink-0 flex items-center gap-1.5 h-8 px-3 rounded-xl bg-white text-zinc-950 hover:bg-zinc-100 font-semibold text-xs transition-colors"
       >
-        <SkipForward className="w-3.5 h-3.5" />
-        <span>Próxima Ação</span>
-      </Button>
+        <span>Treino</span>
+        <ArrowRight className="w-3.5 h-3.5" />
+      </button>
     </aside>
   );
 }
+
