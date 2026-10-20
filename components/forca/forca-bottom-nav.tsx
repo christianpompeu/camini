@@ -1,11 +1,12 @@
 "use client";
 
 import React from "react";
-import { Dumbbell, History, BookOpen, TrendingUp } from "lucide-react";
+import { Dumbbell, Layers, History, BookOpen, TrendingUp } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export const FORCA_NAV_ITEMS = [
   { id: "hoje", label: "Hoje", icon: Dumbbell },
+  { id: "fichas", label: "Fichas", icon: Layers },
   { id: "exercicios", label: "Exercícios", icon: BookOpen },
   { id: "historico", label: "Histórico", icon: History },
   { id: "progresso", label: "Progresso", icon: TrendingUp },
@@ -30,12 +31,12 @@ export function ForcaBottomNav({
     <nav
       aria-label="Navegação do módulo FORÇA"
       className={cn(
-        "fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white/95 backdrop-blur-md border-t border-zinc-200/90 dark:bg-zinc-950/95 dark:border-zinc-800/90 px-3 py-2 z-40 transition-all",
+        "fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white/95 backdrop-blur-md border-t border-zinc-200/90 dark:bg-zinc-950/95 dark:border-zinc-800/90 px-2 py-1.5 z-40 transition-all",
         className
       )}
       data-purpose="bottom-tab-bar"
     >
-      <div className="grid grid-cols-4 items-center gap-1">
+      <div className="grid grid-cols-5 items-center gap-0.5">
         {FORCA_NAV_ITEMS.map((item) => {
           const isActive = activeId === item.id || (item.id === "hoje" && activeId === "treinos");
           const Icon = item.icon;

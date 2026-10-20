@@ -57,13 +57,15 @@ export interface WorkoutExerciseDef {
 }
 
 export interface WorkoutDef {
-  letter: "A" | "B" | "C" | "D" | "E";
+  letter: string;
   title: string;
   focus: string;
   exerciseCount: number;
   lastExecuted: string;
   estimatedMinutes: number;
   exercises: WorkoutExerciseDef[];
+  planId?: string;
+  divisionId?: string;
 }
 
 export const WORKOUT_PROGRAM: WorkoutDef[] = [
@@ -145,7 +147,7 @@ export const WORKOUT_PROGRAM: WorkoutDef[] = [
 ];
 
 export default function ForcaAppPage() {
-  const [activeTab, setActiveTab] = useState<ForcaNavItemId | "fichas">("hoje");
+  const [activeTab, setActiveTab] = useState<ForcaNavItemId>("hoje");
   const [todaySubView, setTodaySubView] = useState<"dashboard" | "preview" | "active-session" | "rest" | "summary">("dashboard");
   const [selectedPreviewWorkout, setSelectedPreviewWorkout] = useState<WorkoutDef>(WORKOUT_PROGRAM[0]);
   
@@ -205,6 +207,51 @@ export default function ForcaAppPage() {
   const restCountdown = useRestCountdown();
   const activePlan = getActivePlan();
 
+  // Conversão de divisões de WorkoutPlan personalizado para WorkoutDef unificado
+  const divisionToWorkoutDef = React.useCallback(
+    (plan: WorkoutPlan, division: WorkoutDivision): WorkoutDef => {
+      const exercises: WorkoutExerciseDef[] = division.prescribedExercises.map((pEx) => {
+        const cat = getExerciseById(pEx.exerciseId);
+        return {
+          id: pEx.exerciseId,
+          name: cat?.name || pEx.exerciseId,
+          measurementType: pEx.measurementType || cat?.measurementType || "reps",
+          loadConvention: pEx.loadConvention || cat?.loadConvention || "total",
+          expectedSets: pEx.targetSets,
+          targetMuscles: cat?.targetMuscles || cat?.primaryMuscles?.join(", ") || "",
+        };
+      });
+
+      return {
+        letter: division.letter || division.name.charAt(0) || "A",
+        title: division.name,
+        focus: division.notes || `${division.prescribedExercises.length} exercícios prescritos`,
+        exerciseCount: division.prescribedExercises.length,
+        lastExecuted: "-",
+        estimatedMinutes: division.estimatedMinutes || Math.max(30, division.prescribedExercises.length * 9),
+        exercises,
+        planId: plan.id,
+        divisionId: division.id,
+      };
+    },
+    [getExerciseById]
+  );
+
+  const allAvailableWorkouts: WorkoutDef[] = React.useMemo(() => {
+    if (activePlan && activePlan.divisions && activePlan.divisions.length > 0) {
+      return activePlan.divisions.map((div) => divisionToWorkoutDef(activePlan, div));
+    }
+    return WORKOUT_PROGRAM;
+  }, [activePlan, divisionToWorkoutDef]);
+
+  const suggestedWorkout: WorkoutDef = React.useMemo(() => {
+    if (activeWorkout && !activeWorkout.isCompleted) {
+      const current = allAvailableWorkouts.find((w) => w.letter === activeWorkout.letter);
+      if (current) return current;
+    }
+    return allAvailableWorkouts[0] || WORKOUT_PROGRAM[0];
+  }, [activeWorkout, allAvailableWorkouts]);
+
   // Data formatada para a aba Hoje
   const currentDateFormatted = new Intl.DateTimeFormat("pt-BR", {
     weekday: "long",
@@ -249,8 +296,51 @@ export default function ForcaAppPage() {
     isExtra: currentSetNumber > (currentExercise?.expectedSets || 4),
   };
 
-  // Iniciar treino baseline
-  const handleStartBaselineWorkout = (workout: WorkoutDef) => {
+  // Configurar treino / divisão (editar fichas)
+  const handleConfigureWorkout = (workout: WorkoutDef) => {
+    if (workout.planId && workout.divisionId && activePlan) {
+      const div = activePlan.divisions.find((d) => d.id === workout.divisionId);
+      if (div) {
+        setSelectedPlan(activePlan);
+        setSelectedDivision(div);
+        setPlanViewMode("division-detail");
+        setActiveTab("fichas");
+        return;
+      }
+    }
+
+    const draft = importDraftFromBaseline();
+    savePlan(draft);
+    setSelectedPlan(draft);
+    const targetDiv = draft.divisions.find((d) => d.letter === workout.letter);
+    if (targetDiv) {
+      setSelectedDivision(targetDiv);
+      setPlanViewMode("division-detail");
+    } else {
+      setPlanViewMode("editor");
+    }
+    setActiveTab("fichas");
+  };
+
+  // Criar novo rascunho de ficha a partir dos treinos provisórios
+  const handleCreateNewPlanDraft = () => {
+    const draft = importDraftFromBaseline();
+    savePlan(draft);
+    setSelectedPlan(draft);
+    setPlanViewMode("editor");
+    setActiveTab("fichas");
+  };
+
+  // Iniciar treino (seja da ficha ativa ou provisório A–E)
+  const handleStartWorkout = (workout: WorkoutDef) => {
+    if (workout.planId && workout.divisionId && activePlan) {
+      const div = activePlan.divisions.find((d) => d.id === workout.divisionId);
+      if (div) {
+        handleStartPlanDivision(activePlan, div);
+        return;
+      }
+    }
+
     if (activeWorkout && activeWorkout.letter === workout.letter && !activeWorkout.isCompleted) {
       setTodaySubView("active-session");
       setActiveTab("hoje");
@@ -446,7 +536,9 @@ export default function ForcaAppPage() {
         </div>
       </div>
 
-      <main className="flex-1 max-w-md w-full mx-auto px-4 py-4 space-y-4">
+      <main className={`flex-1 w-full mx-auto px-4 py-4 space-y-4 ${
+        activeTab === "fichas" || activeTab === "exercicios" ? "max-w-4xl" : "max-w-md"
+      }`}>
         {/* ============================================================== */}
         {/* ABA: HOJE (STITCH MONOCHROME DISCIPLINE CORE)                   */}
         {/* ============================================================== */}
@@ -457,7 +549,8 @@ export default function ForcaAppPage() {
               <TodayDashboardView
                 currentDateFormatted={currentDateFormatted}
                 activePlan={activePlan}
-                suggestedWorkout={WORKOUT_PROGRAM[0]}
+                suggestedWorkout={suggestedWorkout}
+                allWorkouts={allAvailableWorkouts}
                 hasActiveSession={Boolean(activeWorkout && !activeWorkout.isCompleted)}
                 activeSessionLetter={activeWorkout?.letter}
                 activeSessionTitle={activeWorkout?.title}
@@ -482,6 +575,8 @@ export default function ForcaAppPage() {
                 }}
                 onOpenDownloads={() => setIsSettingsOpen(true)}
                 onOpenSettings={() => setIsSettingsOpen(true)}
+                onConfigureWorkout={handleConfigureWorkout}
+                onCreateNewPlanDraft={handleCreateNewPlanDraft}
               />
             )}
 
@@ -490,10 +585,11 @@ export default function ForcaAppPage() {
               <WorkoutPreviewView
                 workout={selectedPreviewWorkout}
                 onBack={() => setTodaySubView("dashboard")}
-                onStart={handleStartBaselineWorkout}
+                onStart={handleStartWorkout}
                 onViewExerciseDetails={() => {
                   setActiveTab("exercicios");
                 }}
+                onConfigure={handleConfigureWorkout}
               />
             )}
 
@@ -951,11 +1047,14 @@ export default function ForcaAppPage() {
         />
       )}
 
-      {/* Barra de Navegação Inferior Canônica com 4 Abas do Stitch */}
+      {/* Barra de Navegação Inferior Canônica com 5 Abas do FORÇA */}
       <ForcaBottomNav
-        activeId={activeTab === "fichas" ? "hoje" : activeTab}
+        activeId={activeTab}
         onChange={(tabId) => {
           setActiveTab(tabId);
+          if (tabId === "fichas") {
+            setPlanViewMode("list");
+          }
           if (tabId === "hoje" && todaySubView === "summary") {
             setTodaySubView("dashboard");
           }

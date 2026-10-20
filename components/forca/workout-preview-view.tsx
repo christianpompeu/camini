@@ -10,6 +10,7 @@ export interface WorkoutPreviewViewProps {
   onBack: () => void;
   onStart: (workout: WorkoutDef) => void;
   onViewExerciseDetails?: (exerciseId: string) => void;
+  onConfigure?: (workout: WorkoutDef) => void;
 }
 
 export function WorkoutPreviewView({
@@ -17,6 +18,7 @@ export function WorkoutPreviewView({
   onBack,
   onStart,
   onViewExerciseDetails,
+  onConfigure,
 }: WorkoutPreviewViewProps) {
   return (
     <div className="space-y-4 max-w-md mx-auto w-full pb-8 animate-in fade-in duration-200">
@@ -107,7 +109,7 @@ export function WorkoutPreviewView({
       </section>
 
       {/* Botão de Iniciar Treino Fixo */}
-      <div className="pt-4 sticky bottom-16 sm:bottom-20 z-20">
+      <div className="pt-4 sticky bottom-16 sm:bottom-20 z-20 space-y-2">
         <button
           type="button"
           onClick={() => onStart(workout)}
@@ -116,6 +118,16 @@ export function WorkoutPreviewView({
           <Play className="w-4 h-4 fill-current" />
           <span>Iniciar Treino {workout.letter}</span>
         </button>
+
+        {onConfigure && (
+          <button
+            type="button"
+            onClick={() => onConfigure(workout)}
+            className="w-full bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700 text-zinc-800 dark:text-zinc-200 font-medium text-xs py-2.5 px-4 rounded-xl text-center transition cursor-pointer select-none"
+          >
+            Configurar ou alterar exercícios desta ficha
+          </button>
+        )}
       </div>
     </div>
   );
