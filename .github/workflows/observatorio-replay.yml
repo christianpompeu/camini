@@ -16,6 +16,8 @@ on:
       - "supabase/migrations/20261020195912_observatorio_b1_2_proteger_insert_reavaliacao.sql"
       - "supabase/migrations/20261020195924_observatorio_b1_2_fix_search_path.sql"
       - "supabase/migrations/20261020195940_observatorio_b1_2_fix_reavaliacao_trigger.sql"
+      - "supabase/migrations/20261020195970_observatorio_b1_2_isolar_coletor.sql"
+      - "supabase/migrations/20261020195980_observatorio_b1_2_isolar_coletor_rls.sql"
       - "scripts/observatorio-replay-fixture.sql"
       - "scripts/observatorio-reavaliacao-fixture.sql"
 
@@ -74,6 +76,9 @@ jobs:
           done
           psql -v ON_ERROR_STOP=1 -f supabase/migrations/20261020195924_observatorio_b1_2_fix_search_path.sql
           psql -v ON_ERROR_STOP=1 -f supabase/migrations/20261020195940_observatorio_b1_2_fix_reavaliacao_trigger.sql
+          psql -v ON_ERROR_STOP=1 -f supabase/migrations/20261020195970_observatorio_b1_2_isolar_coletor.sql
+          psql -v ON_ERROR_STOP=1 -f supabase/migrations/20261020195980_observatorio_b1_2_isolar_coletor_rls.sql
+          psql -v ON_ERROR_STOP=1 -c "grant observatorio_coletor to postgres"
 
       - name: Schema, grants and security checks
         run: |
@@ -84,7 +89,8 @@ jobs:
             if has_table_privilege('service_role','public.observatorio_decisoes_historico','UPDATE') or has_table_privilege('service_role','public.observatorio_decisoes_historico','DELETE') or has_table_privilege('service_role','public.observatorio_decisoes_historico','TRUNCATE') then raise exception 'audit mutation privilege leaked'; end if;
             if has_table_privilege('service_role','public.observatorio_aprovacoes_editoriais','INSERT') or has_table_privilege('service_role','public.observatorio_aprovacoes_editoriais','TRUNCATE') then raise exception 'approval mutation privilege leaked'; end if;
             if has_function_privilege('service_role','public.observatorio_aprovar_relacao(uuid,text,text)','EXECUTE') or not has_function_privilege('authenticated','public.observatorio_aprovar_relacao(uuid,text,text)','EXECUTE') then raise exception 'approval RPC grants incorrect'; end if;
-            if has_function_privilege('anon','public.observatorio_ingest_lote(jsonb)','EXECUTE') or not has_function_privilege('service_role','public.observatorio_ingest_lote(jsonb)','EXECUTE') then raise exception 'ingest RPC grants incorrect'; end if;
+            if has_function_privilege('anon','public.observatorio_ingest_lote(jsonb)','EXECUTE') or has_function_privilege('service_role','public.observatorio_ingest_lote(jsonb)','EXECUTE') or not has_function_privilege('observatorio_coletor','public.observatorio_ingest_lote(jsonb)','EXECUTE') then raise exception 'ingest RPC grants incorrect'; end if;
+            if has_table_privilege('service_role','public.observatorio_aprovadores','INSERT') or has_table_privilege('service_role','public.observatorio_aprovadores','UPDATE') or has_table_privilege('service_role','public.observatorio_relacoes','UPDATE') then raise exception 'collector boundary leaked'; end if;
           end $$;
           SQL
 

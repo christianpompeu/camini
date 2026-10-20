@@ -1,5 +1,5 @@
 begin;
-set local role service_role;
+set local role observatorio_coletor;
 select set_config('observatorio.run_key','ci-reavaliacao',true);
 do $$
 declare
