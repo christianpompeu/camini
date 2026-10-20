@@ -536,7 +536,7 @@ export default function ForcaAppPage() {
         </div>
       </div>
 
-      <main className={`flex-1 w-full mx-auto px-4 py-4 space-y-4 ${
+      <main className={`flex-1 w-full mx-auto px-4 pt-3 pb-28 sm:pb-32 space-y-4 ${
         activeTab === "fichas" || activeTab === "exercicios" ? "max-w-4xl" : "max-w-md"
       }`}>
         {/* ============================================================== */}
@@ -707,7 +707,14 @@ export default function ForcaAppPage() {
                 Sessões Anteriores
               </h1>
             </div>
-            <HistoryList onSessionClick={(session) => setSelectedSessionId(session.id)} />
+            <HistoryList
+              onSessionClick={(session) => setSelectedSessionId(session.id)}
+              onGoToWorkout={() => setActiveTab("hoje")}
+              onGoToPlans={() => {
+                setPlanViewMode("list");
+                setActiveTab("fichas");
+              }}
+            />
           </div>
         )}
 
@@ -1047,20 +1054,22 @@ export default function ForcaAppPage() {
         />
       )}
 
-      {/* Barra de Navegação Inferior Canônica com 5 Abas do FORÇA */}
-      <ForcaBottomNav
-        activeId={activeTab}
-        onChange={(tabId) => {
-          setActiveTab(tabId);
-          if (tabId === "fichas") {
-            setPlanViewMode("list");
-          }
-          if (tabId === "hoje" && todaySubView === "summary") {
-            setTodaySubView("dashboard");
-          }
-        }}
-        hasActiveSession={Boolean(activeWorkout && !activeWorkout.isCompleted)}
-      />
+      {/* Barra de Navegação Inferior Canônica com 5 Abas do FORÇA (oculta na sessão ativa para foco total nos controles de treino) */}
+      {!(activeTab === "hoje" && (todaySubView === "active-session" || todaySubView === "rest")) && (
+        <ForcaBottomNav
+          activeId={activeTab}
+          onChange={(tabId) => {
+            setActiveTab(tabId);
+            if (tabId === "fichas") {
+              setPlanViewMode("list");
+            }
+            if (tabId === "hoje" && todaySubView === "summary") {
+              setTodaySubView("dashboard");
+            }
+          }}
+          hasActiveSession={Boolean(activeWorkout && !activeWorkout.isCompleted)}
+        />
+      )}
     </div>
   );
 }

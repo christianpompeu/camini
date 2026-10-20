@@ -18,9 +18,15 @@ import {
 
 interface HistoryListProps {
   onSessionClick: (session: WorkoutSession) => void;
+  onGoToWorkout?: () => void;
+  onGoToPlans?: () => void;
 }
 
-export function HistoryList({ onSessionClick }: HistoryListProps) {
+export function HistoryList({
+  onSessionClick,
+  onGoToWorkout,
+  onGoToPlans,
+}: HistoryListProps) {
   const { completedWorkouts, hasHydrated } = useWorkoutStore();
   const [searchTerm, setSearchTerm] = useState("");
   const [filterLetter, setFilterLetter] = useState<string>("ALL");
@@ -33,6 +39,70 @@ export function HistoryList({ onSessionClick }: HistoryListProps) {
         <div className="h-11 bg-muted/40 animate-pulse rounded-xl" />
         <div className="h-24 bg-muted/20 animate-pulse rounded-xl" />
         <div className="h-24 bg-muted/20 animate-pulse rounded-xl" />
+      </div>
+    );
+  }
+
+  // Se não há nenhum treino no histórico, exibir Tela 18 (Sem Histórico)
+  if (completedWorkouts.length === 0) {
+    return (
+      <div className="space-y-4 animate-in fade-in duration-200">
+        <div className="space-y-3">
+          <div className="p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800">
+            <h4 className="text-sm font-bold text-zinc-950 dark:text-white">
+              Sem números inventados
+            </h4>
+            <p className="text-xs text-zinc-600 dark:text-zinc-400 mt-1 leading-relaxed">
+              Carga anterior, recordes e tendências aparecem somente quando há dados suficientes registrados.
+            </p>
+          </div>
+
+          <button
+            type="button"
+            onClick={onGoToWorkout}
+            className="w-full text-left p-4 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700 transition-all cursor-pointer group shadow-2xs"
+          >
+            <div className="flex items-center justify-between">
+              <div>
+                <h4 className="text-sm font-bold text-zinc-950 dark:text-white group-hover:text-zinc-800 dark:group-hover:text-zinc-200">
+                  Conhecer minha ficha
+                </h4>
+                <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
+                  Veja os exercícios prescritos e prepare sua sessão.
+                </p>
+              </div>
+              <ChevronRight className="w-4 h-4 text-zinc-400 group-hover:translate-x-0.5 transition-transform" />
+            </div>
+          </button>
+
+          <button
+            type="button"
+            onClick={onGoToPlans}
+            className="w-full text-left p-4 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700 transition-all cursor-pointer group shadow-2xs"
+          >
+            <div className="flex items-center justify-between">
+              <div>
+                <h4 className="text-sm font-bold text-zinc-950 dark:text-white group-hover:text-zinc-800 dark:group-hover:text-zinc-200">
+                  Configurar meu programa
+                </h4>
+                <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
+                  Revise fichas, divisões e equipamentos.
+                </p>
+              </div>
+              <ChevronRight className="w-4 h-4 text-zinc-400 group-hover:translate-x-0.5 transition-transform" />
+            </div>
+          </button>
+        </div>
+
+        <div className="pt-3">
+          <Button
+            type="button"
+            onClick={onGoToWorkout}
+            className="w-full h-12 rounded-xl bg-zinc-950 text-white hover:bg-zinc-900 dark:bg-white dark:text-zinc-950 dark:hover:bg-zinc-100 font-semibold text-sm transition-all shadow-sm cursor-pointer"
+          >
+            Ver meu próximo treino
+          </Button>
+        </div>
       </div>
     );
   }
@@ -124,19 +194,10 @@ export function HistoryList({ onSessionClick }: HistoryListProps) {
         </div>
       </div>
 
-      {/* Estados da Lista */}
-      {completedWorkouts.length === 0 ? (
-        <div className="p-10 text-center border border-dashed border-border rounded-xl text-muted-foreground flex flex-col items-center gap-3 bg-muted/10">
-          <HistoryIcon className="w-10 h-10 opacity-30" />
-          <h4 className="font-semibold text-foreground text-sm">Nenhum treino no histórico</h4>
-          <p className="text-xs max-w-sm">
-            Você ainda não registrou nenhum treino. Inicie uma sessão na aba Treinos para que suas
-            séries e sobrecargas apareçam aqui.
-          </p>
-        </div>
-      ) : filteredSessions.length === 0 ? (
+      {/* Lista Filtrada de Sessões */}
+      {filteredSessions.length === 0 ? (
         <div className="p-8 text-center border border-dashed border-border rounded-xl text-muted-foreground flex flex-col items-center gap-3">
-          <HistoryIcon className="w-10 h-10 opacity-20" />
+          <History className="w-10 h-10 opacity-20 text-muted-foreground" />
           <p className="text-sm">Nenhuma sessão encontrada para os filtros selecionados.</p>
           {hasActiveFilters && (
             <Button

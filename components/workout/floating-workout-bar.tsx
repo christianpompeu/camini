@@ -28,7 +28,7 @@ export function FloatingWorkoutBar({
       aria-label="Barra de treino ativa"
       onClick={onReturnToWorkout}
       className={cn(
-        "fixed bottom-16 left-1/2 -translate-x-1/2 w-[calc(100%-2rem)] max-w-md bg-[#18181A] text-white rounded-2xl p-3.5 shadow-lg z-30 flex items-center justify-between gap-3 cursor-pointer active:scale-[0.99] transition-all select-none",
+        "fixed bottom-[calc(4.75rem+env(safe-area-inset-bottom,0px))] left-1/2 -translate-x-1/2 w-[calc(100%-2rem)] max-w-sm sm:max-w-md bg-[#18181A] text-white rounded-2xl p-3.5 shadow-xl border border-zinc-800/90 z-30 flex items-center justify-between gap-3 cursor-pointer active:scale-[0.99] transition-all select-none",
         className
       )}
     >
