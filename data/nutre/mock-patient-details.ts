@@ -114,12 +114,14 @@ export const MOCK_PATIENT_DETAILS: Record<string, PatientDetail> = {
   },
 };
 
-export function getPatientDetail(id: string): PatientDetail {
+export function getPatientDetail(id: string): PatientDetail | undefined {
   if (MOCK_PATIENT_DETAILS[id]) {
     return MOCK_PATIENT_DETAILS[id];
   }
 
-  const patient = MOCK_PATIENTS.find((p) => p.id === id) || MOCK_PATIENTS[0];
+  const patient = MOCK_PATIENTS.find((p) => p.id === id);
+
+  if (!patient) return undefined;
 
   return {
     ...patient,
