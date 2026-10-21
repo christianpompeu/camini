@@ -55,6 +55,9 @@ Validacao local concluida:
 - lint direcionado sem erros;
 - build de producao do Next.js 16.3.5 concluido.
 
+GitHub Actions concluido com sucesso no commit `2c4cee0`:
+<https://github.com/christianpompeu/camini/actions/runs/39523554567>.
+
 Os tipos TypeScript foram regenerados contra HML e incluem a RPC. Os advisors
 nao apontaram problema novo desta migration. Permanecem quatro tabelas privadas
 com RLS sem policy (intencional) e o alerta preexistente da RPC editorial
@@ -64,7 +67,6 @@ com RLS sem policy (intencional) e o alerta preexistente da RPC editorial
 
 ### Correcao curta de fechamento
 
-- Confirmar o workflow verde no commit final.
 - Executar o adaptador com as duas variaveis secretas no backend autorizado;
   o contrato e a mesma RPC foram provados em HML, mas nenhuma credencial foi
   copiada para o ambiente local.
@@ -84,10 +86,10 @@ com RLS sem policy (intencional) e o alerta preexistente da RPC editorial
 ## Parecer
 
 O bloqueio funcional de ingestao e a fundacao tecnica do Marco B estao
-resolvidos em HML. O encerramento formal fica condicionado somente a uma
-execucao verde do GitHub Actions e a prova do adaptador usando as credenciais
-secretas no ambiente de backend. Producao permanece sem alteracoes e a promocao
-continua sendo uma decisao humana separada.
+resolvidos em HML. O encerramento formal fica condicionado somente a prova do
+adaptador usando as credenciais secretas no ambiente de backend. Producao
+permanece sem alteracoes e a promocao continua sendo uma decisao humana
+separada.
 
 ## Bloco para o Br[AI]n
 
@@ -97,7 +99,7 @@ continua sendo uma decisao humana separada.
 >
 > Testado: ingestao HML, idempotencia, rollback, auditoria e preservacao editorial.
 >
-> Pendente curto: Actions verde e execucao do adaptador com secrets do backend.
+> Pendente curto: execucao do adaptador com secrets do backend.
 >
 > Adiado: Auth editorial E2E, UI, publicacao, grafo e integracoes externas.
 >
