@@ -8,6 +8,8 @@ import {
   type PrivateSnapshotOptions,
 } from "./supabase-read-repository.ts";
 
+export { ingestObservatorioBatchInHml } from "./supabase-ingestion.ts";
+
 async function assertObservatorioAccess() {
   const supabase = await createSessionClient();
   const {

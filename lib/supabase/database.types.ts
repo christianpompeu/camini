@@ -846,6 +846,7 @@ export type Database = {
     Functions: {
       has_route_access: { Args: { check_route: string }; Returns: boolean }
       is_super_admin: { Args: never; Returns: boolean }
+      observatorio_ingest_lote: { Args: { p_payload: Json }; Returns: Json }
     }
     Enums: {
       [_ in never]: never

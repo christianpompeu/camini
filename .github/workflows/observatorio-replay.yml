@@ -18,6 +18,12 @@ on:
       - "supabase/migrations/20261020195940_observatorio_b1_2_fix_reavaliacao_trigger.sql"
       - "supabase/migrations/20261020195970_observatorio_b1_2_isolar_coletor.sql"
       - "supabase/migrations/20261020195980_observatorio_b1_2_isolar_coletor_rls.sql"
+      - "supabase/migrations/20261021001511_observatorio_marco_b_auditoria_backend.sql"
+      - "lib/observatorio/supabase-ingestion.ts"
+      - "lib/observatorio/__tests__/supabase-ingestion.test.ts"
+      - "lib/supabase/database.types.ts"
+      - "package.json"
+      - "package-lock.json"
       - "scripts/observatorio-replay-fixture.sql"
       - "scripts/observatorio-reavaliacao-fixture.sql"
 
@@ -43,6 +49,18 @@ jobs:
       PGDATABASE: postgres
     steps:
       - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Validate backend adapter
+        run: |
+          npm ci
+          npm run test:observatorio
+          npm run test:observatorio-backend
+          npx tsc --noEmit
 
       - name: Bootstrap Supabase-compatible roles
         run: |
@@ -78,6 +96,7 @@ jobs:
           psql -v ON_ERROR_STOP=1 -f supabase/migrations/20261020195940_observatorio_b1_2_fix_reavaliacao_trigger.sql
           psql -v ON_ERROR_STOP=1 -f supabase/migrations/20261020195970_observatorio_b1_2_isolar_coletor.sql
           psql -v ON_ERROR_STOP=1 -f supabase/migrations/20261020195980_observatorio_b1_2_isolar_coletor_rls.sql
+          psql -v ON_ERROR_STOP=1 -f supabase/migrations/20261021001511_observatorio_marco_b_auditoria_backend.sql
           psql -v ON_ERROR_STOP=1 -c "grant observatorio_coletor to postgres"
 
       - name: Schema, grants and security checks
@@ -89,10 +108,23 @@ jobs:
             if has_table_privilege('service_role','public.observatorio_decisoes_historico','UPDATE') or has_table_privilege('service_role','public.observatorio_decisoes_historico','DELETE') or has_table_privilege('service_role','public.observatorio_decisoes_historico','TRUNCATE') then raise exception 'audit mutation privilege leaked'; end if;
             if has_table_privilege('service_role','public.observatorio_aprovacoes_editoriais','INSERT') or has_table_privilege('service_role','public.observatorio_aprovacoes_editoriais','TRUNCATE') then raise exception 'approval mutation privilege leaked'; end if;
             if has_function_privilege('service_role','public.observatorio_aprovar_relacao(uuid,text,text)','EXECUTE') or not has_function_privilege('authenticated','public.observatorio_aprovar_relacao(uuid,text,text)','EXECUTE') then raise exception 'approval RPC grants incorrect'; end if;
-            if has_function_privilege('anon','public.observatorio_ingest_lote(jsonb)','EXECUTE') or has_function_privilege('service_role','public.observatorio_ingest_lote(jsonb)','EXECUTE') or not has_function_privilege('observatorio_coletor','public.observatorio_ingest_lote(jsonb)','EXECUTE') then raise exception 'ingest RPC grants incorrect'; end if;
+            if has_function_privilege('anon','public.observatorio_ingest_lote(jsonb)','EXECUTE') or not has_function_privilege('service_role','public.observatorio_ingest_lote(jsonb)','EXECUTE') or not has_function_privilege('observatorio_coletor','public.observatorio_ingest_lote(jsonb)','EXECUTE') then raise exception 'ingest RPC grants incorrect'; end if;
             if has_table_privilege('service_role','public.observatorio_aprovadores','INSERT') or has_table_privilege('service_role','public.observatorio_aprovadores','UPDATE') or has_table_privilege('service_role','public.observatorio_relacoes','UPDATE') then raise exception 'collector boundary leaked'; end if;
+            if not has_table_privilege('observatorio_ingest_owner','public.observatorio_decisoes_historico','INSERT') or has_table_privilege('observatorio_ingest_owner','public.observatorio_decisoes_historico','UPDATE') or has_table_privilege('observatorio_ingest_owner','public.observatorio_decisoes_historico','DELETE') or has_table_privilege('observatorio_ingest_owner','public.observatorio_decisoes_historico','TRUNCATE') then raise exception 'audit owner grants incorrect'; end if;
           end $$;
           SQL
+
+      - name: Collector direct writes are denied
+        run: |
+          if psql -v ON_ERROR_STOP=1 <<'SQL'
+          set role observatorio_coletor;
+          insert into public.observatorio_fontes(nome, dominio, tipo)
+          values ('Denied', 'denied.example', 'outro');
+          SQL
+          then
+            echo "collector direct write unexpectedly succeeded"
+            exit 1
+          fi
 
       - name: Synthetic fixture and concurrent idempotency
         run: |
@@ -114,3 +146,51 @@ jobs:
 
       - name: Re-evaluation trigger coverage
         run: psql -v ON_ERROR_STOP=1 -f scripts/observatorio-reavaliacao-fixture.sql
+
+      - name: Transaction rollback
+        run: |
+          if psql -v ON_ERROR_STOP=1 <<'SQL'
+          set role observatorio_coletor;
+          select public.observatorio_ingest_lote($json$
+          {
+            "round":{"run_key":"ci-must-rollback","canal":"tech"},
+            "sources":[],
+            "relations":[{"origem_chave":"missing-a","destino_chave":"missing-b","tipo":"relacionado"}]
+          }$json$::jsonb);
+          SQL
+          then
+            echo "invalid batch unexpectedly succeeded"
+            exit 1
+          fi
+          psql -v ON_ERROR_STOP=1 -c "select 1 / case when count(*) = 0 then 1 else 0 end from public.observatorio_rodadas where run_key='ci-must-rollback'"
+
+      - name: Editorial decisions survive reprocessing
+        run: |
+          psql -v ON_ERROR_STOP=1 <<'SQL'
+          update public.observatorio_materias
+             set status_verificacao = 'contestado'
+           where url_canonica = 'https://replay.example/item';
+          update public.observatorio_eventos
+             set status_verificacao = 'verificado', status_sanitizacao = 'revisado'
+           where chave = 'replay-synthetic-event';
+          SQL
+          psql -v ON_ERROR_STOP=1 -f scripts/observatorio-replay-fixture.sql
+          psql -v ON_ERROR_STOP=1 <<'SQL'
+          do $$ begin
+            if not exists (select 1 from public.observatorio_materias where url_canonica='https://replay.example/item' and status_verificacao='contestado') then raise exception 'article editorial decision overwritten'; end if;
+            if not exists (select 1 from public.observatorio_eventos where chave='replay-synthetic-event' and status_verificacao='verificado' and status_sanitizacao='revisado') then raise exception 'event editorial decision overwritten'; end if;
+          end $$;
+          SQL
+
+      - name: Audit is append-only
+        run: |
+          if psql -v ON_ERROR_STOP=1 <<'SQL'
+          set role service_role;
+          update public.observatorio_decisoes_historico
+             set ator = 'tampered'
+           where run_key = 'replay-b12-synthetic';
+          SQL
+          then
+            echo "audit update unexpectedly succeeded"
+            exit 1
+          fi

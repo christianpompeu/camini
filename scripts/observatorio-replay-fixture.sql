@@ -1,3 +1,5 @@
+begin;
+set local role observatorio_coletor;
 select public.observatorio_ingest_lote($json$
 {
   "round": {"run_key":"replay-b12-synthetic","canal":"tech","origem":"github-replay","status":"concluida"},
@@ -22,3 +24,4 @@ select public.observatorio_ingest_lote($json$
   }],
   "relations": []
 }$json$::jsonb);
+commit;
