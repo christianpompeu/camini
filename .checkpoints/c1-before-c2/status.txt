@@ -1,0 +1,9 @@
+A  app/dashboard/observatorio/edicoes/page.tsx
+A  app/dashboard/observatorio/page.tsx
+M  components/layout/sidebar.tsx
+A  components/observatorio/editorial-queue.tsx
+A  components/observatorio/editorial-status.tsx
+M  docs/observatorio-marco-b-fechamento.md
+A  docs/observatorio-marco-c1.md
+A  lib/observatorio/editorial.ts
+M  lib/observatorio/server.ts

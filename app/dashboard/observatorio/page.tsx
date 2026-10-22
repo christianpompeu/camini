@@ -23,7 +23,7 @@ export default async function ObservatorioDashboardPage() {
     ["Em revisão", editions.filter((item) => item.revisao === "em_revisao").length, ShieldAlert],
     ["Aprovadas", editions.filter((item) => item.status === "aprovada").length, CheckCircle2],
     ["Publicadas", editions.filter((item) => item.status === "publicada").length, Globe2],
-    ["Reconciliação pendente", editions.filter((item) => item.reconciliacao === "informacao_insuficiente" || item.reconciliacao === "divergencia_status").length, ShieldAlert],
+    ["Reconciliação pendente", editions.filter((item) => item.reconciliacao === "insufficient_information" || item.reconciliacao === "status_divergence" || item.reconciliacao === "supabase_id_not_found").length, ShieldAlert],
   ] as const;
 
   return <div className="space-y-8"><header className="flex flex-col gap-4 border-b border-border pb-6 sm:flex-row sm:items-end sm:justify-between"><div><div className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-primary">Camini / Observatório <Badge variant="outline">Privado</Badge></div><h1 className="text-3xl font-semibold tracking-tight">Fila editorial</h1><p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">Leitura operacional das edições no HML, com estados de reconciliação explícitos e sem ações de aprovação ou publicação.</p></div><Link href="/dashboard/observatorio/edicoes" className="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-all hover:opacity-90">Abrir fila <ArrowRight className="size-4" /></Link></header>

@@ -1,5 +1,5 @@
 import { Badge } from "@/components/ui/badge";
-import type { EditorialEdition, ReconciliaçãoEstado } from "@/lib/observatorio/editorial";
+import type { EditorialEdition, ReconciliationState } from "@/lib/observatorio/editorial";
 
 const statusLabels: Record<EditorialEdition["status"], string> = {
   candidata: "Candidata",
@@ -9,12 +9,13 @@ const statusLabels: Record<EditorialEdition["status"], string> = {
   arquivada: "Arquivada",
 };
 
-const reconciliationLabels: Record<ReconciliaçãoEstado, string> = {
-  somente_hml: "Somente no HML",
-  correspondencia_confirmada: "Correspondência confirmada",
-  divergencia_status: "Divergência de status",
-  identificador_nao_confirmado: "ID não confirmado",
-  informacao_insuficiente: "Reconciliação insuficiente",
+const reconciliationLabels: Record<ReconciliationState, string> = {
+  only_notion: "Somente no Notion",
+  only_hml: "Somente no HML",
+  confirmed_match: "Correspondência confirmada",
+  status_divergence: "Divergência de status",
+  supabase_id_not_found: "ID Supabase não encontrado",
+  insufficient_information: "Informação insuficiente",
 };
 
 export function EditionStatus({ status }: { status: EditorialEdition["status"] }) {
@@ -22,6 +23,6 @@ export function EditionStatus({ status }: { status: EditorialEdition["status"] }
   return <Badge variant={variant}>{statusLabels[status]}</Badge>;
 }
 
-export function ReconciliationStatus({ state }: { state: ReconciliaçãoEstado }) {
-  return <Badge variant={state === "informacao_insuficiente" ? "warning" : "outline"}>{reconciliationLabels[state]}</Badge>;
+export function ReconciliationStatus({ state }: { state: ReconciliationState }) {
+  return <Badge variant={state === "insufficient_information" || state === "supabase_id_not_found" ? "warning" : state === "status_divergence" ? "destructive" : "outline"}>{reconciliationLabels[state]}</Badge>;
 }
