@@ -225,6 +225,17 @@ export function AppSidebar() {
                 </CollapsibleContent>
               </SidebarMenuItem>
             </Collapsible>
+
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                render={<Link href="/dashboard/observatorio" onClick={closeMobile} />}
+                isActive={pathname.startsWith("/dashboard/observatorio")}
+                tooltip="Observatório editorial"
+              >
+                <ShieldCheck className="size-4" />
+                <span>Observatório</span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
           </SidebarMenu>
         </SidebarGroup>
 

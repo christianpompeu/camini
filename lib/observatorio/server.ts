@@ -2,6 +2,7 @@ import "server-only";
 
 import { createClient as createSessionClient } from "@/lib/supabase/server";
 import { ObservatorioAccessError } from "./errors.ts";
+import { readEditorialQueue } from "./editorial.ts";
 import {
   readPrivateObservatorioGraph,
   readPrivateObservatorioSnapshot,
@@ -40,4 +41,9 @@ export async function readAuthorizedObservatorioSnapshot(
 export async function readAuthorizedObservatorioGraph(limit = 500) {
   await assertObservatorioAccess();
   return readPrivateObservatorioGraph(limit);
+}
+
+export async function readAuthorizedObservatorioEditorialQueue() {
+  await assertObservatorioAccess();
+  return readEditorialQueue();
 }

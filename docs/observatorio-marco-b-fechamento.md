@@ -85,11 +85,41 @@ com RLS sem policy (intencional) e o alerta preexistente da RPC editorial
 
 ## Parecer
 
-O bloqueio funcional de ingestao e a fundacao tecnica do Marco B estao
-resolvidos em HML. O encerramento formal fica condicionado somente a prova do
-adaptador usando as credenciais secretas no ambiente de backend. Producao
-permanece sem alteracoes e a promocao continua sendo uma decisao humana
-separada.
+## Smoke test final do adaptador (22/10/2026)
+
+**Status: aprovado em HML. Marco B encerrado em HML.** A execução partiu da
+raiz `C:\projects\camini` e carregou `.env.local` com `loadEnvConfig(process.cwd())`;
+as duas variáveis foram confirmadas apenas como presentes (`true/true`).
+
+`run_key`: `smoke-1792689721960` (sintético). Rodada: `fcda5352-e5ef-48f4-aa86-53107b2e79dd`.
+
+- primeira ingestão: 2 matérias, 2 eventos, 1 relação e 2 evidências;
+- persistência: 1 rodada e 2 matérias no HML;
+- auditoria: 5 registros após a primeira chamada e 10 após o reprocessamento;
+- segunda ingestão: mesmo `round_id`, todas as contagens de inserção zero;
+- normalização: 1 relação nova em `hipotese/pendente`;
+- nenhuma chave ou URL secreta foi exibida.
+
+O harness foi temporário, server-only, e removido após a execução.
+
+Procedimento autorizado para destravar, sem versionar segredos:
+
+1. No gerenciador seguro do ambiente de backend, provisionar
+   `OBSERVATORIO_HML_SUPABASE_URL=https://hrpathjcxyzzwxgkhwnt.supabase.co` e
+   `OBSERVATORIO_HML_SUPABASE_SECRET_KEY` usando a credencial exclusiva do
+   HML/adaptador.
+2. Exportar as variáveis somente no processo server-only do harness; não usar
+   `NEXT_PUBLIC_*`, não copiar chave de produção e não salvar em arquivos/Git.
+3. Executar o harness com `run_key` novo e sintético; registrar apenas rodada,
+   contagens, auditoria e contagem de duplicidades.
+4. Remover as variáveis da sessão ao terminar.
+
+O teste unitário do adaptador passou após a restauração das dependências:
+3/3 casos aprovados.
+
+O bloqueio funcional, a fundacao tecnica e o smoke test operacional do Marco B
+estao resolvidos em HML. Producao permanece sem alteracoes e qualquer promocao
+continua sendo uma decisao humana separada.
 
 ## Bloco para o Br[AI]n
 
@@ -99,11 +129,12 @@ separada.
 >
 > Testado: ingestao HML, idempotencia, rollback, auditoria e preservacao editorial.
 >
-> Pendente curto: execucao do adaptador com secrets do backend.
+> Concluido: smoke test do adaptador com ambiente HML carregado server-only.
 >
 > Adiado: Auth editorial E2E, UI, publicacao, grafo e integracoes externas.
 >
 > Risco para o proximo passo: nao promover sem reconciliacao de migrations,
 > backup/PITR e autorizacao humana.
 >
-> Proxima entrega: fechar as duas provas pendentes e declarar o Marco B encerrado.
+> Proxima entrega: iniciar a sprint seguinte conforme o plano, mantendo Auth
+> editorial E2E e refinamentos de produto no backlog aprovado.
