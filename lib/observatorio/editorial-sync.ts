@@ -280,6 +280,18 @@ export async function applySingleEditorialPlan(
 ): Promise<Json> {
   const item = plan.items.find((candidate) => candidate.identificador === identifier);
   if (!item) throw new Error("Edição selecionada não existe no dry-run.");
+  if (item.action === "unchanged") {
+    return {
+      status: "skipped",
+      reason: "unchanged",
+      identifier,
+      version: item.currentVersion,
+      contentHash: item.contentHash,
+    };
+  }
+  if (item.action !== "insert" && item.action !== "update") {
+    throw new Error(`Edição não aplicável: ${item.action}.`);
+  }
   const client = requiredHmlClient();
   const { data, error } = await client.rpc("observatorio_sync_edicoes", {
     p_run_key: runKey,

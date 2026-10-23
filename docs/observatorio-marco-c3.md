@@ -163,3 +163,27 @@ Verificações atualizadas:
 O diff final da migration fica restrito à validação de status Notion Candidata, validação resistente a `NULL`/tipos obrigatórios e preservação das proteções anteriores de identidade, lock, `FOR UPDATE`, estado HML, auditoria e `service_role`. A migration continua não aplicada.
 
 **Parecer revisado para o Gate 2: GO condicionado mantido.** A primeira inserção recomendada permanece `2026-10-22-tech-1900-ampliada`, mas qualquer aplicação exige autorização explícita posterior; nenhum registro, RPC, trigger ou permissão foi criado no HML.
+
+## Ajuste final de replay operacional
+
+O caminho `applySingleEditorialPlan()` foi corrigido para tratar `unchanged` antes da criação do cliente Supabase. Ele retorna `{ status: "skipped", reason: "unchanged", identifier, version, contentHash }` sem cliente privilegiado e sem RPC. `conflict` e `ignored` são rejeitados como não aplicáveis antes da criação do cliente; `insert` e `update` permanecem inalterados.
+
+O teste operacional remove as credenciais HML durante a chamada e confirma que o replay `unchanged` ainda retorna sucesso `skipped`; portanto, uma tentativa de criar cliente ou chamar RPC falharia. O mesmo teste confirma que `conflict` e `ignored` continuam não aplicáveis.
+
+Evidências finais:
+
+- `npm run test:observatorio-c3`: 13/13 aprovados;
+- `npx tsc --noEmit`: aprovado;
+- dry-run real em `2026-10-23T02:22:52.658Z`: 6 `insert`, 0 `update`, 0 `unchanged`, 1 `conflict`, 0 `ignored`;
+- conflito Panorama aprovado preservado;
+- `2026-10-22-tech-1900-ampliada` preservada como `insert`, versão 1;
+- HML após o dry-run: 0 edições, 37 históricos, RPC C3 inexistente;
+- nenhum INSERT, UPDATE, trigger, RPC ou auditoria foi executado.
+
+Comando exato proposto para o Gate 2, ainda não executado:
+
+```text
+npm run observatorio:sync -- --apply-hml --identifier=2026-10-22-tech-1900-ampliada --run-key=c3-gate2-2026-10-23-tech-1900
+```
+
+O comando deve ser executado somente após revisão e autorização explícita. A revisão atual para antes de qualquer execução persistente.

@@ -9,7 +9,7 @@ import {
   hashEditorialContent,
   type SnapshotReadResult,
 } from "../editorial-snapshot.ts";
-import { planEditorialSync } from "../editorial-sync.ts";
+import { applySingleEditorialPlan, planEditorialSync } from "../editorial-sync.ts";
 import type { Edicao } from "../types.ts";
 
 function notionEdition(overrides: Partial<NotionEdition> = {}): NotionEdition {
@@ -121,6 +121,49 @@ test("notion_url-only change is unchanged/skipped", () => {
   assert.equal(plan.items[0].action, "unchanged");
   assert.equal(plan.items[0].plannedVersion, 1);
   assert.deepEqual(plan.items[0].changedFields, []);
+});
+
+test("apply operacional de unchanged retorna skipped sem cliente ou RPC", async () => {
+  const result = snapshotResult();
+  const existing = hmlEdition(result, { id: result.edition.supabaseId! });
+  const plan = planEditorialSync([result], [existing]);
+  const previousUrl = process.env.OBSERVATORIO_HML_SUPABASE_URL;
+  const previousSecret = process.env.OBSERVATORIO_HML_SUPABASE_SECRET_KEY;
+  delete process.env.OBSERVATORIO_HML_SUPABASE_URL;
+  delete process.env.OBSERVATORIO_HML_SUPABASE_SECRET_KEY;
+  try {
+    const applied = await applySingleEditorialPlan(plan, result.edition.identificador, "replay-test");
+    assert.deepEqual(applied, {
+      status: "skipped",
+      reason: "unchanged",
+      identifier: result.edition.identificador,
+      version: 1,
+      contentHash: result.snapshot.contentHash,
+    });
+  } finally {
+    if (previousUrl === undefined) delete process.env.OBSERVATORIO_HML_SUPABASE_URL;
+    else process.env.OBSERVATORIO_HML_SUPABASE_URL = previousUrl;
+    if (previousSecret === undefined) delete process.env.OBSERVATORIO_HML_SUPABASE_SECRET_KEY;
+    else process.env.OBSERVATORIO_HML_SUPABASE_SECRET_KEY = previousSecret;
+  }
+});
+
+test("apply operacional preserva conflict e ignored como não aplicáveis", async () => {
+  const approved = snapshotResult({ statusOriginal: "Aprovada" });
+  const incomplete: SnapshotReadResult = {
+    ok: false,
+    edition: notionEdition({ identificador: "ignored-operational" }),
+    reason: "incomplete",
+  };
+  const plan = planEditorialSync([approved, incomplete], []);
+  await assert.rejects(
+    () => applySingleEditorialPlan(plan, approved.edition.identificador, "replay-test"),
+    /não aplicável: conflict/
+  );
+  await assert.rejects(
+    () => applySingleEditorialPlan(plan, incomplete.edition.identificador, "replay-test"),
+    /não aplicável: ignored/
+  );
 });
 
 test("mudança material incrementa exatamente uma versão", () => {
