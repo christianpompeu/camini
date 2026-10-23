@@ -259,3 +259,48 @@ Após o replay, a consulta confirmou novamente: 1 edição, versão 1, mesmo has
 O Gate 2 autorizado foi executado com sucesso e limitado à única edição Tech. As cinco candidatas restantes continuam apenas planejadas; a edição Panorama aprovada continua bloqueada. Não houve escrita no Notion, aprovação, publicação, acesso à produção ou commit/push.
 
 **Parecer para avançar às demais candidatas: GO técnico condicionado a nova autorização explícita por lote. A C3 não é declarada encerrada automaticamente.**
+
+## Gate 3 — sincronização das cinco candidatas restantes
+
+Autorização explícita do responsável foi utilizada exclusivamente no HML `hrpathjcxyzzwxgkhwnt.supabase.co`. Nenhuma migration, RPC, permissão, produção ou Notion foi alterado nesta etapa.
+
+### Pré-validação real
+
+- Estado de partida: 1 edição, 38 auditorias, 0 publicadas.
+- Edição Tech do Gate 2 íntegra: candidata, versão 1, snapshot completo, hash preservado e 1 auditoria.
+- Dry-run real: 5 `insert`, 1 `unchanged` (Tech já sincronizada), 1 `conflict` (Panorama aprovada), 0 `update`, 0 `ignored`.
+- O alvo aprovado `2026-10-21-panorama-0900-ampliada` permaneceu excluído.
+
+### Execução individual
+
+Cada edição foi revalidada pelo CLI, aplicada unitariamente e imediatamente reexecutada com a mesma `run_key`. Todos os applies retornaram `inserted=1`, `updated=0`; todos os replays retornaram `status=skipped`, `reason=unchanged`. Consultas posteriores confirmaram versão 1, snapshot completo, status candidata, datas de aprovação/publicação nulas e uma auditoria INSERT por linha.
+
+| Ordem | Identificador | ID HML | Hash persistido | Run key | Auditoria |
+|---:|---|---|---|---|---:|
+| 1 | `2026-10-22-panorama-0810-profunda` | `88d0c33a-daf6-46db-aab6-1d8cead83350` | `f9c7590884404f5de701e0a4677bf2b16921b8fd4cc1518633487b78615a29ef` | `c3-gate3-2026-10-22-panorama-0810-profunda` | 1 |
+| 2 | `2026-10-21-tech-1900-ampliada` | `ba0c7ad1-5cb5-4c01-bda6-01cde9c9ff53` | `ed18da39633a0d5052986a59bf30a9f24813d0766ff94a4921fd8bb4263d0dd8` | `c3-gate3-2026-10-21-tech-1900-ampliada` | 1 |
+| 3 | `2026-10-20-tech-1900-ampliada` | `dfc7d386-8b59-4b2e-8dec-38a532ba1a1e` | `9a7eb31382e2db0c34d36d615eada98caee24bbea43ec1855a6c4c3f593f51ec` | `c3-gate3-2026-10-20-tech-1900-ampliada` | 1 |
+| 4 | `2026-10-20-tech-inaugural` | `08798855-f29e-483d-a5b9-0f61f170e8d7` | `e19cdb174ec61667e73903a17c4f6546de08a896fd70f7f28edf8e3f91132` | `c3-gate3-2026-10-20-tech-inaugural` | 1 |
+| 5 | `2026-10-20-panorama-inaugural` | `5fae0bdd-0ccf-4bee-90f7-58677306d40d` | `3be81cf573e8ac4240b20b2e8bb875ce6cf9201000e75f7f3625d55895fb67ad` | `c3-gate3-2026-10-20-panorama-inaugural` | 1 |
+
+### Contagem final HML
+
+Consulta final real:
+
+- `observatorio_edicoes`: 6;
+- `observatorio_decisoes_historico`: 43;
+- publicadas: 0;
+- aprovadas: 0;
+- cada uma das seis linhas: `status=candidata`, `versao=1`, `snapshot_complete=true`, `aprovada_em=NULL`, `publicada_em=NULL`;
+- cada linha: exatamente uma auditoria `INSERT`;
+- Panorama aprovada: 0 linhas persistidas e continua somente como conflito do Notion.
+
+### Ocorrência operacional
+
+Após o primeiro apply, uma automação local de leitura da saída não reconheceu corretamente o envelope JSON e interrompeu antes do replay; não houve avanço para a segunda edição nem falha de banco. O replay da primeira edição foi executado manualmente logo em seguida e retornou `skipped/unchanged`; as quatro edições seguintes seguiram o fluxo completo sem erro.
+
+### Parecer de encerramento
+
+Todos os critérios autorizados do Gate 3 foram satisfeitos: cinco inserções unitárias, cinco replays sem nova auditoria, seis edições candidatas íntegros no HML, 43 históricos, zero publicação/aprovação e Panorama aprovada excluída.
+
+**Recomendação formal: encerrar o Marco C3 em HML, sujeita à conferência independente do resultado.** Não sincronizar novas edições sem autorização posterior.
