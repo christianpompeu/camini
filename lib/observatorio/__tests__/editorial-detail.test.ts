@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
 import { safeExternalHref } from "../editorial-snapshot-safety.ts";
+import { blockDisplayText, collectSnapshotLinks, countSnapshotBlocks, richTextSegments } from "../editorial-snapshot-render.ts";
 
 test("renderização privada aceita somente links http/https", () => {
   assert.equal(safeExternalHref("https://example.com/source"), "https://example.com/source");
@@ -24,14 +25,32 @@ test("rota privada preserva autorização de sessão e não oferece decisão per
   assert.match(page, /Decisão não habilitada/);
 });
 
-test("snapshot de detalhe mantém blocos aninhados no contrato", () => {
-  const snapshot = {
-    schemaVersion: 1,
-    source: { type: "notion", notionPageId: "page", notionUrl: "https://notion.so/page", lastEditedTime: null },
-    edition: { identificador: "id", canal: "tech", titulo: "Título", resumo: "Resumo", criadaEm: "2026-01-01", publicadaEm: null, statusOriginal: "Candidata", revisaoOriginal: "Pendente", slug: null, declaredSupabaseId: null },
-    content: { complete: true, blocks: [{ id: "root", type: "toggle", data: {}, children: [{ id: "child", type: "paragraph", data: { rich_text: [{ plain_text: "Texto" }] }, children: [] }] }] },
-    contentHash: "hash",
-  };
-  assert.equal(snapshot.content.blocks[0].children.length, 1);
-  assert.equal(snapshot.content.blocks[0].children[0].data.rich_text[0].plain_text, "Texto");
+test("rich_text preserva ordem, hyperlinks seguros e anotações", () => {
+  const segments = richTextSegments([
+    { plain_text: "Fonte ", href: null, annotations: { bold: false } },
+    { plain_text: "principal", href: "https://example.com/a", annotations: { bold: true } },
+    { plain_text: " insegura", href: "javascript:alert(1)", annotations: { italic: true } },
+    { plain_text: " e link interno", link: { url: "https://example.com/b" }, annotations: { code: true } },
+  ]);
+  assert.deepEqual(segments.map(({ text, href, bold }) => ({ text, href, bold })), [
+    { text: "Fonte ", href: null, bold: false },
+    { text: "principal", href: "https://example.com/a", bold: true },
+    { text: " insegura", href: null, bold: false },
+    { text: " e link interno", href: "https://example.com/b", bold: false },
+  ]);
+  assert.equal(segments[3].code, true);
+});
+
+test("coleta referências de blocos e rich_text com deduplicação", () => {
+  const blocks = [
+    { id: "one", type: "paragraph", data: { rich_text: [{ plain_text: "A", href: "https://example.com/ref" }, { plain_text: "B", link: { url: "https://example.com/other" } }] }, children: [] },
+    { id: "two", type: "bookmark", data: { url: "https://example.com/ref" }, children: [{ id: "three", type: "paragraph", data: { rich_text: [{ plain_text: "C", href: "javascript:bad" }] }, children: [] }] },
+  ];
+  assert.deepEqual(collectSnapshotLinks(blocks), ["https://example.com/ref", "https://example.com/other"]);
+});
+
+test("child_page usa title e preserva filhos aninhados", () => {
+  const childPage = { id: "page", type: "child_page", data: { title: "Seção filha" }, children: [{ id: "nested", type: "paragraph", data: { rich_text: [{ plain_text: "Conteúdo" }] }, children: [] }] };
+  assert.equal(blockDisplayText(childPage), "Seção filha");
+  assert.equal(countSnapshotBlocks([childPage]), 2);
 });

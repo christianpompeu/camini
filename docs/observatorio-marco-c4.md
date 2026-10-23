@@ -85,6 +85,24 @@ Versão/hash divergente, revisor revogado, permissão ausente, operação duplic
 
 Não foram alterados migrations, RPCs, permissões HML, Notion, produção, Radar, Nutre, Força ou outras branches.
 
+## Correções da revisão independente — evidências finais
+
+- `rich_text` agora é renderizado segmento a segmento, preservando ordem, texto, hyperlinks `http`/`https`, negrito e anotações simples. Hyperlinks inseguros preservam somente o texto.
+- “Referências e links” combina URLs de blocos e hyperlinks de `rich_text`, com deduplicação e validação por `safeExternalHref()`.
+- Blocos `child_page` exibem `data.title` e continuam renderizando filhos aninhados. O smoke real das seis edições confirmou `2026-10-20-tech-1900-ampliada` com 45 blocos totais.
+- URLs de origem da fila e do detalhe também passam por `safeExternalHref()`; esquemas diferentes de `http`/`https` não viram links.
+
+### Verificação executada em 23/10/2026
+
+- `npm run test:observatorio-c4`: 5/5 aprovados, incluindo rich text múltiplo, hyperlink inseguro, negrito, referências deduplicadas, `child_page.title` e filhos aninhados.
+- `npx tsc --noEmit`: aprovado.
+- ESLint dirigido aos arquivos alterados: aprovado.
+- `npm run build`: aprovado; a rota privada dinâmica foi compilada.
+- `npm run observatorio:sync -- --dry-run`: leitura real Notion × HML, 6 edições inalteradas, 1 conflito Panorama preservado, 0 escritas. Tech 20/10 retornou `blockCount: 45`, hash `9a7eb31382e2db0c34d36d615eada98caee24bbea43ec1855a6c4c3f593f51ec`.
+- O smoke de rota com sessão real de navegador não foi executado nesta revisão; não foram fabricadas evidências de sessão. A proteção server-side existente permanece inalterada.
+
+**Parecer revisado:** GO para encerramento do Gate 1 de leitura privada, sujeito à conferência independente; NO-GO para identidade, decisões persistentes, migrations, RPCs ou ações editoriais do Gate 2.
+
 ## Riscos bloqueantes para o Gate 2
 
 - Não existe ainda identidade humana editorial provisionada no HML.
