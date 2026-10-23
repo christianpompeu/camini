@@ -18,11 +18,22 @@ function formatDate(value: string | null): string | null {
 function editionTopics(edition: Edicao): string[] {
   const snapshot = publicEditionSnapshot(edition);
   if (!snapshot) return [];
-  return snapshot.content.blocks
-    .filter((block) => ["heading_1", "heading_2", "child_page"].includes(block.type))
-    .map(blockDisplayText)
-    .filter(Boolean)
-    .slice(0, 6);
+  const blocks = snapshot.content.blocks;
+  const topics: string[] = [];
+  const seen = new Set<string>();
+  function visit(blocksToVisit: typeof blocks, depth: number) {
+    if (depth > 100 || topics.length >= 6) return;
+    for (const block of blocksToVisit) {
+      if (["heading_1", "heading_2", "child_page"].includes(block.type)) {
+        const text = blockDisplayText(block);
+        if (text && !seen.has(text)) { seen.add(text); topics.push(text); }
+      }
+      visit(block.children, depth + 1);
+      if (topics.length >= 6) return;
+    }
+  }
+  visit(blocks, 0);
+  return topics;
 }
 
 export function PublicEditionPage({

@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
-import type { EditorialSnapshot, NotionSnapshotBlock } from "../editorial-snapshot.ts";
+import { hashEditorialContent, type EditorialSnapshot, type NotionSnapshotBlock } from "../editorial-snapshot.ts";
 import { collectSnapshotLinks, countSnapshotBlocks } from "../editorial-snapshot-render.ts";
 import {
   isPublicEdition,
@@ -12,7 +12,7 @@ import {
 import type { Edicao } from "../types.ts";
 
 function snapshot(overrides: Partial<EditorialSnapshot> = {}): EditorialSnapshot {
-  return {
+  const value: EditorialSnapshot = {
     schemaVersion: 1,
     source: { type: "notion", notionPageId: "notion-1", notionUrl: null, lastEditedTime: null },
     edition: {
@@ -31,9 +31,11 @@ function snapshot(overrides: Partial<EditorialSnapshot> = {}): EditorialSnapshot
       complete: true,
       blocks: [{ id: "root", type: "paragraph", data: { rich_text: [{ plain_text: "Conteúdo" }] }, children: [] }],
     },
-    contentHash: "a".repeat(64),
+    contentHash: "",
     ...overrides,
   };
+  if (overrides.contentHash === undefined) value.contentHash = hashEditorialContent({ schemaVersion: value.schemaVersion, notionPageId: value.source.notionPageId, edition: value.edition, content: value.content });
+  return value;
 }
 
 function edition(overrides: Partial<Edicao> = {}): Edicao {
@@ -73,6 +75,9 @@ test("nega snapshot incompleto, divergente ou sem integridade", () => {
   assert.equal(publicEditionSnapshot(wrongChannel), null);
   const badHash = edition({ snapshot: snapshot({ contentHash: "invalido" }) as never });
   assert.equal(publicEditionSnapshot(badHash), null);
+  const valid = snapshot();
+  const changed = edition({ snapshot: { ...valid, content: { ...valid.content, blocks: [{ ...valid.content.blocks[0], data: { rich_text: [{ plain_text: "alterado" }] } }] } } as never });
+  assert.equal(publicEditionSnapshot(changed), null);
 });
 
 test("nega canal divergente e identificadores manipulados", () => {

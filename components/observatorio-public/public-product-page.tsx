@@ -12,7 +12,7 @@ export function PublicProductPage({ product, editions }: { product: PublicProduc
     <div className="min-h-screen overflow-x-clip bg-[#fbfbfe] text-slate-950">
       <PublicHeader channel={product.channel} />
       <main>
-        <ProductHero product={product} hasEditions={editions.length > 0} />
+        <ProductHero product={product} latestEdition={editions[0] ?? null} />
         <section aria-labelledby="features-title" className="mx-auto max-w-7xl px-5 py-16 sm:px-8 lg:py-20">
           <div className="mb-9 max-w-2xl">
             <p className="text-xs font-bold uppercase tracking-[.2em] text-violet-600">Como funciona</p>
@@ -34,7 +34,7 @@ export function PublicProductPage({ product, editions }: { product: PublicProduc
               <div><p className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[.2em] text-violet-600"><Layers3 className="size-4" /> Arquivo editorial</p><h2 id="editions-title" className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">Edições publicadas</h2></div>
               {editions.length > 0 && <p className="text-sm text-slate-500">{editions.length} {editions.length === 1 ? "edição" : "edições"}</p>}
             </div>
-            <EditionArchive editions={editions} />
+            <EditionArchive channel={product.channel} editions={editions} />
           </div>
         </section>
         <section className="mx-auto max-w-7xl px-5 py-16 sm:px-8 lg:py-24">

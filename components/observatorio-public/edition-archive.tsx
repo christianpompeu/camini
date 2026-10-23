@@ -1,5 +1,7 @@
 import { CalendarDays } from "lucide-react";
+import Link from "next/link";
 import type { Edicao } from "@/lib/observatorio/types";
+import type { CanalObservatorio } from "@/lib/observatorio/types";
 import { EditorialEmptyState } from "./editorial-empty-state";
 
 const dateFormatter = new Intl.DateTimeFormat("pt-BR", {
@@ -8,14 +10,16 @@ const dateFormatter = new Intl.DateTimeFormat("pt-BR", {
   year: "numeric",
 });
 
-export function EditionArchive({ editions }: { editions: Edicao[] }) {
+export function EditionArchive({ channel, editions }: { channel: CanalObservatorio; editions: Edicao[] }) {
   if (editions.length === 0) return <EditorialEmptyState />;
 
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
       {editions.map((edition, index) => (
-        <article
+        <Link
           key={edition.id}
+          href={`/${channel}/edicoes/${edition.identificador}`}
+          aria-label={`Ler a edição ${edition.titulo}`}
           className="group rounded-3xl border border-slate-200 bg-white p-6 shadow-sm transition-all duration-200 hover:-translate-y-1 hover:border-violet-200 hover:shadow-xl hover:shadow-violet-950/5"
         >
           <div className="flex items-center justify-between gap-3 text-xs font-semibold uppercase tracking-[0.16em] text-violet-600">
@@ -27,7 +31,7 @@ export function EditionArchive({ editions }: { editions: Edicao[] }) {
           <p className="mt-6 text-xs text-slate-500">
             {edition.publicada_em ? dateFormatter.format(new Date(edition.publicada_em)) : ""}
           </p>
-        </article>
+        </Link>
       ))}
     </div>
   );

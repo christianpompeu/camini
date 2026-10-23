@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Menu } from "lucide-react";
 import { PublicLogo } from "./public-logo";
 import type { CanalObservatorio } from "@/lib/observatorio/types";
 import { cn } from "@/lib/utils";
@@ -30,6 +30,13 @@ export function PublicHeader({ channel }: { channel: CanalObservatorio }) {
         >
           Assinar <ArrowRight className="size-4" />
         </Link>
+        <details className="relative sm:hidden">
+          <summary className="grid size-10 cursor-pointer list-none place-items-center rounded-xl border border-violet-100 bg-white text-slate-700 transition-colors hover:bg-violet-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 [&::-webkit-details-marker]:hidden" aria-label="Abrir menu principal"><Menu className="size-5" aria-hidden="true" /></summary>
+          <nav aria-label="Menu mobile" className="absolute right-0 top-12 z-50 w-52 rounded-2xl border border-violet-100 bg-white p-2 shadow-xl">
+            {(["panorama", "tech"] as const).map((item) => <Link key={item} href={`/${item}`} className="block rounded-xl px-3 py-3 text-sm font-medium text-slate-700 transition-colors hover:bg-violet-50 hover:text-violet-700">{item === "panorama" ? "Panorama" : "Tech"}</Link>)}
+            <Link href={`/${channel}/assinar`} className="mt-1 block rounded-xl bg-violet-600 px-3 py-3 text-sm font-semibold text-white transition-colors hover:bg-violet-700">Assinar</Link>
+          </nav>
+        </details>
       </div>
     </header>
   );

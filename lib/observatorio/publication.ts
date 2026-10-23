@@ -1,4 +1,4 @@
-import type { EditorialSnapshot } from "./editorial-snapshot.ts";
+import { hashEditorialContent, type EditorialSnapshot } from "./editorial-snapshot.ts";
 import type { CanalObservatorio, Edicao } from "./types.ts";
 
 export const PUBLIC_EDITION_IDENTIFIER = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
@@ -40,6 +40,12 @@ export function publicEditionSnapshot(
   const snapshot = value as unknown as Partial<EditorialSnapshot>;
   const snapshotEdition = snapshot.edition;
   const contentHash = snapshot.contentHash;
+  const expectedHash = hashEditorialContent({
+    schemaVersion: snapshot.schemaVersion,
+    notionPageId: snapshot.source?.notionPageId,
+    edition: snapshotEdition,
+    content: snapshot.content,
+  });
   if (
     snapshot.schemaVersion !== 1 ||
     snapshot.source?.type !== "notion" ||
@@ -48,8 +54,15 @@ export function publicEditionSnapshot(
     !snapshotEdition ||
     snapshotEdition.identificador !== edition.identificador ||
     snapshotEdition.canal !== edition.canal ||
+    snapshotEdition.titulo !== edition.titulo ||
+    snapshotEdition.resumo !== edition.resumo ||
+    snapshotEdition.criadaEm !== edition.criada_em ||
+    snapshotEdition.publicadaEm !== edition.publicada_em ||
+    snapshot.source?.notionPageId !== edition.notion_page_id ||
+    snapshot.source?.notionUrl !== edition.notion_url ||
     typeof contentHash !== "string" ||
-    !/^[a-f0-9]{64}$/i.test(contentHash)
+    !/^[a-f0-9]{64}$/i.test(contentHash) ||
+    contentHash.toLowerCase() !== expectedHash
   ) {
     return null;
   }

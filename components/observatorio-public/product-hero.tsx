@@ -1,8 +1,9 @@
 import Link from "next/link";
 import { ArrowDown, ArrowRight, Network, Orbit, Sparkles } from "lucide-react";
 import type { PublicProduct } from "@/lib/observatorio/public-content";
+import type { Edicao } from "@/lib/observatorio/types";
 
-export function ProductHero({ product, hasEditions }: { product: PublicProduct; hasEditions: boolean }) {
+export function ProductHero({ product, latestEdition }: { product: PublicProduct; latestEdition: Edicao | null }) {
   const tech = product.channel === "tech";
   return (
     <section className="relative overflow-hidden border-b border-violet-950/5 bg-[linear-gradient(135deg,#fff_0%,#faf9ff_52%,#f0f7ff_100%)]">
@@ -19,9 +20,9 @@ export function ProductHero({ product, hasEditions }: { product: PublicProduct; 
           </h1>
           <p className="mt-7 max-w-2xl text-base leading-7 text-slate-600 sm:text-lg sm:leading-8">{product.description}</p>
           <div className="mt-9 flex flex-col gap-3 sm:flex-row">
-            <a href="#edicoes" className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-violet-600 px-6 text-sm font-semibold text-white shadow-lg shadow-violet-600/20 transition-all duration-200 hover:-translate-y-0.5 hover:bg-violet-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 focus-visible:ring-offset-2">
-              {hasEditions ? "Ler edição mais recente" : "Conhecer a proposta"} <ArrowDown className="size-4" />
-            </a>
+            <Link href={latestEdition ? `/${product.channel}/edicoes/${latestEdition.identificador}` : "#edicoes"} className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-violet-600 px-6 text-sm font-semibold text-white shadow-lg shadow-violet-600/20 transition-all duration-200 hover:-translate-y-0.5 hover:bg-violet-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 focus-visible:ring-offset-2">
+              {latestEdition ? "Ler edição mais recente" : "Conhecer a proposta"} <ArrowDown className="size-4" />
+            </Link>
             <Link href={`/${product.channel}/assinar`} className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border border-violet-200 bg-white px-6 text-sm font-semibold text-violet-700 transition-all duration-200 hover:-translate-y-0.5 hover:border-violet-300 hover:bg-violet-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 focus-visible:ring-offset-2">
               Quero acompanhar <ArrowRight className="size-4" />
             </Link>
@@ -34,14 +35,19 @@ export function ProductHero({ product, hasEditions }: { product: PublicProduct; 
               <div><p className="text-xs font-semibold uppercase tracking-[.2em] text-violet-600">Observatório Camini</p><p className="mt-1 font-bold text-slate-950">{product.name}</p></div>
               <Sparkles className="size-6 text-violet-500" />
             </div>
-            <div className="space-y-4 py-6">
+            {latestEdition ? <div className="py-6">
+              <p className="text-xs font-semibold uppercase tracking-[.2em] text-violet-600">Edição mais recente</p>
+              <h2 className="mt-3 text-2xl font-bold leading-tight text-slate-950">{latestEdition.titulo}</h2>
+              <p className="mt-3 line-clamp-4 text-sm leading-6 text-slate-600">{latestEdition.resumo}</p>
+              <Link href={`/${product.channel}/edicoes/${latestEdition.identificador}`} className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-violet-700 transition-colors hover:text-violet-900">Abrir edição <ArrowRight className="size-4" /></Link>
+            </div> : <div className="space-y-4 py-6">
               {product.themes.slice(0, 4).map((theme, index) => (
                 <div key={theme} className="flex items-center gap-4 rounded-2xl border border-slate-100 bg-white p-4 shadow-sm">
                   <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-violet-600 to-blue-500 text-sm font-bold text-white">0{index + 1}</span>
                   <div className="min-w-0"><p className="text-xs font-semibold text-violet-600">{theme}</p><div className="mt-2 h-2 w-full rounded-full bg-slate-100"><div className="h-full rounded-full bg-gradient-to-r from-violet-500 to-cyan-400" style={{ width: `${82 - index * 11}%` }} /></div></div>
                 </div>
               ))}
-            </div>
+            </div>}
             <p className="border-t border-slate-100 pt-5 text-sm leading-6 text-slate-600">{product.proposition}</p>
           </div>
         </div>

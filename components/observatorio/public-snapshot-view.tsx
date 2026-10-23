@@ -29,7 +29,14 @@ function RichText({ data }: { data: unknown }) {
 
 function Children({ blocks, depth }: { blocks: NotionSnapshotBlock[]; depth: number }) {
   if (!blocks.length) return null;
-  return <div className={depth > 0 ? "mt-4 border-l border-violet-100 pl-4 sm:pl-6" : "mt-4"}>{blocks.map((block) => <Block key={block.id} block={block} depth={depth + 1} />)}</div>;
+  const groups: Array<{ type: "numbered_list_item" | "bulleted_list_item" | "block"; blocks: NotionSnapshotBlock[] }> = [];
+  for (const block of blocks) {
+    const type = block.type === "numbered_list_item" || block.type === "bulleted_list_item" ? block.type : "block";
+    const previous = groups.at(-1);
+    if (previous?.type === type) previous.blocks.push(block);
+    else groups.push({ type, blocks: [block] });
+  }
+  return <div className={depth > 0 ? "mt-4 border-l border-violet-100 pl-4 sm:pl-6" : "mt-4"}>{groups.map((group, index) => group.type === "block" ? group.blocks.map((block) => <Block key={block.id} block={block} depth={depth + 1} />) : group.type === "numbered_list_item" ? <ol key={index} className="my-3 list-decimal pl-6">{group.blocks.map((block) => <Block key={block.id} block={block} depth={depth + 1} />)}</ol> : <ul key={index} className="my-3 list-disc pl-6">{group.blocks.map((block) => <Block key={block.id} block={block} depth={depth + 1} />)}</ul>)}</div>;
 }
 
 function Block({ block, depth = 0 }: { block: NotionSnapshotBlock; depth?: number }) {
@@ -47,8 +54,7 @@ function Block({ block, depth = 0 }: { block: NotionSnapshotBlock; depth?: numbe
     return <section><Tag className={`${className} scroll-mt-24 font-bold tracking-tight text-slate-950`}><RichText data={richText} /></Tag>{children}</section>;
   }
   if (block.type === "bulleted_list_item" || block.type === "numbered_list_item") {
-    const List = block.type === "numbered_list_item" ? "ol" : "ul";
-    return <List className={`my-3 pl-6 ${List === "ol" ? "list-decimal" : "list-disc"}`}><li className="pl-1 leading-8 marker:text-[var(--edition-accent)]"><RichText data={richText} />{children}</li></List>;
+    return <li className="pl-1 leading-8 marker:text-[var(--edition-accent)]"><RichText data={richText} />{children}</li>;
   }
   if (block.type === "to_do") {
     return <div className="my-3 flex items-start gap-3 leading-8"><span className="mt-2.5 size-3.5 shrink-0 rounded border border-violet-300 bg-violet-50" aria-hidden="true" /><div><RichText data={richText} />{children}</div></div>;

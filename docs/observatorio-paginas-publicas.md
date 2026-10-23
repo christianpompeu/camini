@@ -101,3 +101,27 @@ A verificação final também executa os testes C1–C4 existentes, TypeScript, 
 5. Executar revisão independente do conteúdo, SEO, acessibilidade e screenshots da edição real.
 
 Até essas condições existirem, as seis candidatas do HML continuam privadas e nenhuma pode aparecer nas rotas de edição.
+
+## Auditoria final de navegação e integridade
+
+Correções aplicadas nesta rodada:
+
+- `components/observatorio-public/edition-archive.tsx`: cartões publicados agora são links acessíveis para o canal e identificador validados.
+- `lib/observatorio/publication.ts`: o hash é recalculado com `hashEditorialContent`, e fonte, identidade, canal e metadados da edição precisam corresponder ao registro persistido. A autorização editorial continua sendo um gate independente.
+- `components/observatorio/public-snapshot-view.tsx`: itens consecutivos de listas são agrupados em uma única lista, inclusive em árvores aninhadas.
+- `components/observatorio/public-edition-page.tsx`: o índice percorre headings e `child_page` recursivamente, com limite de profundidade e deduplicação.
+- `components/observatorio-public/public-header.tsx` e `components/observatorio/public-edition-shell.tsx`: menus mobile acessíveis expõem Panorama, Tech e assinatura; a leitura reutiliza o logo público compartilhado.
+- `components/observatorio-public/product-hero.tsx` e `public-product-page.tsx`: quando existe edição elegível, o hero mostra título, resumo e links da edição mais recente; sem publicação, o estado de preparação permanece.
+
+Evidências executadas:
+
+- `npm run test:observatorio-public`: 10/10 testes aprovados, incluindo hash válido, hash divergente, alteração material do snapshot, filtragem de candidatas e ausência de persistência no cadastro.
+- `npm run test:observatorio-c3`: 13/13 aprovados.
+- `npm run test:observatorio-c4`: 5/5 aprovados.
+- `npm run test:observatorio-c4-contract`: 6/6 aprovados.
+- ESLint do escopo alterado: aprovado. O lint global ainda possui erros preexistentes fora do escopo do Observatório.
+- `npx tsc --noEmit` e `npm run build`: aprovados após regenerar o artefato inválido `.next/dev/types/validator.ts`; o build compilou e gerou 86 páginas.
+
+Screenshots: o HML permanece sem edição elegível, portanto não foi criada captura positiva artificial de arquivo publicado. A tentativa de validação visual local não pôde ser concluída porque o navegador embutido não estava disponível nesta sessão. As capturas existentes continuam sendo somente dos estados reais sem publicação e das telas de assinatura; imagens de demonstração permanecem identificadas como demonstração.
+
+Parecer: GO para a prontidão da interface pública e dos gates de integridade verificados localmente. NO-GO para autorização de publicação real: as seis candidatas do HML continuam privadas, sem aprovação humana persistida e sem alteração de dados remotos.

@@ -3,6 +3,8 @@ import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import test from "node:test";
 import { isPublicEdition, selectPublicEditions } from "../publication.ts";
+import { hashEditorialContent } from "../editorial-snapshot.ts";
+import type { EditorialSnapshot } from "../editorial-snapshot.ts";
 import type { Edicao } from "../types.ts";
 
 const root = process.cwd();
@@ -44,9 +46,12 @@ test("only a complete published snapshot reaches the public list", () => {
       source: { type: "notion", notionPageId: "page", notionUrl: null, lastEditedTime: null },
       edition: { identificador: "edicao-teste", canal: "panorama", titulo: "Edição de teste", resumo: "Resumo", criadaEm: "2026-10-23T00:00:00.000Z", publicadaEm: "2026-10-23T02:00:00.000Z", statusOriginal: "publicada", revisaoOriginal: null, slug: "edicao-teste", declaredSupabaseId: null },
       content: { complete: true, blocks: [{ id: "one", type: "paragraph", data: {}, children: [] }] },
-      contentHash: "0".repeat(64),
+      contentHash: "",
     },
   });
+  const storedSnapshot = published.snapshot as unknown as EditorialSnapshot;
+  storedSnapshot.contentHash = hashEditorialContent({ schemaVersion: 1, notionPageId: "page", edition: storedSnapshot.edition, content: storedSnapshot.content });
+  published.notion_page_id = "page";
   assert.deepEqual(selectPublicEditions([edition(), published]), [published]);
 });
 
