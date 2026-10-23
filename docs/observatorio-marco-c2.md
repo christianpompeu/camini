@@ -1,69 +1,83 @@
-# Observatório — Marco C2
+# Observatório — Sprint C2
 
-## Implementação
+Data do smoke test: 22/10/2026
 
-`lib/observatorio/editorial.ts` agora consulta a API oficial do Notion em
-`POST /v1/data_sources/{data_source_id}/query`, usando `Notion-Version:
-2026-03-11`, paginação por cursor e limite de 100 páginas por requisição. A
-consulta é server-only, sem dependência do conector Notion do ChatGPT e sem
-qualquer endpoint público privilegiado.
+Ambiente: Supabase HML `hrpathjcxyzzwxgkhwnt`
 
-As páginas são mapeadas para Edição, Canal, Identificador, Data, Status,
-Revisão, Resumo, Slug, Supabase ID, URL, page ID e última alteração. Respostas
-inválidas, HTTP 401/403/429/5xx e indisponibilidade retornam estado explícito
-sem expor o token.
+Modo: estritamente somente leitura
 
-## Configuração
+## Execução real
 
-O mecanismo existente é `.env.local`, carregado pelo Next.js no servidor. O
-`OBSERVATORIO_NOTION_TOKEN` e o `OBSERVATORIO_NOTION_DATA_SOURCE_ID` foram provisionados
-no ambiente server-side seguro (`.env.local`), mantendo `.env.example` documentado:
+O `.env.local` foi carregado por um script Node com
+`loadEnvConfig(process.cwd())`. A execução confirmou somente a presença, sem
+imprimir valores, de:
 
-```text
-OBSERVATORIO_NOTION_TOKEN=<provisionar no gerenciador seguro>
-OBSERVATORIO_NOTION_DATA_SOURCE_ID=469de5a5-6634-45eb-9d43-9019ac0f46eb
-```
+- `OBSERVATORIO_NOTION_TOKEN`;
+- `OBSERVATORIO_NOTION_DATA_SOURCE_ID`;
+- `OBSERVATORIO_HML_SUPABASE_URL`;
+- `OBSERVATORIO_HML_SUPABASE_SECRET_KEY`.
 
-A integração interna do Notion opera exclusivamente com permissão de leitura sobre
-a base Edições / data source. O token permanece protegido no servidor, sem exposição
-em chat, sem uso de conector ChatGPT e sem qualquer prefixo `NEXT_PUBLIC_`.
+O smoke test chamou a interface pública `readEditorialQueue()` de
+`lib/observatorio/editorial.ts`. A função executou `readNotionEditions()` e a
+leitura de `public.observatorio_edicoes` em paralelo.
 
-## Reconciliação e Evidências da Leitura Real
+Resultado:
 
-A fila combina páginas Notion com `observatorio_edicoes` do HML usando exclusivamente
-o `Supabase ID` declarado no Notion. Nenhuma correspondência é inferida por título
-ou data e nenhuma escrita é realizada no Notion, HML ou Produção.
+- Notion disponível: **sim**;
+- Supabase HML disponível: **sim**;
+- aviso retornado: `Notion conectado; reconciliação somente leitura.`;
+- páginas mapeadas do Notion: **7**;
+- registros em `observatorio_edicoes` no HML: **0**;
+- escritas no Notion ou Supabase: **0**.
 
-Executada a leitura real com sucesso (`HTTP 200` em `POST /v1/data_sources/469de5a5-6634-45eb-9d43-9019ac0f46eb/query`):
+## Edições retornadas pelo Notion
 
-- **Edições retornadas da fonte canônica (Notion):** 6 páginas mapeadas.
-- **Tabela `observatorio_edicoes` no HML:** vazia (0 registros).
-- **Resultado da reconciliação:** 6 edições em estado `supabase_id_not_found` (todas possuem `Supabase ID` declarado no Notion que ainda não existe no HML).
-- **Edição alvo `2026-10-21-panorama-0900-ampliada`:**
-  - Identificador: `2026-10-21-panorama-0900-ampliada`
-  - Título: `Panorama — 21/10/2026, 09h | Apuração ampliada (19 pautas)`
-  - Canal: `panorama`
-  - Status no Notion: `aprovada` (original: `Aprovada`)
-  - Revisão: `concluida` (original: `Concluída`)
-  - Supabase ID declarado: `6052e5f7-fcae-40db-b468-262eda0f1b6b`
-  - Estado reconciliado: `supabase_id_not_found` (aguarda sincronização formal/snapshot no HML)
-  - Última alteração no Notion: `2026-10-22T11:10:00.000Z`
+| Identificador | Canal | Status | Revisão | Estado de reconciliação | URL |
+|---|---|---|---|---|---|
+| `2026-10-22-tech-1900-ampliada` | tech | Candidata (`candidata`) | Pendente (`pendente`) | `supabase_id_not_found` | [Notion](https://app.notion.com/p/Tech-22-10-2026-19h-Seguran-a-infraestrutura-e-auditoria-cient-fica-40113c241b4d812b905dd4bbb657f772) |
+| `2026-10-22-panorama-0810-profunda` | panorama | Candidata (`candidata`) | Pendente (`pendente`) | `supabase_id_not_found` | [Notion](https://app.notion.com/p/Panorama-22-10-2026-08h10-Candidata-parcial-19-acontecimentos-40113c241b4d81e9a652e25678fd27d3) |
+| `2026-10-21-tech-1900-ampliada` | tech | Candidata (`candidata`) | Pendente (`pendente`) | `supabase_id_not_found` | [Notion](https://app.notion.com/p/Tech-21-10-2026-19h-Pesquisa-ampliada-e-papers-40113c241b4d8119a325d2ce1baae326) |
+| `2026-10-21-panorama-0900-ampliada` | panorama | Aprovada (`aprovada`) | Concluída (`concluida`) | `supabase_id_not_found` | [Notion](https://app.notion.com/p/Panorama-21-10-2026-09h-Apura-o-ampliada-19-pautas-40013c241b4d81b58650e72e70e0d32a) |
+| `2026-10-20-tech-1900-ampliada` | tech | Candidata (`candidata`) | Pendente (`pendente`) | `supabase_id_not_found` | [Notion](https://app.notion.com/p/Tech-20-10-2026-19h-Pesquisa-ampliada-3ff13c241b4d817da71ad88c1ef06a39) |
+| `2026-10-20-tech-inaugural` | tech | Candidata (`candidata`) | Pendente (`pendente`) | `supabase_id_not_found` | [Notion](https://app.notion.com/p/Tech-20-10-2026-Chips-PyTorch-e-agentes-de-IA-3ff13c241b4d81549bb4e7c7c07c1987) |
+| `2026-10-20-panorama-inaugural` | panorama | Candidata (`candidata`) | Pendente (`pendente`) | `supabase_id_not_found` | [Notion](https://app.notion.com/p/Panorama-20-10-2026-Energia-elei-es-e-mercados-3ff13c241b4d8163b7b1e4033f755447) |
 
-## Verificação
+Todas as sete páginas possuem `Supabase ID` declarado, mas nenhum desses IDs
+existe atualmente em `observatorio_edicoes`. Por isso, o estado correto é
+`supabase_id_not_found`; nenhuma correspondência foi inferida por título ou
+data e nenhum registro artificial foi criado.
 
-- TypeScript (`npx tsc --noEmit`): aprovado sem erros;
-- ESLint direcionado (`lib/`, `components/`, `app/` do Observatório): aprovado;
-- Testes da fundação (`npm run test:observatorio`): 6/6 aprovados;
-- Testes do adaptador backend (`npm run test:observatorio-backend`): 3/3 aprovados;
-- Build de produção do Next.js 16.3.5 (`npm run build`): aprovado;
-- Rotas dinâmicas reconhecidas: `/dashboard/observatorio` e `/dashboard/observatorio/edicoes`;
-- Nenhuma migration, escrita HML/Notion, publicação ou acesso à produção.
+## Rotas e autorização
 
-## Estado
+Prova sem sessão, contra o servidor local real:
 
-Marco C2 **concluído com sucesso**. A fonte canônica Notion está conectada e reconciliada
-de forma estritamente somente leitura com o HML.
+| Rota | Resultado |
+|---|---|
+| `/dashboard/observatorio` | HTTP `307` para `/login?next=%2Fdashboard%2Fobservatorio` |
+| `/dashboard/observatorio/edicoes` | HTTP `307` para `/login?next=%2Fdashboard%2Fobservatorio%2Fedicoes` |
 
-Próximos passos (Marco C3 / backlog):
-- Sincronização e ingestão de edições do Notion para snapshot formal no Supabase HML;
-- Fluxo de aprovação humana e publicação editorial.
+A camada interna também valida a identidade com `supabase.auth.getUser()` e
+exige `is_super_admin=true` ou a rota `/dashboard/observatorio` em
+`app_permissions`. Usuários que falham nessa checagem recebem
+`ObservatorioAccessError`, convertido pelas páginas em `notFound()`.
+
+A prova visual com sessão autorizada não foi concluída nesta execução: o
+controlador do navegador falhou repetidamente com `native pipe unavailable`,
+inclusive após reinicialização conforme o procedimento de recuperação. Não foi
+criado usuário, token ou cookie artificial para contornar essa limitação.
+
+## Parecer
+
+A integração real **Notion → `readEditorialQueue()` → Supabase HML** está
+operacional e reconciliou sete edições, sem qualquer escrita. A negativa sem
+sessão também foi comprovada nas duas rotas.
+
+Entretanto, a **Sprint C2 ainda não pode ser declarada encerrada** porque falta
+a evidência solicitada de renderização das duas rotas com uma sessão realmente
+autorizada e a negativa com uma sessão autenticada sem permissão. Assim que o
+controlador do navegador estiver disponível (ou forem fornecidas sessões de
+teste existentes), esse teste pode ser concluído sem alteração de código ou
+dados.
+
+Nenhuma alteração foi feita em produção, migrations, Radar, permissões
+editoriais, Notion ou dados do Supabase.

@@ -106,7 +106,7 @@ function revisionKey(value: string | null): EditorialEdition["revisao"] {
 }
 
 type NotionPage = { id?: unknown; url?: unknown; last_edited_time?: unknown; properties?: unknown };
-type NotionEdition = Omit<EditorialEdition, "origem" | "reconciliacao" | "supabaseId"> & { origem: "Notion"; supabaseId: string | null };
+export type NotionEdition = Omit<EditorialEdition, "origem" | "reconciliacao" | "supabaseId"> & { origem: "Notion"; supabaseId: string | null };
 
 function mapNotionPage(page: NotionPage): NotionEdition | null {
   if (!page.properties || typeof page.properties !== "object" || Array.isArray(page.properties)) return null;
@@ -128,7 +128,7 @@ function mapNotionPage(page: NotionPage): NotionEdition | null {
   };
 }
 
-async function readNotionEditions() {
+export async function readNotionEditions() {
   const token = process.env.OBSERVATORIO_NOTION_TOKEN;
   const dataSourceId = process.env.OBSERVATORIO_NOTION_DATA_SOURCE_ID ?? DEFAULT_DATA_SOURCE_ID;
   if (!token) return { editions: [] as NotionEdition[], available: false, notice: "Integração Notion não configurada: provisione OBSERVATORIO_NOTION_TOKEN no ambiente server-only." };
