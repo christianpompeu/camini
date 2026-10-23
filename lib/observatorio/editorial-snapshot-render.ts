@@ -54,8 +54,16 @@ export function snapshotBlockUrl(block: NotionSnapshotBlock): string | null {
     const href = safeExternalHref(data[key]);
     if (href) return href;
   }
+  const external = record(data.external);
+  const externalHref = external ? safeExternalHref(external.url) : null;
+  if (externalHref) return externalHref;
   const file = record(data.file);
   return file ? safeExternalHref(file.url) : null;
+}
+
+export function snapshotBlockCaption(block: NotionSnapshotBlock): RichTextSegment[] {
+  const data = record(block.data) ?? {};
+  return richTextSegments(data.caption);
 }
 
 export function collectSnapshotLinks(blocks: NotionSnapshotBlock[], links: string[] = []): string[] {

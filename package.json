@@ -12,6 +12,7 @@
     "test:observatorio-c3": "node --conditions=react-server --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --test --experimental-strip-types lib/observatorio/__tests__/editorial-sync.test.ts",
     "test:observatorio-c4": "node --conditions=react-server --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --test --experimental-strip-types lib/observatorio/__tests__/editorial-detail.test.ts",
     "test:observatorio-c4-contract": "node --conditions=react-server --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --test --experimental-strip-types lib/observatorio/__tests__/editorial-decision-contract.test.ts",
+    "test:observatorio-public": "node --conditions=react-server --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --test --experimental-strip-types lib/observatorio/__tests__/public-pages.test.ts lib/observatorio/__tests__/public-editions.test.ts",
     "observatorio:sync": "node --conditions=react-server --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types scripts/observatorio-sync-editorial.ts",
     "build:rm-index": "node scripts/build-rm-index.cjs",
     "check:rm-golden": "node scripts/check-golden.cjs"
