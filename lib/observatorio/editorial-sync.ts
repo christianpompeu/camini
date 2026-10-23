@@ -90,6 +90,10 @@ function changedFields(snapshot: EditorialSnapshot, existing: HmlEdition): strin
   return changed;
 }
 
+function isNotionCandidateStatus(status: string | null): boolean {
+  return status !== null && status.trim().toLocaleLowerCase() === "candidata";
+}
+
 function conflictItem(
   result: Extract<SnapshotReadResult, { ok: true }>,
   reason: string,
@@ -173,8 +177,11 @@ export function planEditorialSync(
       continue;
     }
 
-    if (result.edition.statusOriginal?.toLowerCase().includes("aprov")) {
-      items.push(conflictItem(result, "notion_approved_requires_human_review", existing, warnings));
+    if (!isNotionCandidateStatus(result.edition.statusOriginal)) {
+      const reason = result.edition.statusOriginal?.trim().toLocaleLowerCase() === "aprovada"
+        ? "notion_approved_requires_human_review"
+        : "notion_status_not_candidata";
+      items.push(conflictItem(result, reason, existing, warnings));
       continue;
     }
 
@@ -207,7 +214,7 @@ export function planEditorialSync(
       continue;
     }
     const fields = changedFields(result.snapshot, existing);
-    if (existingHash(existing) === result.snapshot.contentHash && fields.length === 0) {
+    if (existingHash(existing) === result.snapshot.contentHash) {
       items.push({
         identificador: result.edition.identificador,
         notionPageId: result.edition.id,

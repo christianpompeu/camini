@@ -24,6 +24,7 @@ const printable = {
     declaredSupabaseId: item.declaredSupabaseId,
     existingSupabaseId: item.existingSupabaseId,
     action: item.action,
+    skipped: item.action === "unchanged",
     reason: item.reason,
     warnings: item.warnings,
     changedFields: item.changedFields,

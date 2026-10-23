@@ -126,3 +126,40 @@ Riscos residuais:
 Para o Gate 2, a candidata recomendada é `2026-10-22-tech-1900-ampliada`, por ser a edição mais recente e ter o menor corpo (23 blocos). Sequência proposta: revisar/aplicar a única migration em HML, repetir o dry-run, aplicar somente essa edição com `run_key` único, verificar linha + auditoria + replay idempotente. Falha durante a RPC faz rollback transacional; após commit, qualquer compensação exige nova decisão explícita e deve preservar a trilha histórica.
 
 **Parecer final do Gate 1: GO condicionado. Aguardando revisão e autorização explícita; nenhum apply foi executado.**
+
+## Revisão independente do Gate 1
+
+Correções aplicadas localmente após a revisão:
+
+1. O planejador agora aceita somente `statusOriginal` explicitamente igual a `Candidata` (comparação trim/case-insensitive). `Aprovada`, `Publicada`, `Rejeitada`, `Arquivada`, ausente e desconhecido são conflitos; o caso aprovado preserva `notion_approved_requires_human_review`.
+2. A RPC proposta passou a usar `IS DISTINCT FROM` nas verificações anuláveis e exige operação conhecida, snapshot objeto, `schemaVersion` numérico igual a 1, origem Notion, page ID/URL, identificador, canal, título, resumo, status Candidata, conteúdo completo com array de blocos e hash textual não vazio.
+3. Replay sem alteração material permanece `unchanged/skipped`; o CLI explicita `skipped: true` e o caminho normal não chama RPC. Alteração isolada de `notion_url` não incrementa versão nem gera auditoria.
+4. O hash canônico continua cobrindo metadados editoriais materiais e corpo, mas não a URL de origem, mantendo a decisão coerente com a materialidade do conteúdo.
+
+Testes adicionados cobrem todos os status proibidos, `Candidata` com espaços, replay URL-only e as cláusulas SQL de nulidade/contrato.
+
+## Evidência após a revisão
+
+Novo dry-run real em `2026-10-23T01:50:18.938Z`:
+
+- `insert`: 6;
+- `update`: 0;
+- `unchanged`: 0;
+- `conflict`: 1;
+- `ignored`: 0.
+
+`2026-10-21-panorama-0900-ampliada` continua bloqueada por `notion_approved_requires_human_review`, com 109 blocos. `2026-10-22-tech-1900-ampliada` continua elegível como `insert`, versão 1, com 23 blocos e hash `5af63ef999515ddeda13a46e3beaa3f70fbadda541727c13ff3f4ed852b3bf6c`.
+
+Consulta HML posterior permanece inalterada: 0 linhas em `observatorio_edicoes`, 37 linhas históricas e RPC C3 inexistente.
+
+Verificações atualizadas:
+
+- `npm run test:observatorio-c3`: 11/11 aprovados;
+- `npx tsc --noEmit`: aprovado;
+- ESLint dirigido: aprovado;
+- dry-run real Notion × HML: aprovado, sem escrita;
+- `git diff --check`: aprovado.
+
+O diff final da migration fica restrito à validação de status Notion Candidata, validação resistente a `NULL`/tipos obrigatórios e preservação das proteções anteriores de identidade, lock, `FOR UPDATE`, estado HML, auditoria e `service_role`. A migration continua não aplicada.
+
+**Parecer revisado para o Gate 2: GO condicionado mantido.** A primeira inserção recomendada permanece `2026-10-22-tech-1900-ampliada`, mas qualquer aplicação exige autorização explícita posterior; nenhum registro, RPC, trigger ou permissão foi criado no HML.

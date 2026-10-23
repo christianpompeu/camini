@@ -33,7 +33,7 @@ begin
   if nullif(pg_catalog.btrim(p_run_key), '') is null then
     raise exception using errcode = '22023', message = 'run_key obrigatorio';
   end if;
-  if pg_catalog.jsonb_typeof(p_edicoes) <> 'array'
+  if pg_catalog.jsonb_typeof(p_edicoes) is distinct from 'array'
      or pg_catalog.jsonb_array_length(p_edicoes) <> 1 then
     raise exception using errcode = '22023', message = 'apply C3 exige exatamente uma edicao';
   end if;
@@ -49,14 +49,27 @@ begin
     v_expected_version := nullif(v_item->>'expected_version', '')::integer;
     v_expected_hash := v_item->>'expected_previous_hash';
 
-    if v_operation not in ('insert', 'update')
-       or pg_catalog.jsonb_typeof(v_snapshot) <> 'object'
-       or (v_snapshot->>'schemaVersion')::integer <> 1
-       or (v_snapshot#>>'{content,complete}')::boolean is not true
-       or nullif(v_snapshot->>'contentHash', '') is null
-       or nullif(v_identifier, '') is null
-       or nullif(v_notion_page_id, '') is null
-       or v_snapshot#>>'{source,type}' <> 'notion' then
+    if v_operation is null or v_operation not in ('insert', 'update')
+       or pg_catalog.jsonb_typeof(v_snapshot) is distinct from 'object'
+       or pg_catalog.jsonb_typeof(v_snapshot->'schemaVersion') is distinct from 'number'
+       or (v_snapshot->>'schemaVersion')::integer is distinct from 1
+       or pg_catalog.jsonb_typeof(v_snapshot->'source') is distinct from 'object'
+       or v_snapshot#>>'{source,type}' is distinct from 'notion'
+       or nullif(pg_catalog.btrim(v_snapshot#>>'{source,notionPageId}'), '') is null
+       or nullif(pg_catalog.btrim(v_snapshot#>>'{source,notionUrl}'), '') is null
+       or pg_catalog.jsonb_typeof(v_snapshot->'edition') is distinct from 'object'
+       or nullif(pg_catalog.btrim(v_identifier), '') is null
+       or nullif(pg_catalog.btrim(v_snapshot#>>'{edition,canal}'), '') is null
+       or nullif(pg_catalog.btrim(v_snapshot#>>'{edition,titulo}'), '') is null
+       or nullif(pg_catalog.btrim(v_snapshot#>>'{edition,resumo}'), '') is null
+       or pg_catalog.lower(pg_catalog.btrim(v_snapshot#>>'{edition,statusOriginal}')) is distinct from 'candidata'
+       or pg_catalog.jsonb_typeof(v_snapshot->'content') is distinct from 'object'
+       or pg_catalog.jsonb_typeof(v_snapshot#>'{content,complete}') is distinct from 'boolean'
+       or (v_snapshot#>>'{content,complete}')::boolean is distinct from true
+       or pg_catalog.jsonb_typeof(v_snapshot#>'{content,blocks}') is distinct from 'array'
+       or pg_catalog.jsonb_typeof(v_snapshot->'contentHash') is distinct from 'string'
+       or nullif(pg_catalog.btrim(v_snapshot->>'contentHash'), '') is null
+       or nullif(pg_catalog.btrim(v_notion_page_id), '') is null then
       raise exception using errcode = '22023', message = 'contrato de snapshot C3 invalido';
     end if;
 

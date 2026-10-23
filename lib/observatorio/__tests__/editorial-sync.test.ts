@@ -91,9 +91,32 @@ test("bloqueia status aprovado do Notion para revisão humana", () => {
   assert.equal(plan.items[0].reason, "notion_approved_requires_human_review");
 });
 
+test("aceita somente Candidata no Notion", () => {
+  for (const status of ["Publicada", "Rejeitada", "Arquivada", "", null, "Em revisao"]) {
+    const result = snapshotResult({ statusOriginal: status });
+    const plan = planEditorialSync([result], []);
+    assert.equal(plan.items[0].action, "conflict", status || "ausente");
+    assert.equal(plan.items[0].reason, "notion_status_not_candidata", status || "ausente");
+  }
+  const candidate = planEditorialSync([snapshotResult({ statusOriginal: " Candidata " })], []);
+  assert.equal(candidate.items[0].action, "insert");
+});
+
 test("replay idempotente mantém versão e não planeja auditoria", () => {
   const result = snapshotResult();
   const existing = hmlEdition(result, { id: result.edition.supabaseId! });
+  const plan = planEditorialSync([result], [existing]);
+  assert.equal(plan.items[0].action, "unchanged");
+  assert.equal(plan.items[0].plannedVersion, 1);
+  assert.deepEqual(plan.items[0].changedFields, []);
+});
+
+test("notion_url-only change is unchanged/skipped", () => {
+  const result = snapshotResult();
+  const existing = hmlEdition(result, {
+    id: result.edition.supabaseId!,
+    notion_url: "https://notion.so/redirect-diferente",
+  });
   const plan = planEditorialSync([result], [existing]);
   assert.equal(plan.items[0].action, "unchanged");
   assert.equal(plan.items[0].plannedVersion, 1);
@@ -172,5 +195,12 @@ test("migration proposta exige lote unitário, lock, precondições e auditoria"
   assert.match(migration, /edicao alterada desde o dry-run/);
   assert.match(migration, /observatorio_edicoes_decisao_audit/);
   assert.match(migration, /status,\s+notion_page_id[\s\S]+?'candidata'/);
+  assert.ok(migration.includes("statusOriginal") && migration.includes("'candidata'"));
+  assert.match(migration, /is distinct from 1/);
+  assert.match(migration, /is distinct from true/);
+  assert.ok(migration.includes("content,blocks"));
+  assert.match(migration, /jsonb_typeof\(v_snapshot\) is distinct from 'object'/);
+  assert.match(migration, /v_operation is null or v_operation not in/);
+  assert.match(migration, /statusOriginal/);
   assert.doesNotMatch(migration, /security definer/i);
 });
