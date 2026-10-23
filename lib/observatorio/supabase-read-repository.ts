@@ -4,29 +4,10 @@ import { createClient, type PostgrestResponse } from "@supabase/supabase-js";
 import type { Database } from "@/lib/supabase/database.types";
 import { ObservatorioRepositoryError } from "./errors.ts";
 
-function requiredServerCredential(): string {
-  const credential =
-    process.env.SUPABASE_SECRET_KEY ?? process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-  if (!credential) {
-    throw new ObservatorioRepositoryError("configurar credencial server-only");
-  }
-  return credential;
-}
+const OBSERVATORIO_HML_HOST = "hrpathjcxyzzwxgkhwnt.supabase.co";
 
 function createPrivateClient() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  if (!url) {
-    throw new ObservatorioRepositoryError("configurar URL do Supabase");
-  }
-
-  return createClient<Database>(url, requiredServerCredential(), {
-    auth: {
-      persistSession: false,
-      autoRefreshToken: false,
-      detectSessionInUrl: false,
-    },
-  });
+  return createObservatorioHmlClient();
 }
 
 function unwrap<T>(operation: string, response: PostgrestResponse<T>): T[] {
@@ -39,6 +20,8 @@ function unwrap<T>(operation: string, response: PostgrestResponse<T>): T[] {
 export interface PrivateSnapshotOptions {
   limitPerTable?: number;
 }
+
+export type PrivateObservatorioSnapshot = Awaited<ReturnType<typeof readPrivateObservatorioSnapshot>>;
 
 export async function readPrivateObservatorioSnapshot(
   options: PrivateSnapshotOptions = {}
@@ -149,6 +132,24 @@ function createObservatorioHmlClient() {
     throw new ObservatorioRepositoryError("validar URL HML do Observatório");
   }
   return createClient<Database>(url, secret, {
+    auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
+  });
+}
+
+export function createObservatorioHmlActionClient(accessToken: string) {
+  const url = process.env.OBSERVATORIO_HML_SUPABASE_URL;
+  const secret = process.env.OBSERVATORIO_HML_SUPABASE_SECRET_KEY;
+  if (!url || !secret || !accessToken) throw new ObservatorioRepositoryError("configurar sessão HML server-only");
+  try {
+    if (new URL(url).hostname !== OBSERVATORIO_HML_HOST) {
+      throw new ObservatorioRepositoryError("validar projeto HML do Observatório");
+    }
+  } catch (error) {
+    if (error instanceof ObservatorioRepositoryError) throw error;
+    throw new ObservatorioRepositoryError("validar URL HML do Observatório");
+  }
+  return createClient<Database>(url, secret, {
+    global: { headers: { Authorization: `Bearer ${accessToken}` } },
     auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
   });
 }

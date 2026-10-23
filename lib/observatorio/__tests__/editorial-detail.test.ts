@@ -12,7 +12,7 @@ test("renderização privada aceita somente links http/https", () => {
   assert.equal(safeExternalHref("not-a-url"), null);
 });
 
-test("rota privada preserva autorização de sessão e não oferece decisão persistente", () => {
+test("rota privada preserva autorização de sessão e conecta o painel de decisão", () => {
   const server = readFileSync(new URL("../server.ts", import.meta.url), "utf8");
   const page = readFileSync(new URL("../../../app/dashboard/observatorio/edicoes/[identificador]/page.tsx", import.meta.url), "utf8");
   assert.match(server, /auth\.getUser\(\)/);
@@ -21,8 +21,8 @@ test("rota privada preserva autorização de sessão e não oferece decisão per
   const repository = readFileSync(new URL("../supabase-read-repository.ts", import.meta.url), "utf8");
   assert.match(repository, /OBSERVATORIO_HML_SUPABASE_URL/);
   assert.match(repository, /hrpathjcxyzzwxgkhwnt\.supabase\.co/);
-  assert.doesNotMatch(page, /<button[^>]*>(Aprovar|Rejeitar|Publicar)/i);
-  assert.match(page, /Decisão não habilitada/);
+  assert.match(page, /EditorialDecisionPanel/);
+  assert.match(page, /contentHash/);
 });
 
 test("rich_text preserva ordem, hyperlinks seguros e anotações", () => {

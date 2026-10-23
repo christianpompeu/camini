@@ -273,6 +273,30 @@ export function AppSidebar() {
                     </SidebarMenuSubItem>
                     <SidebarMenuSubItem>
                       <SidebarMenuSubButton
+                        render={<Link href="/dashboard/observatorio/noticias" onClick={closeMobile} />}
+                        isActive={pathname === "/dashboard/observatorio/noticias"}
+                      >
+                        <span>Notícias</span>
+                      </SidebarMenuSubButton>
+                    </SidebarMenuSubItem>
+                    <SidebarMenuSubItem>
+                      <SidebarMenuSubButton
+                        render={<Link href="/dashboard/observatorio/grafo" onClick={closeMobile} />}
+                        isActive={pathname === "/dashboard/observatorio/grafo"}
+                      >
+                        <span>Grafo e evidências</span>
+                      </SidebarMenuSubButton>
+                    </SidebarMenuSubItem>
+                    <SidebarMenuSubItem>
+                      <SidebarMenuSubButton
+                        render={<Link href="/dashboard/observatorio/tendencias" onClick={closeMobile} />}
+                        isActive={pathname === "/dashboard/observatorio/tendencias"}
+                      >
+                        <span>Tendências</span>
+                      </SidebarMenuSubButton>
+                    </SidebarMenuSubItem>
+                    <SidebarMenuSubItem>
+                      <SidebarMenuSubButton
                         render={<Link href="/panorama" onClick={closeMobile} />}
                         isActive={pathname.startsWith("/panorama")}
                       >

@@ -7,12 +7,13 @@ import {
   readPrivateObservatorioGraph,
   readPrivateObservatorioSnapshot,
   readPrivateObservatorioEdition,
+  createObservatorioHmlActionClient,
   type PrivateSnapshotOptions,
 } from "./supabase-read-repository.ts";
 
 export { ingestObservatorioBatchInHml } from "./supabase-ingestion.ts";
 
-async function assertObservatorioAccess() {
+export async function assertObservatorioAccess() {
   const supabase = await createSessionClient();
   const {
     data: { user },
@@ -30,6 +31,14 @@ async function assertObservatorioAccess() {
   const allowed = permission?.is_super_admin === true ||
     permission?.allowed_routes?.includes("/dashboard/observatorio") === true;
   if (permissionError || !allowed) throw new ObservatorioAccessError();
+}
+
+export async function getAuthorizedObservatorioActionClient() {
+  await assertObservatorioAccess();
+  const sessionClient = await createSessionClient();
+  const { data: { session } } = await sessionClient.auth.getSession();
+  if (!session?.access_token) throw new ObservatorioAccessError();
+  return createObservatorioHmlActionClient(session.access_token);
 }
 
 export async function readAuthorizedObservatorioSnapshot(
