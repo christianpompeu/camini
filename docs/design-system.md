@@ -103,3 +103,9 @@ A rota `/playground` atua como catálogo vivo de componentes:
 - Não efetua mutações no banco de dados.
 - Apresenta todas as variantes reais e estados suportados.
 - Permite validação de contraste e responsividade em múltiplos viewports (375px, 768px, 1280px e 1440px).
+
+---
+
+## 6. Identidades Específicas: Camini Observatório (Panorama & Tech)
+Para produtos editoriais, publicações e portais públicos do Observatório, o sistema utiliza uma extensão visual especializada que une a precisão editorial com design digital moderno (glassmorphism sutil, ambient orbs, tipografia display impactante e paleta violeta/índigo):
+- **Diretriz Completa:** Consulte [`docs/guideline-identidade-observatorio.md`](./guideline-identidade-observatorio.md) para tokens de cores dos canais Panorama e Tech, padrões tipográficos, cards elevados de metodologia, banners de conversão escuros e critérios de adoção para novos módulos.

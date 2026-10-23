@@ -10,7 +10,6 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
@@ -89,7 +88,7 @@ export function Navbar() {
                 <span>Observatório</span>
                 <ChevronDown className="h-3.5 w-3.5 opacity-60" />
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="start" className="w-56 p-1.5 shadow-lg border border-border bg-popover text-popover-foreground">
+              <DropdownMenuContent align="start" className="w-64 p-1.5 shadow-lg border border-border bg-popover text-popover-foreground">
                 <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground px-2 py-1 select-none">
                   Publicações
                 </div>
@@ -99,12 +98,12 @@ export function Navbar() {
                 >
                   <div className="flex items-center justify-between w-full">
                     <span className="font-semibold text-sm">Panorama</span>
-                    <span className="text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-violet-100 text-violet-700 dark:bg-violet-950/60 dark:text-violet-300">
-                      Semanal
+                    <span className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-violet-100 text-violet-700 dark:bg-violet-950/60 dark:text-violet-300">
+                      Em preparação
                     </span>
                   </div>
                   <span className="text-xs text-muted-foreground">
-                    Negócios, mercado e gestão
+                    Atualidades, conexões e contexto
                   </span>
                 </DropdownMenuItem>
                 <DropdownMenuItem
@@ -113,12 +112,12 @@ export function Navbar() {
                 >
                   <div className="flex items-center justify-between w-full">
                     <span className="font-semibold text-sm">Tech</span>
-                    <span className="text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-indigo-100 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300">
-                      Quinzenal
+                    <span className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-indigo-100 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300">
+                      Em preparação
                     </span>
                   </div>
                   <span className="text-xs text-muted-foreground">
-                    Tecnologia, produto e IA
+                    Tecnologia, inovação, IA e software
                   </span>
                 </DropdownMenuItem>
               </DropdownMenuContent>

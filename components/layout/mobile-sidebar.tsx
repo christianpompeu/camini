@@ -58,8 +58,8 @@ export function MobileSidebar({ isOpen, onClose }: MobileSidebarProps) {
     {
       href: "/panorama",
       title: "Panorama",
-      subtitle: "Semanal • Negócios & Gestão",
-      badge: "Semanal",
+      subtitle: "Atualidades, conexões & contexto",
+      badge: "Em preparação",
       icon: Compass,
       isActive: isPanorama,
       badgeColor: "bg-violet-100 text-violet-700 dark:bg-violet-950/60 dark:text-violet-300",
@@ -67,8 +67,8 @@ export function MobileSidebar({ isOpen, onClose }: MobileSidebarProps) {
     {
       href: "/tech",
       title: "Tech",
-      subtitle: "Quinzenal • Tecnologia & IA",
-      badge: "Quinzenal",
+      subtitle: "Tecnologia, inovação, IA & software",
+      badge: "Em preparação",
       icon: Cpu,
       isActive: isTech,
       badgeColor: "bg-indigo-100 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300",

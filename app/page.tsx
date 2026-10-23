@@ -56,7 +56,7 @@ export default function CaminiHomePage() {
               </div>
               <h2 className="text-2xl font-bold tracking-tight">Publicações & Conteúdo Editorial</h2>
               <p className="text-muted-foreground max-w-2xl">
-                Análises estratégicas, curadoria de mercado e inteligência aplicada com rigor técnico e independência editorial.
+                Análises de atualidades e tecnologia com contexto, responsabilidade editorial e rigor técnico para ir além do ruído.
               </p>
             </div>
             <span className="self-start md:self-auto text-xs text-muted-foreground bg-muted/60 px-3 py-1 rounded-full border border-border">
@@ -72,20 +72,23 @@ export default function CaminiHomePage() {
                   <Compass className="h-5 w-5" />
                 </div>
                 <span className="rounded-full bg-violet-100 dark:bg-violet-950/60 text-violet-700 dark:text-violet-300 px-2.5 py-0.5 text-xs font-semibold uppercase tracking-wider">
-                  Semanal
+                  Em preparação
                 </span>
               </div>
               <h3 className="text-xl font-bold tracking-tight">Panorama</h3>
               <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
-                Síntese semanal sobre negócios, mercado, liderança e gestão corporativa. Perspectiva clara para apoiar decisões estratégicas.
+                Uma leitura editorial que conecta acontecimentos, tendências e sinais para ir além do fato isolado. Atualidades com perspectiva ampla em política, economia, geopolítica e sociedade.
               </p>
               <div className="mt-6 flex flex-wrap items-center gap-3 pt-4 border-t border-border/60">
-                <Link href="/panorama">
-                  <Button variant="default" size="sm" className="gap-1.5 bg-violet-600 hover:bg-violet-700 text-white">
-                    Explorar Panorama
-                    <ArrowRight className="h-3.5 w-3.5" />
-                  </Button>
-                </Link>
+                <Button
+                  render={<Link href="/panorama" />}
+                  variant="default"
+                  size="sm"
+                  className="gap-1.5 bg-violet-600 hover:bg-violet-700 text-white"
+                >
+                  Explorar Panorama
+                  <ArrowRight className="h-3.5 w-3.5" />
+                </Button>
                 <Link href="/panorama#edicoes" className="text-xs font-medium text-muted-foreground hover:text-foreground transition-colors">
                   Ver edições →
                 </Link>
@@ -99,20 +102,23 @@ export default function CaminiHomePage() {
                   <Cpu className="h-5 w-5" />
                 </div>
                 <span className="rounded-full bg-indigo-100 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 px-2.5 py-0.5 text-xs font-semibold uppercase tracking-wider">
-                  Quinzenal
+                  Em preparação
                 </span>
               </div>
               <h3 className="text-xl font-bold tracking-tight">Tech</h3>
               <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
-                Publicação quinzenal dedicada a tecnologia, produto, arquitetura de software e avanços práticos em inteligência artificial.
+                Análises sobre tecnologia e inovação para compreender o presente e acompanhar o que vem pela frente. Sinais relevantes examinados em software, pesquisa, segurança e inteligência artificial.
               </p>
               <div className="mt-6 flex flex-wrap items-center gap-3 pt-4 border-t border-border/60">
-                <Link href="/tech">
-                  <Button variant="default" size="sm" className="gap-1.5 bg-indigo-600 hover:bg-indigo-700 text-white">
-                    Explorar Tech
-                    <ArrowRight className="h-3.5 w-3.5" />
-                  </Button>
-                </Link>
+                <Button
+                  render={<Link href="/tech" />}
+                  variant="default"
+                  size="sm"
+                  className="gap-1.5 bg-indigo-600 hover:bg-indigo-700 text-white"
+                >
+                  Explorar Tech
+                  <ArrowRight className="h-3.5 w-3.5" />
+                </Button>
                 <Link href="/tech#edicoes" className="text-xs font-medium text-muted-foreground hover:text-foreground transition-colors">
                   Ver edições →
                 </Link>

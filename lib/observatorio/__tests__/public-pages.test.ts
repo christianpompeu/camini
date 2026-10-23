@@ -113,12 +113,16 @@ test("ecosystem navigation integrates Panorama and Tech across Home, Navbar, Mob
   assert.match(home, /href="\/tech"/);
   assert.match(home, /href="\/panorama#edicoes"/);
   assert.match(home, /href="\/tech#edicoes"/);
+  assert.match(home, /Em preparação/);
+  assert.doesNotMatch(home, /Semanal|Quinzenal/);
 
   // 2. Navbar provides grouped Observatório dropdown with Panorama and Tech
   assert.match(navbar, /DropdownMenu/);
   assert.match(navbar, /Observatório/);
   assert.match(navbar, /href="\/panorama"/);
   assert.match(navbar, /href="\/tech"/);
+  assert.match(navbar, /Em preparação/);
+  assert.doesNotMatch(navbar, /Semanal|Quinzenal/);
 
   // 3. Mobile sidebar includes dedicated Publicações section
   assert.match(mobileSidebar, /Publicações/);
@@ -126,6 +130,8 @@ test("ecosystem navigation integrates Panorama and Tech across Home, Navbar, Mob
   assert.match(mobileSidebar, /href:\s*"\/tech"/);
   assert.match(mobileSidebar, /isPanorama/);
   assert.match(mobileSidebar, /isTech/);
+  assert.match(mobileSidebar, /Em preparação/);
+  assert.doesNotMatch(mobileSidebar, /Semanal|Quinzenal/);
 
   // 4. Public headers provide channel editions anchor and subscription
   assert.match(publicHeader, /href=\{`\/\$\{channel\}#edicoes`\}/);

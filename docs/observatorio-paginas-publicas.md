@@ -169,18 +169,18 @@ A integração dos produtos públicos **Panorama** e **Tech** unifica a experiê
 
 - **Página Inicial (`app/page.tsx`):**
   - Seção dedicada e harmoniosa **Camini Observatório / Publicações & Conteúdo Editorial** posicionada imediatamente antes dos módulos operacionais, sem alterar nenhum módulo pré-existente (Dashboard Central, Radar Tributário, RM SQL AI, App FORÇA, Calendário Público, Design System).
-  - Cartão **Panorama**: link principal `/panorama`, atalho de arquivo `/panorama#edicoes`, síntese sobre negócios e gestão, e badge "Semanal".
-  - Cartão **Tech**: link principal `/tech`, atalho de arquivo `/tech#edicoes`, síntese sobre produto, arquitetura e IA, e badge "Quinzenal".
+  - Cartão **Panorama**: link principal `/panorama`, atalho de arquivo `/panorama#edicoes`, síntese abrangente sobre atualidades e conexões, e badge "Em preparação".
+  - Cartão **Tech**: link principal `/tech`, atalho de arquivo `/tech#edicoes`, síntese sobre tecnologia, inovação, IA e software, e badge "Em preparação".
   - Rodapé da Home enriquecido com links diretos para `/panorama` e `/tech`.
 
 - **Navbar Desktop Principal (`components/layout/navbar.tsx`):**
   - Item agrupador único **Observatório** implementado com dropdown acessível Base UI (`@base-ui/react/menu` / Studio Admin), eliminando o risco de sobrecarga horizontal ou quebra em telas médias (768px–1024px).
-  - O dropdown apresenta os dois canais editoriais com distinção visual, periodicidade ("Semanal" e "Quinzenal") e sínteses de escopo.
+  - O dropdown apresenta os dois canais editoriais com distinção visual, status de entrega ("Em preparação") e sínteses de escopo.
   - Detecção ativa inteligente: o menu se destaca quando o usuário navega em rotas filhas de `/panorama` ou `/tech`.
 
 - **Menu Mobile Geral (`components/layout/mobile-sidebar.tsx`):**
   - Nova seção **Publicações** posicionada estrategicamente no topo da navegação, logo após o link do Início e antes de "Módulos & Aplicações".
-  - Entradas dedicadas para **Panorama** e **Tech** com ícones temáticos (`Compass` e `Cpu`), tags de periodicidade, descrições compactas e destaque de rota ativa (`isPanorama`, `isTech`).
+  - Entradas dedicadas para **Panorama** e **Tech** com ícones temáticos (`Compass` e `Cpu`), tags de status "Em preparação", descrições compactas e destaque de rota ativa (`isPanorama`, `isTech`).
 
 - **Cabeçalhos Públicos (`components/observatorio-public/public-header.tsx` e `components/observatorio/public-edition-shell.tsx`):**
   - Navegação desktop e gaveta mobile unificadas oferecendo acesso cruzado imediato a:
