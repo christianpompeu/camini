@@ -187,3 +187,75 @@ npm run observatorio:sync -- --apply-hml --identifier=2026-10-22-tech-1900-ampli
 ```
 
 O comando deve ser executado somente após revisão e autorização explícita. A revisão atual para antes de qualquer execução persistente.
+
+## Execução autorizada do Gate 2 — HML
+
+Autorização explícita registrada no Br[AI]n foi utilizada exclusivamente no projeto HML `hrpathjcxyzzwxgkhwnt`.
+
+### Pré-validação
+
+- URL/ID confirmados para `hrpathjcxyzzwxgkhwnt.supabase.co` / `hrpathjcxyzzwxgkhwnt`; nenhum segredo foi exibido.
+- Estado anterior: `observatorio_edicoes=0`, `observatorio_decisoes_historico=37`, RPC ausente e trigger ausente.
+- Histórico anterior preservado; a única migration aplicada foi `20261023023220_observatorio_c3_sync_editorial` (`observatorio_c3_sync_editorial`), correspondente ao arquivo autorizado.
+- Dry-run imediatamente anterior: alvo `2026-10-22-tech-1900-ampliada` em `insert`, status Notion `Candidata`, 23 blocos, snapshot completo e hash `5af63ef999515ddeda13a46e3beaa3f70fbadda541727c13ff3f4ed852b3bf6c`.
+- A edição Panorama aprovada permaneceu `conflict`; nenhuma outra edição foi selecionada para apply.
+
+### Migration e permissões
+
+Após a migration:
+
+- `observatorio_sync_edicoes(text,jsonb)`: existente;
+- `observatorio_edicoes_decisao_audit`: existente;
+- `service_role`: `EXECUTE=true`;
+- `anon`: `EXECUTE=false`;
+- `authenticated`: `EXECUTE=false`;
+- função: `SECURITY INVOKER`;
+- contagens ainda antes do apply: 0 edições e 37 auditorias.
+
+Não foram aplicadas migrations anteriores nem alterações paralelas.
+
+### Primeira inserção
+
+Comando autorizado executado:
+
+```text
+npm run observatorio:sync -- --apply-hml --identifier=2026-10-22-tech-1900-ampliada --run-key=c3-gate2-2026-10-23-tech-1900
+```
+
+Resultado da RPC: `inserted=1`, `updated=0`, ID HML `cfa965dd-b863-4d9e-a086-28d05758b962`.
+
+Validação direta no HML:
+
+- identificador: `2026-10-22-tech-1900-ampliada`;
+- `notion_page_id`: `40113c24-1b4d-812b-905d-d4bbb657f772`;
+- `status=candidata`;
+- `versao=1`;
+- `aprovada_em=NULL`;
+- `publicada_em=NULL`;
+- `snapshot.content.complete=true`;
+- hash: `5af63ef999515ddeda13a46e3beaa3f70fbadda541727c13ff3f4ed852b3bf6c`;
+- total de edições: 1;
+- total de auditorias: 38;
+- auditorias `INSERT` para a linha e run key autorizado: 1.
+
+### Replay
+
+O mesmo comando foi executado novamente. O resultado foi:
+
+```json
+{
+  "status": "skipped",
+  "reason": "unchanged",
+  "identifier": "2026-10-22-tech-1900-ampliada",
+  "version": 1,
+  "contentHash": "5af63ef999515ddeda13a46e3beaa3f70fbadda541727c13ff3f4ed852b3bf6c"
+}
+```
+
+Após o replay, a consulta confirmou novamente: 1 edição, versão 1, mesmo hash, snapshot inalterado, 38 auditorias totais e exatamente 1 auditoria associada à linha/run key. Não houve duplicação, incremento de versão ou nova auditoria.
+
+### Parecer
+
+O Gate 2 autorizado foi executado com sucesso e limitado à única edição Tech. As cinco candidatas restantes continuam apenas planejadas; a edição Panorama aprovada continua bloqueada. Não houve escrita no Notion, aprovação, publicação, acesso à produção ou commit/push.
+
+**Parecer para avançar às demais candidatas: GO técnico condicionado a nova autorização explícita por lote. A C3 não é declarada encerrada automaticamente.**
