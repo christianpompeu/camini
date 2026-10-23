@@ -135,3 +135,36 @@ export async function readPrivateObservatorioGraph(limit = 500) {
     articles: snapshot.materias,
   };
 }
+
+function createObservatorioHmlClient() {
+  const url = process.env.OBSERVATORIO_HML_SUPABASE_URL;
+  const secret = process.env.OBSERVATORIO_HML_SUPABASE_SECRET_KEY;
+  if (!url || !secret) throw new ObservatorioRepositoryError("configurar credencial HML server-only");
+  try {
+    if (new URL(url).hostname !== "hrpathjcxyzzwxgkhwnt.supabase.co") {
+      throw new ObservatorioRepositoryError("validar projeto HML do Observatório");
+    }
+  } catch (error) {
+    if (error instanceof ObservatorioRepositoryError) throw error;
+    throw new ObservatorioRepositoryError("validar URL HML do Observatório");
+  }
+  return createClient<Database>(url, secret, {
+    auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
+  });
+}
+
+export async function readPrivateObservatorioEdition(identifier: string) {
+  const normalized = identifier.trim();
+  if (!normalized || normalized.length > 160) {
+    throw new ObservatorioRepositoryError("validar identificador da edição");
+  }
+  const response = await createObservatorioHmlClient()
+    .from("observatorio_edicoes")
+    .select("id,identificador,canal,rodada_id,titulo,resumo,status,notion_page_id,notion_url,snapshot,versao,criada_em,aprovada_em,publicada_em")
+    .eq("identificador", normalized)
+    .maybeSingle();
+  if (response.error) {
+    throw new ObservatorioRepositoryError("ler edição privada", { cause: response.error });
+  }
+  return response.data;
+}

@@ -6,6 +6,7 @@ import { readEditorialQueue } from "./editorial.ts";
 import {
   readPrivateObservatorioGraph,
   readPrivateObservatorioSnapshot,
+  readPrivateObservatorioEdition,
   type PrivateSnapshotOptions,
 } from "./supabase-read-repository.ts";
 
@@ -46,4 +47,9 @@ export async function readAuthorizedObservatorioGraph(limit = 500) {
 export async function readAuthorizedObservatorioEditorialQueue() {
   await assertObservatorioAccess();
   return readEditorialQueue();
+}
+
+export async function readAuthorizedObservatorioEdition(identifier: string) {
+  await assertObservatorioAccess();
+  return readPrivateObservatorioEdition(identifier);
 }
