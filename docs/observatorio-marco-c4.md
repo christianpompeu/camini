@@ -105,6 +105,51 @@ Não foram alterados migrations, RPCs, permissões HML, Notion, produção, Rada
 
 ## Riscos bloqueantes para o Gate 2
 
+## Preparação técnica do Gate 2 — ponte de identidade e decisão
+
+### Evidência de ADR
+
+O ADR preliminar informado em `https://app.notion.com/p/40213c241b4d81ceb4acd09f43de68c7` não pôde ser recuperado pelo conector/web desta sessão. Portanto, nenhuma decisão foi atribuída ao ADR; a proposta abaixo deriva somente dos contratos já registrados neste documento e do código local.
+
+### Contrato verificável de identidade
+
+- O Camini resolve a sessão com `supabase.auth.getUser()` no servidor; ausência de sessão ou usuário não produz identidade editorial.
+- Leitura do dashboard e permissão editorial são capacidades distintas. A leitura continua baseada em `app_permissions`/`is_super_admin`/`allowed_routes`; a decisão exigirá uma permissão editorial explícita, separada e revogável.
+- O cliente não envia `revisor_id`, e-mail ou UUID de ator. A operação recebe apenas os dados da edição e a decisão; o ator é resolvido no backend a partir da sessão.
+- Revogação deve ser consultada server-side a cada operação (ou por concessão com versão/expiração curta), de modo que remover a permissão invalide novas decisões sem confiar em metadata editável do usuário.
+
+### Canal de confiança proposto
+
+A ponte server-side só é aceitável com uma credencial dedicada à decisão editorial, separada da `service_role` usada pelo sincronizador, com privilégios mínimos para uma futura RPC específica, rotação, expiração, allowlist de origem e auditoria. A credencial nunca chega ao navegador, e a RPC não aceita identidade fornecida pelo cliente. Até existir essa prova operacional (segredo segregado, rotação/revogação testadas e grants mínimos), não há demonstração suficiente de separação confiável de privilégios.
+
+Comparação objetiva:
+
+| Critério | Ponte Camini → HML | Auth dedicado no HML |
+|---|---|---|
+| Identidade | Camini resolve `getUser()` e permissão editorial | HML resolve `auth.uid()` diretamente |
+| Revogação | exige consulta server-side e rotação/expiração da credencial | allowlist/RLS nativas no mesmo projeto |
+| Superfície de confiança | canal administrativo entre projetos | um único domínio de autenticação |
+| Estado atual | proposta, sem prova de credencial segregada | ainda não provisionado, mas fronteira verificável |
+| Parecer | não autorizar persistência antes da prova | recomendada se a ponte não demonstrar separação |
+
+### Contrato de `aprovar`/`rejeitar`
+
+Entrada mínima server-side: `editionId`, `identifier`, `version`, `contentHash`, `decision`, `justification` não vazia e `idempotencyKey`. A operação deve validar identidade confiável, edição/`notion_page_id`, estado atual `candidata`, versão, hash e chave idempotente. Apenas `candidata → aprovada` ou `candidata → rejeitada` são permitidos; `publicada` permanece fora do Gate 2.
+
+### Persistência mínima proposta
+
+Criar, somente após aprovação e migration separada, uma tabela própria de decisões editoriais de edições (por exemplo `observatorio_edicoes_decisoes`) com `edicao_id`, `notion_page_id`, `identifier`, `decision`, `justification`, `version`, `content_hash`, `actor_user_id` confiável, `operation_key`, timestamps e estado de revogação/validade. Não reutilizar `observatorio_aprovacoes` das relações do grafo: são domínios, invariantes e auditorias diferentes. A tabela de decisões deve ser append-only; alterações posteriores ao snapshot aprovado exigem nova versão/decisão explícita.
+
+### Estratégia transacional
+
+Uma futura RPC deve adquirir lock por edição (`FOR UPDATE`/advisory lock), verificar novamente estado, versão e hash, rejeitar snapshot obsoleto e inserir a chave idempotente na mesma transação. Chave repetida com payload idêntico retorna replay sem nova auditoria; chave repetida com payload diferente falha. Após aprovação, o snapshot aprovado fica congelado: atualização de conteúdo não pode sobrescrevê-lo nem alterar timestamps/ator da decisão. Concorrência, revogação ou qualquer precondição falha sem alteração parcial.
+
+### Validação local do contrato
+
+Foi adicionado apenas o validador puro `lib/observatorio/editorial-decision-contract.ts`, sem cliente Supabase, RPC ou endpoint mutante. Os testes cobrem: sem sessão, leitor sem permissão editorial, revisor revogado, identidade forjada pelo cliente, hash divergente, versão obsoleta, concorrência, replay idempotente, reutilização de chave e estado já aprovado/publicado. Isso valida o contrato, não substitui E2E com identidades reais.
+
+**Parecer para implementação persistente do Gate 2: NO-GO.** A ponte server-side permanece uma proposta até demonstrar credencial segregada, grants mínimos, rotação e revogação efetivas. Se essa separação não puder ser demonstrada em HML, adotar Auth dedicado no HML; não improvisar confiança por e-mail, UUID, header ou `service_role` do sincronizador. Nenhuma migration, usuário, permissão, RPC, aprovação, rejeição ou publicação foi executada neste preparo.
+
 - Não existe ainda identidade humana editorial provisionada no HML.
 - A ponte Camini/HML ainda não possui contrato de confiança, rotação e revogação implementado.
 - Os testes de autorização ainda são mocks; falta E2E com um usuário autorizado e um usuário sem permissão.
