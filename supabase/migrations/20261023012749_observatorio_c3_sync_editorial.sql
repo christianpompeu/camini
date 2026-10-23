@@ -1,47 +1,6 @@
 -- Marco C3: proposta local para apply HML controlado.
 -- NAO APLICAR sem aprovacao explicita posterior ao dry-run do Gate 1.
 
-create extension if not exists pgcrypto with schema extensions;
-
-create or replace function public.observatorio_canonical_json(p_value jsonb)
-returns text
-language plpgsql
-immutable
-set search_path = pg_catalog
-as $$
-declare
-  v_type text := pg_catalog.jsonb_typeof(p_value);
-  v_result text;
-begin
-  if p_value is null or v_type = 'null' then return 'null';
-  elsif v_type in ('string', 'number', 'boolean') then return p_value::text;
-  elsif v_type = 'array' then
-    select '[' || coalesce(string_agg(public.observatorio_canonical_json(value), ',' order by ordinality), '') || ']'
-      into v_result from pg_catalog.jsonb_array_elements(p_value) with ordinality as item(value, ordinality);
-    return v_result;
-  elsif v_type = 'object' then
-    select '{' || coalesce(string_agg(pg_catalog.to_jsonb(key)::text || ':' || public.observatorio_canonical_json(value), ',' order by key), '') || '}'
-      into v_result from pg_catalog.jsonb_each(p_value) as item(key, value)
-     where key <> 'expiry_time'
-       and not (key = 'url' and pg_catalog.jsonb_typeof(p_value->'expiry_time') = 'string');
-    return v_result;
-  end if;
-  raise exception using errcode = '22023', message = 'JSON canonico invalido';
-end;
-$$;
-
-create or replace function public.observatorio_hash_editorial(p_value jsonb)
-returns text
-language sql
-immutable
-set search_path = pg_catalog
-as $$
-  select pg_catalog.encode(extensions.digest(pg_catalog.convert_to(public.observatorio_canonical_json(p_value), 'UTF8'), 'sha256'), 'hex')
-$$;
-
-revoke all on function public.observatorio_canonical_json(jsonb) from public, anon, authenticated, service_role;
-revoke all on function public.observatorio_hash_editorial(jsonb) from public, anon, authenticated, service_role;
-
 drop trigger if exists observatorio_edicoes_decisao_audit
   on public.observatorio_edicoes;
 create trigger observatorio_edicoes_decisao_audit
@@ -110,14 +69,6 @@ begin
        or pg_catalog.jsonb_typeof(v_snapshot#>'{content,blocks}') is distinct from 'array'
        or pg_catalog.jsonb_typeof(v_snapshot->'contentHash') is distinct from 'string'
        or nullif(pg_catalog.btrim(v_snapshot->>'contentHash'), '') is null
-       or v_snapshot->>'contentHash' is distinct from public.observatorio_hash_editorial(
-         pg_catalog.jsonb_build_object(
-           'schemaVersion', v_snapshot->'schemaVersion',
-           'notionPageId', v_snapshot#>'{source,notionPageId}',
-           'edition', v_snapshot->'edition',
-           'content', v_snapshot->'content'
-         )
-       )
        or nullif(pg_catalog.btrim(v_notion_page_id), '') is null then
       raise exception using errcode = '22023', message = 'contrato de snapshot C3 invalido';
     end if;
