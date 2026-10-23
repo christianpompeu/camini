@@ -1,8 +1,13 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
+interface PublicRouteItem {
+  route_path: string;
+  is_public: boolean;
+}
+
 interface CachedRoutes {
-  data: Array<{ route_path: string; is_public: boolean }>;
+  data: PublicRouteItem[];
   timestamp: number;
 }
 
@@ -13,7 +18,9 @@ export function invalidatePublicRoutesCache() {
   cachedPublicRoutes = null;
 }
 
-async function getPublicRoutes(supabase: ReturnType<typeof createServerClient>) {
+async function getPublicRoutes(
+  supabase: ReturnType<typeof createServerClient>
+): Promise<PublicRouteItem[]> {
   const now = Date.now();
   if (cachedPublicRoutes && now - cachedPublicRoutes.timestamp < CACHE_TTL_MS) {
     return cachedPublicRoutes.data;
@@ -25,11 +32,12 @@ async function getPublicRoutes(supabase: ReturnType<typeof createServerClient>) 
       .select("route_path, is_public");
 
     if (!error && data) {
+      const routes = data as unknown as PublicRouteItem[];
       cachedPublicRoutes = {
-        data,
+        data: routes,
         timestamp: now,
       };
-      return data;
+      return routes;
     }
   } catch (err) {
     console.error("Erro ao buscar public_routes no middleware:", err);
@@ -45,7 +53,13 @@ function matchesRoute(pathname: string, routePath: string) {
 }
 
 // Rotas que são sempre públicas e não gerenciadas por restrição
-const ALWAYS_PUBLIC_PREFIXES = ["/login", "/auth", "/radar"];
+const ALWAYS_PUBLIC_PREFIXES = [
+  "/login",
+  "/auth",
+  "/radar",
+  "/panorama",
+  "/tech",
+];
 
 // Prefixos conhecidos de rotas protegidas por padrão do sistema
 const PROTECTED_SYSTEM_PREFIXES = [
@@ -69,7 +83,7 @@ export async function updateSession(request: NextRequest) {
           return request.cookies.getAll();
         },
         setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value, options }) => request.cookies.set(name, value));
+          cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
           supabaseResponse = NextResponse.next({
             request,
           });
@@ -119,8 +133,8 @@ export async function updateSession(request: NextRequest) {
 
     // Buscar a regra mais específica correspondente ao caminho
     const matchingRule = publicRoutes
-      .filter((r: any) => matchesRoute(checkPath, r.route_path))
-      .sort((a: any, b: any) => b.route_path.length - a.route_path.length)[0];
+      .filter((r) => matchesRoute(checkPath, r.route_path))
+      .sort((a, b) => b.route_path.length - a.route_path.length)[0];
 
     // Se houver regra explícita declarando como pública
     const isPublic = matchingRule ? matchingRule.is_public : false;

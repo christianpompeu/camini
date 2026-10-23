@@ -160,3 +160,53 @@ Evidências executadas:
 - Zero escritas ou modificações no Notion, HML, produção ou outros módulos.
 
 Parecer: GO para a correção do contrato público e desacoplamento de timestamps. Prontidão técnica mantida para a primeira publicação real quando os gates editoriais humanos forem concluídos.
+
+## Mapa Final de Integração e Navegação (Panorama & Tech)
+
+A integração dos produtos públicos **Panorama** e **Tech** unifica a experiência do ecossistema Camini, estabelecendo canais fluidos de descoberta, navegação editorial e assinatura, respeitando integralmente a identidade Studio Admin e os gates de publicação.
+
+### 1. Topologia de Rotas e Pontos de Acesso
+
+- **Página Inicial (`app/page.tsx`):**
+  - Seção dedicada e harmoniosa **Camini Observatório / Publicações & Conteúdo Editorial** posicionada imediatamente antes dos módulos operacionais, sem alterar nenhum módulo pré-existente (Dashboard Central, Radar Tributário, RM SQL AI, App FORÇA, Calendário Público, Design System).
+  - Cartão **Panorama**: link principal `/panorama`, atalho de arquivo `/panorama#edicoes`, síntese sobre negócios e gestão, e badge "Semanal".
+  - Cartão **Tech**: link principal `/tech`, atalho de arquivo `/tech#edicoes`, síntese sobre produto, arquitetura e IA, e badge "Quinzenal".
+  - Rodapé da Home enriquecido com links diretos para `/panorama` e `/tech`.
+
+- **Navbar Desktop Principal (`components/layout/navbar.tsx`):**
+  - Item agrupador único **Observatório** implementado com dropdown acessível Base UI (`@base-ui/react/menu` / Studio Admin), eliminando o risco de sobrecarga horizontal ou quebra em telas médias (768px–1024px).
+  - O dropdown apresenta os dois canais editoriais com distinção visual, periodicidade ("Semanal" e "Quinzenal") e sínteses de escopo.
+  - Detecção ativa inteligente: o menu se destaca quando o usuário navega em rotas filhas de `/panorama` ou `/tech`.
+
+- **Menu Mobile Geral (`components/layout/mobile-sidebar.tsx`):**
+  - Nova seção **Publicações** posicionada estrategicamente no topo da navegação, logo após o link do Início e antes de "Módulos & Aplicações".
+  - Entradas dedicadas para **Panorama** e **Tech** com ícones temáticos (`Compass` e `Cpu`), tags de periodicidade, descrições compactas e destaque de rota ativa (`isPanorama`, `isTech`).
+
+- **Cabeçalhos Públicos (`components/observatorio-public/public-header.tsx` e `components/observatorio/public-edition-shell.tsx`):**
+  - Navegação desktop e gaveta mobile unificadas oferecendo acesso cruzado imediato a:
+    1. **Panorama** (`/panorama`);
+    2. **Tech** (`/tech`);
+    3. **Arquivo de Edições** do canal ativo (`/panorama#edicoes` e `/tech#edicoes`);
+    4. **Assinatura** do canal ativo (`/panorama/assinar` e `/tech/assinar`).
+  - O alvo `#edicoes` utiliza o elemento `<section id="edicoes">` já presente em `PublicProductPage`, com suporte nativo a scroll suave e margem de rolagem (`scroll-mt-24`).
+
+- **Middleware Supabase (`lib/supabase/middleware.ts`):**
+  - Declaração explícita de `"/panorama"` e `"/tech"` na lista `ALWAYS_PUBLIC_PREFIXES`.
+  - Rotas públicas e dinâmicas de edição operam sem bloqueio indevido de autenticação, enquanto `/dashboard/observatorio` e rotas administrativas permanecem sob proteção estrita de sessão.
+
+### 2. Matriz de Navegação
+
+| Origem | Destino Panorama | Destino Tech | Destino Edições (Âncora) | Destino Assinatura |
+|---|---|---|---|---|
+| **Home (`/`)** | Card / Botão (`/panorama`) | Card / Botão (`/tech`) | Links nos Cards (`#edicoes`) | Via canais |
+| **Navbar Desktop** | Dropdown Observatório (`/panorama`) | Dropdown Observatório (`/tech`) | Via página do canal | Via página do canal |
+| **Menu Mobile Drawer** | Seção Publicações (`/panorama`) | Seção Publicações (`/tech`) | Via página do canal | Via página do canal |
+| **Header Público (`PublicHeader`)** | Link navegação (`/panorama`) | Link navegação (`/tech`) | Link âncora (`/${channel}#edicoes`) | Botão CTA (`/${channel}/assinar`) |
+| **Shell de Leitura (`PublicEditionShell`)** | Link navegação (`/panorama`) | Link navegação (`/tech`) | Link âncora (`/${channel}#edicoes`) | Botão CTA (`/${channel}/assinar`) |
+
+### 3. Limitações de Validação Visual
+
+- **Ambiente HML e local sem edições publicadas:** Como o banco HML contém exclusivamente 6 edições em estado de preparação editorial (candidatas), a navegação pelas rotas de edição real `/panorama/edicoes/[identificador]` e `/tech/edicoes/[identificador]` resulta em 404 intencional e seguro. A renderização de edições reais foi validada por meio de fixtures com snapshots completos e válidos em `npm run test:observatorio-public`.
+- **Validação de âncora `#edicoes`:** O scroll para `#edicoes` funciona perfeitamente nas páginas `/panorama` e `/tech`, posicionando a visualização diretamente sobre a lista/mensagem de arquivo editorial.
+- **Isolamento de dados:** Nenhuma alteração foi realizada em migrations, dados do HML, credenciais do Notion ou contratos C3/C4 de snapshot.
+

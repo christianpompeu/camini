@@ -2,7 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
-import { ArrowRight, Database, Dumbbell, LayoutGrid, CalendarDays, Palette, Radio } from "lucide-react";
+import { ArrowRight, Database, Dumbbell, LayoutGrid, CalendarDays, Palette, Radio, Compass, Cpu, Sparkles } from "lucide-react";
 import { Navbar } from "@/components/layout/navbar";
 import { Button } from "@/components/ui/button";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -43,6 +43,81 @@ export default function CaminiHomePage() {
                 Radar da Reforma
               </Button>
             </Link>
+          </div>
+        </section>
+
+        {/* OBSERVATÓRIO SECTION - Publicações Editoriais */}
+        <section className="mx-auto max-w-5xl px-6 py-12 md:py-16 border-t border-border/50">
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
+            <div className="flex flex-col gap-2">
+              <div className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-violet-600 dark:text-violet-400">
+                <Sparkles className="h-3.5 w-3.5" />
+                Camini Observatório
+              </div>
+              <h2 className="text-2xl font-bold tracking-tight">Publicações & Conteúdo Editorial</h2>
+              <p className="text-muted-foreground max-w-2xl">
+                Análises estratégicas, curadoria de mercado e inteligência aplicada com rigor técnico e independência editorial.
+              </p>
+            </div>
+            <span className="self-start md:self-auto text-xs text-muted-foreground bg-muted/60 px-3 py-1 rounded-full border border-border">
+              Acesso Aberto
+            </span>
+          </div>
+
+          <div className="grid gap-6 sm:grid-cols-2">
+            {/* Panorama */}
+            <div className="group relative rounded-2xl border border-border bg-card p-6 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-violet-500/50 hover:shadow-md">
+              <div className="flex items-center justify-between gap-2 mb-4">
+                <div className="inline-flex h-10 w-10 items-center justify-center rounded-lg bg-violet-500/10 text-violet-600 dark:text-violet-400">
+                  <Compass className="h-5 w-5" />
+                </div>
+                <span className="rounded-full bg-violet-100 dark:bg-violet-950/60 text-violet-700 dark:text-violet-300 px-2.5 py-0.5 text-xs font-semibold uppercase tracking-wider">
+                  Semanal
+                </span>
+              </div>
+              <h3 className="text-xl font-bold tracking-tight">Panorama</h3>
+              <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
+                Síntese semanal sobre negócios, mercado, liderança e gestão corporativa. Perspectiva clara para apoiar decisões estratégicas.
+              </p>
+              <div className="mt-6 flex flex-wrap items-center gap-3 pt-4 border-t border-border/60">
+                <Link href="/panorama">
+                  <Button variant="default" size="sm" className="gap-1.5 bg-violet-600 hover:bg-violet-700 text-white">
+                    Explorar Panorama
+                    <ArrowRight className="h-3.5 w-3.5" />
+                  </Button>
+                </Link>
+                <Link href="/panorama#edicoes" className="text-xs font-medium text-muted-foreground hover:text-foreground transition-colors">
+                  Ver edições →
+                </Link>
+              </div>
+            </div>
+
+            {/* Tech */}
+            <div className="group relative rounded-2xl border border-border bg-card p-6 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-indigo-500/50 hover:shadow-md">
+              <div className="flex items-center justify-between gap-2 mb-4">
+                <div className="inline-flex h-10 w-10 items-center justify-center rounded-lg bg-indigo-500/10 text-indigo-600 dark:text-indigo-400">
+                  <Cpu className="h-5 w-5" />
+                </div>
+                <span className="rounded-full bg-indigo-100 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 px-2.5 py-0.5 text-xs font-semibold uppercase tracking-wider">
+                  Quinzenal
+                </span>
+              </div>
+              <h3 className="text-xl font-bold tracking-tight">Tech</h3>
+              <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
+                Publicação quinzenal dedicada a tecnologia, produto, arquitetura de software e avanços práticos em inteligência artificial.
+              </p>
+              <div className="mt-6 flex flex-wrap items-center gap-3 pt-4 border-t border-border/60">
+                <Link href="/tech">
+                  <Button variant="default" size="sm" className="gap-1.5 bg-indigo-600 hover:bg-indigo-700 text-white">
+                    Explorar Tech
+                    <ArrowRight className="h-3.5 w-3.5" />
+                  </Button>
+                </Link>
+                <Link href="/tech#edicoes" className="text-xs font-medium text-muted-foreground hover:text-foreground transition-colors">
+                  Ver edições →
+                </Link>
+              </div>
+            </div>
           </div>
         </section>
 
@@ -160,7 +235,13 @@ export default function CaminiHomePage() {
               © 2026. Todos os direitos reservados.
             </span>
           </div>
-          <div className="flex items-center gap-6 text-sm font-medium text-muted-foreground">
+          <div className="flex items-center gap-6 text-sm font-medium text-muted-foreground flex-wrap">
+            <Link href="/panorama" className="hover:text-foreground transition-colors">
+              Panorama
+            </Link>
+            <Link href="/tech" className="hover:text-foreground transition-colors">
+              Tech
+            </Link>
             <Link href="/radar" className="hover:text-foreground transition-colors">
               Radar Tributário
             </Link>

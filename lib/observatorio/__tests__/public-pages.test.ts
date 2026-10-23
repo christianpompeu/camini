@@ -96,3 +96,47 @@ test("navigation uses internal safe URLs and form does not fake persistence", as
   assert.doesNotMatch(form, /supabase|fetch\(|success/i);
   assert.match(form, /name="consent"/);
 });
+
+test("ecosystem navigation integrates Panorama and Tech across Home, Navbar, Mobile Sidebar, and Headers", async () => {
+  const [home, navbar, mobileSidebar, publicHeader, editionShell, middleware] = await Promise.all([
+    read("app/page.tsx"),
+    read("components/layout/navbar.tsx"),
+    read("components/layout/mobile-sidebar.tsx"),
+    read("components/observatorio-public/public-header.tsx"),
+    read("components/observatorio/public-edition-shell.tsx"),
+    read("lib/supabase/middleware.ts"),
+  ]);
+
+  // 1. Home page integrates Observatório with Panorama and Tech cards
+  assert.match(home, /Camini Observatório/);
+  assert.match(home, /href="\/panorama"/);
+  assert.match(home, /href="\/tech"/);
+  assert.match(home, /href="\/panorama#edicoes"/);
+  assert.match(home, /href="\/tech#edicoes"/);
+
+  // 2. Navbar provides grouped Observatório dropdown with Panorama and Tech
+  assert.match(navbar, /DropdownMenu/);
+  assert.match(navbar, /Observatório/);
+  assert.match(navbar, /href="\/panorama"/);
+  assert.match(navbar, /href="\/tech"/);
+
+  // 3. Mobile sidebar includes dedicated Publicações section
+  assert.match(mobileSidebar, /Publicações/);
+  assert.match(mobileSidebar, /href:\s*"\/panorama"/);
+  assert.match(mobileSidebar, /href:\s*"\/tech"/);
+  assert.match(mobileSidebar, /isPanorama/);
+  assert.match(mobileSidebar, /isTech/);
+
+  // 4. Public headers provide channel editions anchor and subscription
+  assert.match(publicHeader, /href=\{`\/\$\{channel\}#edicoes`\}/);
+  assert.match(publicHeader, /href=\{`\/\$\{channel\}\/assinar`\}/);
+  assert.match(editionShell, /href="\/panorama"/);
+  assert.match(editionShell, /href="\/tech"/);
+  assert.match(editionShell, /href=\{`\/\$\{channel\}#edicoes`\}/);
+  assert.match(editionShell, /href=\{`\/\$\{channel\}\/assinar`\}/);
+
+  // 5. Middleware whitelists /panorama and /tech as public prefixes
+  assert.match(middleware, /"\/panorama"/);
+  assert.match(middleware, /"\/tech"/);
+});
+

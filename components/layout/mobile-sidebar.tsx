@@ -13,6 +13,8 @@ import {
   CalendarDays,
   Palette,
   Radio,
+  Compass,
+  Cpu,
 } from "lucide-react";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 
@@ -49,6 +51,29 @@ export function MobileSidebar({ isOpen, onClose }: MobileSidebarProps) {
   const isForca = pathname.startsWith("/forca");
   const isTotvsRm = pathname.startsWith("/totvs-rm");
   const isCalendario = pathname.startsWith("/ctc/calendario");
+  const isPanorama = pathname.startsWith("/panorama");
+  const isTech = pathname.startsWith("/tech");
+
+  const publications = [
+    {
+      href: "/panorama",
+      title: "Panorama",
+      subtitle: "Semanal • Negócios & Gestão",
+      badge: "Semanal",
+      icon: Compass,
+      isActive: isPanorama,
+      badgeColor: "bg-violet-100 text-violet-700 dark:bg-violet-950/60 dark:text-violet-300",
+    },
+    {
+      href: "/tech",
+      title: "Tech",
+      subtitle: "Quinzenal • Tecnologia & IA",
+      badge: "Quinzenal",
+      icon: Cpu,
+      isActive: isTech,
+      badgeColor: "bg-indigo-100 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300",
+    },
+  ];
 
   const modules = [
     {
@@ -174,6 +199,71 @@ export function MobileSidebar({ isOpen, onClose }: MobileSidebarProps) {
                 <Home className="w-4 h-4 shrink-0" />
                 <span>Início (Hub Camini)</span>
               </Link>
+            </div>
+
+            {/* Publicações (Observatório) */}
+            <div className="space-y-2 pt-3 border-t border-border">
+              <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground px-1 mb-2 block">
+                Publicações
+              </span>
+
+              {publications.map((pub) => {
+                const Icon = pub.icon;
+                return (
+                  <Link
+                    key={pub.href}
+                    href={pub.href}
+                    onClick={onClose}
+                    className={`flex items-center justify-between p-3 rounded-lg border text-sm transition-colors ${
+                      pub.isActive
+                        ? "bg-primary text-primary-foreground border-primary font-semibold shadow-sm"
+                        : "bg-card border-border hover:border-primary/40 hover:bg-muted/30 text-card-foreground"
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div
+                        className={`h-8 w-8 rounded-md flex items-center justify-center shrink-0 ${
+                          pub.isActive
+                            ? "bg-primary-foreground/20 text-primary-foreground"
+                            : "bg-primary/10 text-primary"
+                        }`}
+                      >
+                        <Icon className="w-4 h-4" />
+                      </div>
+                      <div className="flex flex-col">
+                        <div className="flex items-center gap-1.5">
+                          <span className="font-semibold text-sm leading-tight">
+                            {pub.title}
+                          </span>
+                          <span
+                            className={`text-[9px] uppercase font-bold px-1.5 py-0.5 rounded ${
+                              pub.isActive
+                                ? "bg-primary-foreground/20 text-primary-foreground"
+                                : pub.badgeColor
+                            }`}
+                          >
+                            {pub.badge}
+                          </span>
+                        </div>
+                        <span
+                          className={`text-xs mt-0.5 ${
+                            pub.isActive
+                              ? "text-primary-foreground/80"
+                              : "text-muted-foreground"
+                          }`}
+                        >
+                          {pub.subtitle}
+                        </span>
+                      </div>
+                    </div>
+                    <ArrowRight
+                      className={`w-4 h-4 shrink-0 ${
+                        pub.isActive ? "text-primary-foreground" : "text-muted-foreground"
+                      }`}
+                    />
+                  </Link>
+                );
+              })}
             </div>
 
             {/* Módulos do Ecossistema */}

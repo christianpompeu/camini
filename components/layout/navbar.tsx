@@ -3,9 +3,16 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Menu } from "lucide-react";
+import { Menu, ChevronDown } from "lucide-react";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { MobileSidebar } from "@/components/layout/mobile-sidebar";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 export function Navbar() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -17,12 +24,13 @@ export function Navbar() {
   const isTotvsRm = pathname.startsWith("/totvs-rm");
   const isRadar = pathname.startsWith("/radar");
   const isPlayground = pathname.startsWith("/playground");
+  const isObservatorio = pathname.startsWith("/panorama") || pathname.startsWith("/tech");
 
   const navItems = [
     {
       href: "/",
       label: "Início",
-      isActive: isHome && !isDashboard,
+      isActive: isHome && !isDashboard && !isObservatorio,
     },
     {
       href: "/dashboard",
@@ -61,8 +69,62 @@ export function Navbar() {
           </Link>
 
           {/* Desktop Nav */}
-          <nav className="hidden md:flex items-center gap-6 text-sm font-medium">
-            {navItems.map((item) => (
+          <nav className="hidden md:flex items-center gap-4 lg:gap-6 text-sm font-medium">
+            <Link
+              href="/"
+              className={`transition-colors hover:text-foreground/80 ${
+                isHome && !isDashboard && !isObservatorio ? "text-foreground" : "text-foreground/60"
+              }`}
+            >
+              Início
+            </Link>
+
+            {/* Observatório Dropdown */}
+            <DropdownMenu>
+              <DropdownMenuTrigger
+                className={`inline-flex items-center gap-1 transition-colors hover:text-foreground/80 focus-visible:outline-none cursor-pointer ${
+                  isObservatorio ? "text-foreground font-semibold" : "text-foreground/60"
+                }`}
+              >
+                <span>Observatório</span>
+                <ChevronDown className="h-3.5 w-3.5 opacity-60" />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className="w-56 p-1.5 shadow-lg border border-border bg-popover text-popover-foreground">
+                <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground px-2 py-1 select-none">
+                  Publicações
+                </div>
+                <DropdownMenuItem
+                  render={<Link href="/panorama" />}
+                  className="flex flex-col items-start gap-0.5 p-2 rounded-md cursor-pointer hover:bg-muted/60 focus:bg-muted/60"
+                >
+                  <div className="flex items-center justify-between w-full">
+                    <span className="font-semibold text-sm">Panorama</span>
+                    <span className="text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-violet-100 text-violet-700 dark:bg-violet-950/60 dark:text-violet-300">
+                      Semanal
+                    </span>
+                  </div>
+                  <span className="text-xs text-muted-foreground">
+                    Negócios, mercado e gestão
+                  </span>
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  render={<Link href="/tech" />}
+                  className="flex flex-col items-start gap-0.5 p-2 rounded-md cursor-pointer hover:bg-muted/60 focus:bg-muted/60"
+                >
+                  <div className="flex items-center justify-between w-full">
+                    <span className="font-semibold text-sm">Tech</span>
+                    <span className="text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-indigo-100 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300">
+                      Quinzenal
+                    </span>
+                  </div>
+                  <span className="text-xs text-muted-foreground">
+                    Tecnologia, produto e IA
+                  </span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            {navItems.slice(1).map((item) => (
               <Link
                 key={item.href}
                 href={item.href}

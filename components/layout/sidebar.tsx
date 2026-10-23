@@ -49,7 +49,12 @@ export function AppSidebar() {
   const isRadarActive = pathname.startsWith("/dashboard/radar") || pathname.startsWith("/radar");
   const [prevPathname, setPrevPathname] = useState(pathname);
   const [ctcOpen, setCtcOpen] = useState(isCtcActive);
+  const isObservatorioActive =
+    pathname.startsWith("/dashboard/observatorio") ||
+    pathname.startsWith("/panorama") ||
+    pathname.startsWith("/tech");
   const [radarOpen, setRadarOpen] = useState(isRadarActive);
+  const [observatorioOpen, setObservatorioOpen] = useState(isObservatorioActive);
 
   if (prevPathname !== pathname) {
     setPrevPathname(pathname);
@@ -58,6 +63,9 @@ export function AppSidebar() {
     }
     if (isRadarActive) {
       setRadarOpen(true);
+    }
+    if (isObservatorioActive) {
+      setObservatorioOpen(true);
     }
   }
 
@@ -226,16 +234,69 @@ export function AppSidebar() {
               </SidebarMenuItem>
             </Collapsible>
 
-            <SidebarMenuItem>
-              <SidebarMenuButton
-                render={<Link href="/dashboard/observatorio" onClick={closeMobile} />}
-                isActive={pathname.startsWith("/dashboard/observatorio")}
-                tooltip="Observatório editorial"
-              >
-                <ShieldCheck className="size-4" />
-                <span>Observatório</span>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
+            {/* MÓDULO OBSERVATÓRIO */}
+            <Collapsible
+              open={observatorioOpen}
+              onOpenChange={setObservatorioOpen}
+              className="group/collapsible"
+            >
+              <SidebarMenuItem>
+                <CollapsibleTrigger
+                  render={
+                    <SidebarMenuButton
+                      isActive={isObservatorioActive}
+                      tooltip="Gestão Observatório"
+                    >
+                      <ShieldCheck className="size-4" />
+                      <span>Gestão Observatório</span>
+                      <ChevronRight className={`ml-auto size-4 transition-transform duration-200 ${observatorioOpen ? "rotate-90" : ""}`} />
+                    </SidebarMenuButton>
+                  }
+                />
+                <CollapsibleContent>
+                  <SidebarMenuSub>
+                    <SidebarMenuSubItem>
+                      <SidebarMenuSubButton
+                        render={<Link href="/dashboard/observatorio" onClick={closeMobile} />}
+                        isActive={pathname === "/dashboard/observatorio"}
+                      >
+                        <span>Visão Geral</span>
+                      </SidebarMenuSubButton>
+                    </SidebarMenuSubItem>
+                    <SidebarMenuSubItem>
+                      <SidebarMenuSubButton
+                        render={<Link href="/dashboard/observatorio/edicoes" onClick={closeMobile} />}
+                        isActive={pathname.startsWith("/dashboard/observatorio/edicoes")}
+                      >
+                        <span>Edições & Fila</span>
+                      </SidebarMenuSubButton>
+                    </SidebarMenuSubItem>
+                    <SidebarMenuSubItem>
+                      <SidebarMenuSubButton
+                        render={<Link href="/panorama" onClick={closeMobile} />}
+                        isActive={pathname.startsWith("/panorama")}
+                      >
+                        <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                          <Globe className="size-3" />
+                          Panorama Público
+                        </span>
+                      </SidebarMenuSubButton>
+                    </SidebarMenuSubItem>
+                    <SidebarMenuSubItem>
+                      <SidebarMenuSubButton
+                        render={<Link href="/tech" onClick={closeMobile} />}
+                        isActive={pathname.startsWith("/tech")}
+                      >
+                        <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                          <Globe className="size-3" />
+                          Tech Público
+                        </span>
+                      </SidebarMenuSubButton>
+                    </SidebarMenuSubItem>
+                  </SidebarMenuSub>
+                </CollapsibleContent>
+              </SidebarMenuItem>
+            </Collapsible>
           </SidebarMenu>
         </SidebarGroup>
 
