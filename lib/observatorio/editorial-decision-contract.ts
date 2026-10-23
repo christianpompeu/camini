@@ -46,10 +46,10 @@ function normalized(value: string): string {
 function fingerprint(request: EditorialDecisionRequest, actorUserId: string): string {
   return JSON.stringify({
     actorUserId,
-    contentHash: request.contentHash,
-    decision: request.decision,
-    editionId: request.editionId,
-    identifier: request.identifier,
+    contentHash: request.contentHash.trim().toLowerCase(),
+    decision: request.decision.trim().toLowerCase(),
+    editionId: request.editionId.trim().toLowerCase(),
+    identifier: request.identifier.trim(),
     justification: normalized(request.justification),
     version: request.version,
   });

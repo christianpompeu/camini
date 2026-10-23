@@ -75,6 +75,46 @@ test("hash canônico independe da ordem das chaves", () => {
   );
 });
 
+test("vetores do hash editorial permanecem aptos à verificação PostgreSQL", () => {
+  assert.equal(
+    hashEditorialContent({
+      schemaVersion: 1,
+      notionPageId: "page-vector-1",
+      edition: {
+        identificador: "2026-tech-vector",
+        canal: "tech",
+        titulo: "Vetor",
+        resumo: "Resumo",
+        criadaEm: "2026-10-23",
+        publicadaEm: null,
+        statusOriginal: "candidata",
+        revisaoOriginal: null,
+        slug: null,
+        declaredSupabaseId: null,
+      },
+      content: {
+        complete: true,
+        blocks: [{
+          id: "b1",
+          type: "paragraph",
+          data: { rich_text: [{ plain_text: "Olá" }] },
+          children: [],
+        }],
+      },
+    }),
+    "8d3a89630655715c1e1cec373703311a332803072f6559de94115417ed1ab687"
+  );
+  assert.equal(
+    hashEditorialContent({
+      b: 2,
+      a: 1,
+      nested: { z: 2, b: 3 },
+      transient: { url: "https://x", expiry_time: "2026-01-01T00:00:00Z" },
+    }),
+    "c98da04f76ded3771fde61cef42e8415e17eff651c55c46e61ce637889de7407"
+  );
+});
+
 test("planeja insert sem adotar UUID declarado inexistente", () => {
   const result = snapshotResult();
   const plan = planEditorialSync([result], [], "2026-10-22T12:00:00.000Z");

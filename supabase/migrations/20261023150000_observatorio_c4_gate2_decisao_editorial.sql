@@ -3,6 +3,93 @@
 -- Ambiente-alvo: Supabase HML hrpathjcxyzzwxgkhwnt
 -- Modelo de identidade: Alternativa A (Autenticação dedicada no Supabase HML)
 
+-- A canonicalização permanece a do C3/TypeScript: objetos com chaves ordenadas,
+-- arrays na ordem original, JSON compacto e remoção de url/expiry_time efêmeros.
+-- Esta função existe apenas para recalcular o digest no banco; não reescreve
+-- snapshots históricos.
+create extension if not exists pgcrypto with schema extensions;
+
+create or replace function public.observatorio_canonical_json(p_value jsonb)
+returns text
+language plpgsql
+immutable
+set search_path = pg_catalog
+as $$
+declare
+  v_type text := pg_catalog.jsonb_typeof(p_value);
+  v_result text;
+begin
+  if p_value is null or v_type = 'null' then
+    return 'null';
+  elsif v_type in ('string', 'number', 'boolean') then
+    return p_value::text;
+  elsif v_type = 'array' then
+    select '[' || coalesce(string_agg(public.observatorio_canonical_json(value), ',' order by ordinality), '') || ']'
+      into v_result
+      from pg_catalog.jsonb_array_elements(p_value) with ordinality as item(value, ordinality);
+    return v_result;
+  elsif v_type = 'object' then
+    select '{' || coalesce(string_agg(
+      pg_catalog.to_jsonb(key)::text || ':' || public.observatorio_canonical_json(value),
+      ',' order by key
+    ), '') || '}'
+      into v_result
+      from pg_catalog.jsonb_each(p_value) as item(key, value)
+     where key <> 'expiry_time'
+       and not (key = 'url' and pg_catalog.jsonb_typeof(p_value->'expiry_time') = 'string');
+    return v_result;
+  end if;
+  raise exception using errcode = '22023', message = 'JSON canonico invalido';
+end;
+$$;
+
+create or replace function public.observatorio_hash_editorial(p_value jsonb)
+returns text
+language sql
+immutable
+set search_path = pg_catalog
+as $$
+  select pg_catalog.encode(
+    extensions.digest(
+      pg_catalog.convert_to(public.observatorio_canonical_json(p_value), 'UTF8'),
+      'sha256'
+    ),
+    'hex'
+  )
+$$;
+
+revoke all on function public.observatorio_canonical_json(jsonb) from public, anon, authenticated, service_role;
+revoke all on function public.observatorio_hash_editorial(jsonb) from public, anon, authenticated, service_role;
+
+-- SECURITY DEFINER não deve transformar o executor técnico em ator humano.
+-- C3/C4 definem explicitamente observatorio.actor dentro da própria transação;
+-- registros antigos e demais chamadas preservam o fallback current_user.
+create or replace function public.observatorio_registrar_decisao()
+returns trigger
+language plpgsql
+security invoker
+set search_path = pg_catalog
+as $$
+begin
+  insert into public.observatorio_decisoes_historico (
+    entidade, entidade_id, operacao, antes, depois, run_key, ator
+  ) values (
+    tg_table_name,
+    case
+      when tg_table_name = 'observatorio_relacoes_evidencias' then
+        case when tg_op = 'DELETE' then (to_jsonb(old)->>'relacao_id')::uuid else (to_jsonb(new)->>'relacao_id')::uuid end
+      else case when tg_op = 'DELETE' then (to_jsonb(old)->>'id')::uuid else (to_jsonb(new)->>'id')::uuid end
+    end,
+    tg_op,
+    case when tg_op = 'INSERT' then null else to_jsonb(old) end,
+    case when tg_op = 'DELETE' then null else to_jsonb(new) end,
+    nullif(current_setting('observatorio.run_key', true), ''),
+    coalesce(nullif(current_setting('observatorio.actor', true), ''), current_user)
+  );
+  return case when tg_op = 'DELETE' then old else new end;
+end;
+$$;
+
 -- ============================================================================
 -- 1. SEGREGAÇÃO EFETIVA DE PRIVILÉGIOS EM public.observatorio_edicoes
 -- ============================================================================
@@ -62,6 +149,7 @@ begin
   end if;
 
   perform pg_catalog.set_config('observatorio.run_key', p_run_key, true);
+  perform pg_catalog.set_config('observatorio.actor', 'observatorio_c3', true);
 
   for v_item in select value from pg_catalog.jsonb_array_elements(p_edicoes) item(value)
   loop
@@ -92,6 +180,14 @@ begin
        or pg_catalog.jsonb_typeof(v_snapshot#>'{content,blocks}') is distinct from 'array'
        or pg_catalog.jsonb_typeof(v_snapshot->'contentHash') is distinct from 'string'
        or nullif(pg_catalog.btrim(v_snapshot->>'contentHash'), '') is null
+       or v_snapshot->>'contentHash' is distinct from public.observatorio_hash_editorial(
+         pg_catalog.jsonb_build_object(
+           'schemaVersion', v_snapshot->'schemaVersion',
+           'notionPageId', v_snapshot#>'{source,notionPageId}',
+           'edition', v_snapshot->'edition',
+           'content', v_snapshot->'content'
+         )
+       )
        or nullif(pg_catalog.btrim(v_notion_page_id), '') is null then
       raise exception using errcode = '22023', message = 'contrato de snapshot C3 invalido';
     end if;
@@ -321,10 +417,14 @@ begin
     raise exception using errcode = '42501', message = 'unauthenticated';
   end if;
 
+  perform pg_catalog.set_config('observatorio.actor', 'editorial:' || v_uid::text, true);
+
   -- 5.2 Validação de permissão editorial na allowlist ativa (revisor revogado é rejeitado imediatamente)
   select email into v_revisor_email
   from public.observatorio_revisores_edicoes
-  where user_id = v_uid and ativo is true;
+  where user_id = v_uid
+    and ativo is true
+  for update;
 
   if v_revisor_email is null then
     raise exception using errcode = '42501', message = 'editorial_permission_required';
@@ -378,15 +478,17 @@ begin
   end if;
 
   -- 5.5 Cálculo determinístico do fingerprint canônico
-  v_fingerprint := pg_catalog.jsonb_build_object(
-    'actorUserId', v_uid,
-    'contentHash', v_content_hash,
-    'decision', v_decision,
-    'editionId', v_edition_id,
-    'identifier', v_identifier,
-    'justification', v_justification,
-    'version', v_version
-  )::text;
+  -- Ordem explícita igual à função fingerprint TypeScript. Não usamos
+  -- jsonb::text: o jsonb reordena chaves e não é JSON.stringify.
+  v_fingerprint := '{' ||
+    '"actorUserId":' || pg_catalog.to_jsonb(v_uid::text)::text || ',' ||
+    '"contentHash":' || pg_catalog.to_jsonb(v_content_hash)::text || ',' ||
+    '"decision":' || pg_catalog.to_jsonb(v_decision)::text || ',' ||
+    '"editionId":' || pg_catalog.to_jsonb(v_edition_id::text)::text || ',' ||
+    '"identifier":' || pg_catalog.to_jsonb(v_identifier)::text || ',' ||
+    '"justification":' || pg_catalog.to_jsonb(v_justification)::text || ',' ||
+    '"version":' || v_version::text ||
+  '}';
 
   -- 5.6 Bloqueio Transacional em Ordem Determinística (Advisory Lock + SELECT FOR UPDATE)
   -- Adquire o lock ANTES de inspecionar idempotência para serializar requisições concorrentes.
@@ -463,7 +565,26 @@ begin
      or (v_current.snapshot#>>'{content,complete}')::boolean is distinct from true
      or pg_catalog.jsonb_typeof(v_current.snapshot#>'{content,blocks}') is distinct from 'array'
      or pg_catalog.jsonb_array_length(v_current.snapshot#>'{content,blocks}') = 0 then
-    raise exception using errcode = '22023', message = 'snapshot_incomplete';
+     raise exception using errcode = '22023', message = 'snapshot_incomplete';
+  end if;
+
+  if v_current.snapshot->>'contentHash' is distinct from public.observatorio_hash_editorial(
+       pg_catalog.jsonb_build_object(
+         'schemaVersion', v_current.snapshot->'schemaVersion',
+         'notionPageId', v_current.snapshot#>'{source,notionPageId}',
+         'edition', v_current.snapshot->'edition',
+         'content', v_current.snapshot->'content'
+       )
+     )
+     or v_content_hash is distinct from public.observatorio_hash_editorial(
+       pg_catalog.jsonb_build_object(
+         'schemaVersion', v_current.snapshot->'schemaVersion',
+         'notionPageId', v_current.snapshot#>'{source,notionPageId}',
+         'edition', v_current.snapshot->'edition',
+         'content', v_current.snapshot->'content'
+       )
+     ) then
+    raise exception using errcode = '22023', message = 'snapshot_hash_invalid';
   end if;
 
   -- 5.13 Efetivação atômica da transição de status
