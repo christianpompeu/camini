@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
-type EditorialStatus = "connecting" | "disconnected" | "authenticated" | "unauthorized" | "expired";
+type EditorialStatus = "connecting" | "disconnected" | "authenticated" | "unauthorized" | "expired" | "error";
 type EditorialContextValue = { accessToken: string | null; status: EditorialStatus };
 const EditorialContext = createContext<EditorialContextValue>({ accessToken: null, status: "disconnected" });
 
@@ -18,6 +18,7 @@ function statusLabel(status: EditorialStatus) {
   if (status === "authenticated") return "Sessao editorial HML autenticada e autorizada";
   if (status === "unauthorized") return "Sessao HML autenticada, sem permissao editorial";
   if (status === "expired") return "Sessao editorial HML expirada";
+  if (status === "error") return "Erro ao validar a sessao editorial HML";
   return "Sessao editorial HML desconectada";
 }
 
@@ -70,6 +71,7 @@ export function EditorialHmlSessionProvider({ children }: { children: React.Reac
         {message && <p role="alert" className="text-sm text-destructive">{message}</p>}
         {status === "unauthorized" && <p className="text-sm text-muted-foreground">A sessao HML e valida, mas este usuario nao possui permissao editorial ativa.</p>}
         {status === "expired" && <p className="text-sm text-destructive">A sessao HML nao pode ser validada. Conecte novamente.</p>}
+        {status === "error" && <p className="text-sm text-destructive">Nao foi possivel consultar a configuracao ou a allowlist HML.</p>}
       </CardContent>
     </Card>
     {children}

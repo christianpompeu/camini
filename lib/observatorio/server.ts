@@ -11,6 +11,8 @@ import {
   type PrivateSnapshotOptions,
 } from "./supabase-read-repository.ts";
 
+export { createObservatorioHmlActionClient } from "./supabase-read-repository.ts";
+
 export { ingestObservatorioBatchInHml } from "./supabase-ingestion.ts";
 
 export async function assertObservatorioAccess() {

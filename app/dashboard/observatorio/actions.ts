@@ -1,9 +1,10 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { getAuthorizedObservatorioActionClient } from "@/lib/observatorio/server";
+import { assertObservatorioAccess, createObservatorioHmlActionClient, getAuthorizedObservatorioActionClient } from "@/lib/observatorio/server";
 import { readPublicEdition } from "@/lib/observatorio/public";
 import type { CanalObservatorio } from "@/lib/observatorio/types";
+import { resolveEditorialHmlStatus, type EditorialHmlStatus } from "@/lib/observatorio/editorial-auth-status";
 
 export type ActionResult = { ok: true; status?: string; replay?: boolean; message: string; publicUrl?: string } | { ok: false; error: string };
 
@@ -31,20 +32,15 @@ async function callRpc(name: string, accessToken: string, body: Record<string, s
   return (response.data ?? {}) as { ok?: boolean; status?: string; replay?: boolean };
 }
 
-export async function getEditorialHmlStatus(accessToken: string): Promise<"authorized" | "unauthorized" | "expired"> {
+export async function getEditorialHmlStatus(accessToken: string): Promise<EditorialHmlStatus> {
   try {
-    const client = await getAuthorizedObservatorioActionClient(accessToken);
+    await assertObservatorioAccess();
+    const client = createObservatorioHmlActionClient(accessToken);
     const { data: { user }, error: userError } = await client.auth.getUser(accessToken);
-    if (userError || !user?.id) return "expired";
-    const allowlistClient = client as unknown as {
-      from: (table: "observatorio_revisores_edicoes") => {
-        select: (columns: "ativo") => { eq: (column: "user_id", value: string) => Promise<{ data: { ativo: boolean } | null; error: unknown }> };
-      };
-    };
-    const { data, error } = await allowlistClient.from("observatorio_revisores_edicoes").select("ativo").eq("user_id", user.id);
-    if (error) return "expired";
-    return data?.ativo === true ? "authorized" : "unauthorized";
-  } catch { return "expired"; }
+    if (userError || !user?.id) return resolveEditorialHmlStatus({ userId: user?.id ?? null, authError: true, allowlist: null, queryError: false });
+    const { data, error } = await client.from("observatorio_revisores_edicoes").select("ativo").eq("user_id", user.id).maybeSingle();
+    return resolveEditorialHmlStatus({ userId: user.id, authError: false, allowlist: data, queryError: Boolean(error) });
+  } catch { return "error"; }
 }
 
 function revalidateEdition(identifier: string, channelValue: string) {

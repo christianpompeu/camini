@@ -208,6 +208,36 @@ export type Database = {
           },
         ]
       }
+      observatorio_revisores_edicoes: {
+        Row: {
+          ativo: boolean
+          concedido_em: string
+          concedido_por: string
+          email: string
+          motivo_revogacao: string | null
+          revogado_em: string | null
+          user_id: string
+        }
+        Insert: {
+          ativo?: boolean
+          concedido_em?: string
+          concedido_por?: string
+          email: string
+          motivo_revogacao?: string | null
+          revogado_em?: string | null
+          user_id: string
+        }
+        Update: {
+          ativo?: boolean
+          concedido_em?: string
+          concedido_por?: string
+          email?: string
+          motivo_revogacao?: string | null
+          revogado_em?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       observatorio_eventos: {
         Row: {
           categoria: string
