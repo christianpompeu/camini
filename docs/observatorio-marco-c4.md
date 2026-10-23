@@ -142,227 +142,216 @@ A ponte Camini → HML continua condicionada à demonstração de autenticação
 
 ## Marco C4 / Gate 2 — Definição Arquitetural e Preparação da Implementação Persistente
 
-Data da definição: 23/10/2026  
-Status: Proposta técnica conclusiva e plano de implementação estruturado  
-Ambiente de destino: Supabase HML `hrpathjcxyzzwxgkhwnt`
+Data da consolidação: 23/10/2026  
+Status: Especificação final concluída, migration SQL endurecida e plano de 6 etapas estruturado  
+Ambiente de destino: Supabase HML `hrpathjcxyzzwxgkhwnt`  
+Branch: `feat/observatorio-fundacao`
 
 ---
 
-### 1. ADR Final — Modelo de Identidade Editorial
+### 1. ADR Final — Modelo de Identidade e Segregação de Privilégios
 
-#### Contexto e Problema
-O Gate 1 (leitura privada das edições e validação isolada do contrato de decisão) foi concluído e aprovado. Para habilitar as ações persistentes de **aprovação** e **rejeição** humana no Supabase HML sem reabrir discussões arquiteturais, é mandatório definir a fronteira de identidade do revisor.
+#### Contexto e Decisão de Identidade
+O Gate 1 (leitura privada das edições e validação isolada do contrato de decisão) foi concluído e aprovado. A arquitetura definitiva aprovada para esta fase é a **Alternativa A: Autenticação editorial dedicada no Supabase HML**.
 
-A análise técnica avaliou duas alternativas concretas com base nas capacidades reais do Supabase:
-
-- **Alternativa A — Autenticação dedicada no Supabase HML:** A identidade humana é autenticada diretamente pelo Supabase Auth do projeto HML (`hrpathjcxyzzwxgkhwnt`) e verificada contra uma allowlist local vinculada a `auth.uid()`.
-- **Alternativa B — Ponte server-side Camini → HML:** O Camini autentica o usuário em seu projeto principal, valida uma permissão editorial própria e transmite a decisão ao HML através de um canal administrativo restrito.
-
-#### Investigação Técnica e Limitações Comprovadas da Ponte Server-Side (Alternativa B)
-A análise minuciosa das interfaces do Supabase PostgREST e das restrições de segurança comprovou que a Alternativa B é inviável sob os critérios de menor privilégio e identidade confiável:
-
-1. **Ausência de credencial com granularidade intermediária no PostgREST:** O Supabase hospeda o PostgREST com duas chaves padrão (`anon` e `service_role`). Não há suporte nativo para provisionar uma terceira API key com papel customizado restrito apenas à execução de uma RPC específica.
-2. **Reuso inaceitável de `service_role`:** Criar uma variável de ambiente (como `OBSERVATORIO_HML_DECISION_KEY`) contendo o token `service_role` apenas mudaria o nome da variável, mas manteria os mesmos privilégios irrestritos do sincronizador (bypass de RLS e acesso a todas as tabelas).
-3. **Impossibilidade de demonstrar a identidade humana ao PostgreSQL:** Na chamada via PostgREST com `service_role`, `auth.uid()` é nulo no banco. O banco de dados teria que receber o identificador do ator como um parâmetro arbitrário de payload (`actor_user_id`), sem qualquer garantia criptográfica de que aquela pessoa realmente autenticou ou consentiu com a decisão.
-4. **Proibição de federação/assinatura de tokens:** Gerar e assinar JWTs customizados com o segredo do HML no servidor Camini para simular papéis violaria a restrição explícita do projeto de não inventar mecanismos de federação de tokens.
-
-#### Decisão Arquitetural Conclusiva: Alternativa A (Autenticação Dedicada no HML)
-Adota-se conclusivamente a **Alternativa A**:
-
-- **Identidade Nativa:** O revisor humano autentica-se diretamente contra o Supabase Auth do HML. O PostgreSQL recebe a requisição com o papel `authenticated` e extrai `v_actor_user_id := auth.uid()` diretamente da sessão criptografada.
-- **Menor Privilégio Real:** A RPC de decisão pertence exclusivamente ao papel `authenticated` (`GRANT EXECUTE TO authenticated`). O papel `service_role` tem sua permissão de execução expressamente revogada (`REVOKE EXECUTE FROM service_role`), impedindo categoricamente que processos em lote ou coletores aprovem ou rejeitem edições.
+- **Identidade Nativa:** O revisor humano autentica-se diretamente contra o Supabase Auth do projeto HML (`hrpathjcxyzzwxgkhwnt`). O PostgreSQL recebe a requisição com o papel `authenticated` e extrai `v_actor_user_id := auth.uid()` diretamente da sessão criptografada.
 - **Identidade Blindada:** O payload JSON enviado pelo cliente é proibido de conter campos de identidade (`actor_user_id` / `actorUserId`). A tentativa de injetar identidade de cliente aborta a transação com `42501 (client_identity_forbidden)`.
-- **Revogação Local e Instantânea:** A allowlist reside em `public.observatorio_revisores_edicoes` no próprio HML. A revogação (`ativo = false`) surte efeito imediatamente na próxima transação.
-- **Operação Enxuta:** Dado que o Observatório possui um grupo restrito de editores humanos (1 a 3 revisores seniores), o provisionamento direto no HML é simples, robusto e elimina qualquer dependência de ponte administrativa.
+- **Allowlist Restrita:** A permissão editorial reside na tabela `public.observatorio_revisores_edicoes`, vinculada a `auth.users(id)` e protegida por RLS por identidade (`auth.uid() = user_id AND ativo = true`). A revogação (`ativo = false`) tem efeito imediato na próxima transação.
+
+#### Segregação Efetiva de Privilégios (C3 vs. Decisão Humana)
+A auditoria independente identificou que a credencial `service_role` possuía originalmente permissão direta de `UPDATE` sobre `public.observatorio_edicoes`. Para eliminar qualquer possibilidade de mutação direta ou bypass pelo sincronizador C3 ou por chaves técnicas:
+
+1. **Revogação de Mutação Direta:**
+   `REVOKE INSERT, UPDATE, DELETE, TRUNCATE ON TABLE public.observatorio_edicoes FROM public, anon, authenticated, service_role;`
+   Nenhum papel de aplicação consegue executar comandos DML de alteração direta de estado sobre a tabela `observatorio_edicoes`.
+2. **Sincronizador C3 Restrito (`SECURITY DEFINER`):**
+   A função `public.observatorio_sync_edicoes` foi convertida para `SECURITY DEFINER` (executável por `service_role`), com `SET search_path = pg_catalog`.
+   - Permite apenas inserções e atualizações de edições no estado `'candidata'`.
+   - Se a edição possuir `status <> 'candidata'`, `aprovada_em IS NOT NULL`, `rejeitada_em IS NOT NULL` ou `publicada_em IS NOT NULL`, a execução é abortada com `42501 (estado editorial HML protegido)`.
+   - O sincronizador não possui autorização nem capacidade de alterar estados para aprovada, rejeitada ou publicada.
+3. **Decisão Humana Restrita (`SECURITY DEFINER` para `authenticated`):**
+   A função `public.observatorio_decidir_edicao` pertence ao papel `authenticated`, com revogação explícita para `service_role` (`REVOKE ALL FROM service_role`).
+   - Apenas revisores humanos ativos na allowlist conseguem aprovar ou rejeitar.
+   - O sincronizador não possui privilégio de execução (`EXECUTE`) na função de decisão.
+4. **Allowlist Protegida:**
+   `REVOKE ALL ON TABLE public.observatorio_revisores_edicoes FROM public, anon, authenticated, service_role;`
+   `GRANT SELECT ON TABLE public.observatorio_revisores_edicoes TO authenticated;` (com RLS).
+   O papel `service_role` não possui privilégio de leitura ou escrita na allowlist de revisores. Somente o superusuário/DBA (`postgres`) pode inserir ou revogar revisores.
 
 ---
 
-### 2. Desenho da Persistência Mínima
+### 2. Matriz de Permissões Efetivas por Papel
 
-A persistência do Gate 2 adiciona exclusivamente as estruturas necessárias para o ciclo de vida editorial das edições, sem reutilizar a tabela `observatorio_aprovacoes_editoriais` (restrita às relações causais do grafo) e sem misturar status editorial com assinantes, pagamentos ou publicação.
+| Objeto / Recurso | Papel `anon` | Papel `service_role` (C3) | Papel `authenticated` (Revisores) | DBA / `postgres` |
+| :--- | :---: | :---: | :---: | :---: |
+| `public.observatorio_edicoes` (SELECT) | ❌ Bloqueado | ✅ Permitido | ✅ Permitido | ✅ Total |
+| `public.observatorio_edicoes` (INSERT/UPDATE/DELETE) | ❌ Bloqueado | ❌ **Revogado** | ❌ **Revogado** | ✅ Total |
+| `public.observatorio_revisores_edicoes` (SELECT) | ❌ Bloqueado | ❌ **Revogado** | ✅ Próprio ID ativo (RLS) | ✅ Total |
+| `public.observatorio_revisores_edicoes` (INSERT/UPDATE/DELETE)| ❌ Bloqueado | ❌ **Revogado** | ❌ Bloqueado | ✅ Total |
+| `public.observatorio_edicoes_decisoes` (SELECT) | ❌ Bloqueado | ❌ **Revogado** | ✅ Próprias decisões (RLS) | ✅ Total |
+| `public.observatorio_edicoes_decisoes` (INSERT/UPDATE/DELETE)| ❌ Bloqueado | ❌ **Revogado** | ❌ Bloqueado (Append-Only) | ✅ Total |
+| RPC `observatorio_sync_edicoes` (EXECUTE) | ❌ Bloqueado | ✅ **Exclusivo** | ❌ Bloqueado | ✅ Total |
+| RPC `observatorio_decidir_edicao` (EXECUTE) | ❌ Bloqueado | ❌ **Revogado** | ✅ **Exclusivo** (Allowlist) | ✅ Total |
 
-#### A. Tabela de Allowlist de Revisores (`public.observatorio_revisores_edicoes`)
-Armazena a permissão editorial explícita e revogável:
-- `user_id uuid primary key references auth.users (id) on delete cascade`;
-- `email text not null`;
-- `ativo boolean not null default true`;
-- `concedido_em timestamptz not null default now()`;
-- `concedido_por text not null default current_user`;
-- `revogado_em timestamptz`;
-- `motivo_revogacao text`.
-
-*Segurança:* RLS habilitado. Leitura permitida apenas para o próprio usuário autenticado (`user_id = auth.uid() and ativo = true`). Mutação restrita à administração do banco.
-
-#### B. Tabela de Auditoria Imutável (`public.observatorio_edicoes_decisoes`)
-Registro append-only de todas as decisões humanas tomadas sobre edições:
-- `id uuid primary key default gen_random_uuid()`;
-- `edicao_id uuid not null references public.observatorio_edicoes (id)`;
-- `identificador text not null`;
-- `notion_page_id text not null`;
-- `decisao text not null check (decisao in ('aprovar', 'rejeitar'))`;
-- `justificativa text not null check (length(btrim(justificativa)) >= 10)`;
-- `versao integer not null check (versao >= 1)`;
-- `content_hash text not null check (content_hash ~ '^[a-f0-9]{64}$')`;
-- `actor_user_id uuid not null references auth.users (id)`;
-- `actor_email text not null`;
-- `chave_idempotencia text not null unique`;
-- `fingerprint text not null`;
-- `snapshot_congelado jsonb not null`;
-- `decidido_em timestamptz not null default now()`.
-
-*Segurança e Índices:*
-- Índices em `(edicao_id, decidido_em desc)` e `(identificador)`.
-- RLS habilitado (leitura apenas de registros próprios).
-- Trigger append-only `observatorio_edicoes_decisoes_append_only` bloqueia `UPDATE` e `DELETE` incondicionalmente via `observatorio_bloquear_mutacao_auditoria()`.
-
-#### C. Campo Operacional em `public.observatorio_edicoes`
-- `rejeitada_em timestamptz` adicionado para marcar o timestamp de rejeição formal, em perfeita simetria com `aprovada_em` e `publicada_em`.
+*Limites de segurança remanescentes para papéis administrativos:* Superusuários PostgreSQL (`postgres`) mantêm controle do banco para migrações e auditoria; nenhuma credencial de aplicação (seja `anon` ou `service_role`) possui permissão de mutação direta sobre estados editoriais ou allowlist.
 
 ---
 
-### 3. Operação Transacional de Decisão (RPC)
+### 3. Concorrência Determinística, Idempotência e Replay
 
-A operação persistente será formalizada na função `public.observatorio_decidir_edicao(p_payload jsonb)`:
+#### Problema Identificado na Versão Anterior
+Na proposta preliminar, a verificação da chave de idempotência ocorria antes da aquisição dos locks transacionais. Essa brecha permitia que duas requisições simultâneas passassem simultaneamente pela verificação de replay e competissem pelo lock da edição, podendo uma requisição legítima ser rejeitada com erro de concorrência ou colisão de estado.
 
-#### Parâmetros de Entrada (`p_payload jsonb`)
-- `edition_id`: UUID da edição;
-- `identifier`: identificador canônico textual;
-- `version`: número da versão examinada na interface;
-- `content_hash`: hash SHA-256 de 64 caracteres do conteúdo examinado;
-- `decision`: `'aprovar'` ou `'rejeitar'` (qualquer outro valor é rejeitado; `'publicada'` é terminantemente bloqueada);
-- `justification`: texto com justificativa editorial (mínimo 10 caracteres);
-- `idempotency_key`: chave única gerada para a ação.
+#### Solução Estruturada com Ordem Determinística
+A RPC `observatorio_decidir_edicao` adota a seguinte ordem rigorosa de serialização:
 
-#### Sequência Transacional Obrigatória
-1. **Autenticação:** Valida `v_uid := auth.uid()`. Se nulo, falha com código `42501 (unauthenticated)`.
-2. **Autorização e Revogação:** Consulta `observatorio_revisores_edicoes` por `user_id = v_uid AND ativo = true`. Se não localizado, falha com `42501 (editorial_permission_required)`.
-3. **Proteção contra Forja de Identidade:** Rejeita a requisição se contiver `actor_user_id` no payload com `42501 (client_identity_forbidden)`.
-4. **Validação de Sintaxe e Domínio:** Garante preenchimento de campos obrigatórios, versão inteira positiva, decisão válida (`aprovar`/`rejeitar`) e justificativa `>= 10` caracteres.
-5. **Fingerprint e Idempotência:**
-   - Calcula fingerprint canônico via `jsonb_build_object('actorUserId', v_uid, 'contentHash', v_content_hash, 'decision', v_decision, 'editionId', v_edition_id, 'identifier', v_identifier, 'justification', v_justification, 'version', v_version)`.
-   - Se `chave_idempotencia` já existir:
-     - Se fingerprint, ator e decisão coincidirem com o registro persistido, retorna sucesso com `replay: true` sem nova escrita.
-     - Se qualquer dado divergir, aborta com `23505 (idempotency_key_reused)`.
-6. **Concorrência e Locks:**
-   - Adquire advisory lock transacional pelo hash do identificador: `pg_advisory_xact_lock(hashtextextended(v_identifier, 0))`.
-   - Executa `SELECT * FROM observatorio_edicoes WHERE id = v_edition_id FOR UPDATE`.
-7. **Validação de Estado e Snapshot:**
-   - Exige `status = 'candidata'`, `aprovada_em IS NULL` e `publicada_em IS NULL`. Se violado, falha com `42501 (editorial_state_not_candidate)`.
-   - Exige que `versao` e `contentHash` correspondam aos examinados pelo revisor. Se divergirem, falha com `40001 (stale_version / stale_content_hash)`.
-   - Exige snapshot íntegro (`complete = true` e blocos presentes).
-8. **Efetivação Atômica:**
-   - Atualiza `observatorio_edicoes` para `status = 'aprovada'` (com `aprovada_em = now()`) ou `status = 'rejeitada'` (com `rejeitada_em = now()`).
-   - Insere na tabela imutável `observatorio_edicoes_decisoes` com o snapshot congelado no momento da decisão.
-9. **Permissões Granulares:**
-   - `REVOKE ALL ON FUNCTION public.observatorio_decidir_edicao(jsonb) FROM public, anon, service_role;`
-   - `GRANT EXECUTE ON FUNCTION public.observatorio_decidir_edicao(jsonb) TO authenticated;`
+```
+[Requisição Recebida]
+         │
+         ▼
+[1. Autenticação & Allowlist Ativa] ──> Erro 42501 se inválido
+         │
+         ▼
+[2. Validação Estrita de Sintaxe & Tipos] ──> Erro 22023 se inválido
+         │
+         ▼
+[3. SERIALIZAÇÃO DETERMINÍSTICA]
+    a) Advisory Lock: pg_advisory_xact_lock(hashtextextended(identifier, 0))
+    b) Row Lock Exclusivo: SELECT * FROM observatorio_edicoes FOR UPDATE
+         │
+         ▼
+[4. Verificação de Idempotência / Replay (SOB LOCK)]
+    ├── Encontrou chave?
+    │    ├── Mesmo ator, fingerprint, edição e decisão ──> Retorna replay: true (SEM MUTAR)
+    │    └── Divergência de payload/ator/decisão ──> Erro 23505 (idempotency_key_reused)
+    │
+    ▼ (Se chave não existia)
+[5. Validação de Pré-condições da Edição]
+    ├── Status = 'candidata' e sem carimbos prévios? ──> Erro 42501 se já decidida
+    ├── Decisão terminal prévia na mesma versão? ──> Erro 42501 (unicidade de ciclo)
+    ├── Versão e ContentHash examinados coincidem? ──> Erro 40001 (stale_version/hash)
+    └── Snapshot íntegro (complete=true, blocks array > 0)? ──> Erro 22023 se incompleto
+         │
+         ▼
+[6. Efetivação Atômica]
+    ├── UPDATE observatorio_edicoes (status = 'aprovada'/'rejeitada', timestamps)
+    └── INSERT INTO observatorio_edicoes_decisoes (snapshot congelado, chave, fingerprint)
+         │
+         ▼
+[7. Retorno com Sucesso (replay: false)]
+```
 
-*Garantia de Isolamento com o Sincronizador C3:* A migration C3 (`observatorio_sync_edicoes`) já protege explicitamente edições com `status <> 'candidata'` ou `aprovada_em IS NOT NULL`. Portanto, uma vez aprovada ou rejeitada no Gate 2, a edição torna-se imutável para o sincronizador Notion, impedindo sobrescritas automáticas.
+#### Matriz de Comportamento Concorrente e Replay
+
+| Cenário Concorrente | Comportamento Garantido | Resultado Esperado |
+| :--- | :--- | :--- |
+| **Duas requisições simultâneas idênticas** (mesma chave e mesmo payload) | A 1ª adquire o lock, decide e comita; a 2ª aguarda no lock, lê a decisão comitada e reconhece o replay idêntico. | 1 decisão gravada; 1 resposta nova + 1 resposta com `replay: true`. Sem duplicar auditoria. |
+| **Duas requisições com chaves diferentes** para a mesma edição | A 1ª comita a decisão; a 2ª obtém o lock, detecta que a edição não é mais `candidata`. | 1ª aprovada/rejeitada; 2ª abortada com `42501 (editorial_state_not_candidate)`. |
+| **Mesma chave reutilizada com payload divergente** | Sob lock, detecta discrepância entre o fingerprint persistido e a nova solicitação. | Abortada com `23505 (idempotency_key_reused)`. Nenhuma alteração. |
+| **Outro revisor tenta reutilizar chave de terceiro** | Sob lock, detecta `actor_user_id <> v_uid`. | Abortada com `23505 (idempotency_key_reused)`. |
+| **Revisor revogado tenta decidir ou obter replay** | Rejeitado na etapa 1 (autorização prévia a qualquer leitura ou lock). | Abortada com `42501 (editorial_permission_required)`. |
+| **Mutação concorrente pelo Notion durante a revisão** | Sincronizador C3 altera a versão ou contentHash da edição candidata. | Revisor é rejeitado com `40001 (stale_version / stale_content_hash)`. |
+| **Tentativa de mutação direta no histórico append-only** | Trigger `observatorio_edicoes_decisoes_append_only` intercepta UPDATE/DELETE. | Abortada com `42501 (auditoria append-only: mutacao bloqueada)`. |
 
 ---
 
-### 4. Plano de Implementação em 4 Etapas Executáveis
+### 4. Sequência Ordenada de Implantação (Etapas A a F)
+
+A implantação do Gate 2 está estruturada em seis etapas sequenciais e estritamente controladas:
 
 ```
 +-------------------------------------------------------------------------------+
-| ETAPA A: Identidade e Permissões (Provisionamento e Allowlist no HML)         |
+| ETAPA A: Migration Validada (DDL, RLS, Grants de Menor Privilégio e RPC)      |
 +-------------------------------------------------------------------------------+
-                                      |
-                                      v
+                                      │
+                                      ▼
 +-------------------------------------------------------------------------------+
-| ETAPA B: Persistência e Transação (Migration DDL, RLS, Trigger e RPC)         |
+| ETAPA B: Provisionamento Auth (Criação de Usuário Revisor no Supabase HML)   |
 +-------------------------------------------------------------------------------+
-                                      |
-                                      v
+                                      │
+                                      ▼
 +-------------------------------------------------------------------------------+
-| ETAPA C: Interface de Decisão (Ações Aprovar/Rejeitar no Detalhe Privado)     |
+| ETAPA C: Ativação da Allowlist (Inserção Administrativa na Tabela de Revisores)|
 +-------------------------------------------------------------------------------+
-                                      |
-                                      v
+                                      │
+                                      ▼
 +-------------------------------------------------------------------------------+
-| ETAPA D: Verificação Ponta a Ponta (E2E com Fixture Isolada e Matriz Negativa)|
+| ETAPA D: Interface Privada (Conexão da Sessão HML à Tela de Decisão)         |
++-------------------------------------------------------------------------------+
+                                      │
+                                      ▼
++-------------------------------------------------------------------------------+
+| ETAPA E: Homologação Controlada (Bateria de Testes em Fixture Isolada)        |
++-------------------------------------------------------------------------------+
+                                      │
+                                      ▼
++-------------------------------------------------------------------------------+
+| ETAPA F: Aceite Formal do Gate 2 (Apresentação de Evidências e Liberação)    |
 +-------------------------------------------------------------------------------+
 ```
 
-#### Etapa A — Identidade e Permissões
-- **Arquivos envolvidos:** Painel Supabase HML (`hrpathjcxyzzwxgkhwnt`), `.env.local` (apenas para eventual usuário de teste).
-- **Estruturas novas:** Usuário revisor em `auth.users` do HML; registro correspondente na allowlist `observatorio_revisores_edicoes`.
-- **Operações previstas:** Criação de 1 conta humana de revisor no Supabase Auth HML; inserção manual/controlada do registro na allowlist com `pode_revisar = true` e `ativo = true`.
-- **Permissões exigidas:** Acesso administrativo ao dashboard do Supabase HML.
-- **Critérios de aceite:** O revisor consegue obter um token de sessão válido emitido pelo HML (`role: authenticated`).
-- **Risco residual:** Uso indevido de credenciais caso compartilhadas (mitigado por senhas fortes e MFA no HML).
-- **Necessidade de autorização humana:** **SIM (Operação 1 e Operação 3).**
+#### Etapa A — Migration Validada
+- **Objetivo:** Aplicar o esquema persistente, triggers append-only, revogação de privilégios de `service_role`, endurecimento de C3 `SECURITY DEFINER` e a RPC `observatorio_decidir_edicao`.
+- **Pré-requisito:** Autorização humana prévia para execução de DDL.
+- **Arquivo:** `supabase/migrations/20261023150000_observatorio_c4_gate2_decisao_editorial.sql`.
+- **Verificação pós-etapa:** Executar consultas de `has_table_privilege` e `has_function_privilege` confirmando que `service_role` perdeu `UPDATE` direto e que a allowlist está inacessível para papéis anônimos/públicos.
+- **Contingência:** Script de rollback DDL preparado (reverter colunas e tabelas, restaurar permissões originais se houver falha de sintaxe).
 
-#### Etapa B — Persistência e Transação
-- **Arquivos envolvidos:** `supabase/migrations/20261023150000_observatorio_c4_gate2_decisao_editorial.sql`.
-- **Estruturas novas:** Tabelas `observatorio_revisores_edicoes` e `observatorio_edicoes_decisoes`, coluna `rejeitada_em` em `observatorio_edicoes`, trigger append-only e RPC `observatorio_decidir_edicao(jsonb)`.
-- **Operações previstas:** Aplicação da migration local proposta via CLI ou console SQL do HML.
-- **Permissões exigidas:** Papel `postgres` / `service_role` para execução de DDL no HML.
-- **Critérios de aceite:** DDL aplicado com sucesso; testes de segurança confirmando que `service_role` e `anon` não conseguem executar a RPC; trigger append-only bloqueia `UPDATE`/`DELETE` na auditoria.
-- **Risco residual:** Conflito de nomes ou tipos (mitigado pelo script com `if not exists` e tipagem estrita).
-- **Necessidade de autorização humana:** **SIM (Operação 2).**
+#### Etapa B — Provisionamento Auth
+- **Objetivo:** Criar a conta de revisor editorial de teste no Supabase Auth do projeto HML (`hrpathjcxyzzwxgkhwnt`).
+- **Momento:** Executado **após** a aplicação da migration da Etapa A, garantindo que as tabelas de destino já existam.
+- **Pré-requisito:** Autorização humana prévia para cadastro de credencial de teste.
+- **Verificação pós-etapa:** Confirmar existência do usuário em `auth.users` com e-mail e UUID válidos, sem conceder nenhum papel de superadmin.
 
-#### Etapa C — Interface de Decisão
-- **Arquivos envolvidos:**
-  - `app/dashboard/observatorio/edicoes/[identificador]/page.tsx`
-  - `components/observatorio/editorial-decision-box.tsx` (novo componente de decisão)
-  - `lib/observatorio/editorial-decision-actions.ts` (ações server/client autenticadas no HML)
-- **Estruturas novas:** Painel de decisão no detalhe da edição com:
-  - Botões distintos para **Aprovar Edição** e **Rejeitar Edição**;
-  - Campo de texto para **Justificativa Editorial Obrigatória** (mínimo 10 caracteres);
-  - Modal de confirmação explícito com resumo da versão e hash examinados;
-  - Feedback visual de status e histórico da decisão.
-- **Operações previstas:** Renderização do formulário interativo de decisão apenas quando a edição estiver em status `candidata` e a sessão HML estiver presente.
-- **Permissões exigidas:** Permissão de leitura do dashboard Camini + sessão ativa no HML.
-- **Critérios de aceite:** Validação client-side impede envio com justificativa menor que 10 caracteres; a requisição é transmitida com JWT do HML; a UI reflete o novo status após a resposta da RPC.
-- **Risco residual:** Erro de renderização em sessões expiradas (mitigado por tratamento explícito de erro HTTP 401/42501).
-- **Necessidade de autorização humana:** Não para o código frontend local; sim para conectar à base remota.
+#### Etapa C — Ativação da Allowlist
+- **Objetivo:** Vincular o `user_id` provisionado na tabela `public.observatorio_revisores_edicoes` com `ativo = true`.
+- **Modo de execução:** Inserção puramente administrativa (via console SQL autenticado como superusuário/DBA).
+- **Verificação pós-etapa:** Testar que o usuário autenticado consegue ler o próprio registro via RLS (`observatorio_revisores_edicoes_leitura_propria`), mas não consegue alterar registros de terceiros nem inserir novos revisores.
 
-#### Etapa D — Verificação Ponta a Ponta (E2E)
-- **Arquivos envolvidos:** Script de validação isolada (ex: `scripts/test-c4-gate2-e2e.ts`) e testes automatizados de integração.
-- **Estruturas novas:** Fixture de teste temporária `teste-c4-gate2-fixture` inserida em `observatorio_edicoes` (NUNCA executar sobre as 6 candidatas reais).
-- **Operações previstas:**
-  1. Teste positivo de aprovação com usuário autorizado e justificativa válida.
-  2. Teste de replay idempotente com mesma chave e payload (deve retornar `replay: true` sem duplicar histórico).
-  3. Teste negativo com usuário autenticado mas fora da allowlist (deve falhar com `42501`).
-  4. Teste negativo com revisor revogado (`ativo = false`) (deve falhar com `42501`).
-  5. Teste negativo com justificativa curta `< 10` caracteres (deve falhar com `22023`).
-  6. Teste negativo de chave de idempotência reutilizada com dados divergentes (deve falhar com `23505`).
-  7. Teste negativo de colisão de versão ou hash adulterado (deve falhar com `40001`).
-  8. Teste negativo de concorrência simultânea contra o mesmo identificador.
-- **Permissões exigidas:** Credenciais dos dois usuários de teste (autorizado e não autorizado).
-- **Critérios de aceite:** 100% dos cenários positivos e negativos da matriz aprovados com os códigos de erro exatos.
-- **Risco residual:** Deixar dados residuais de teste (mitigado por limpeza controlada da fixture ao término).
-- **Necessidade de autorização humana:** **SIM (Operação 4).**
+#### Etapa D — Interface Privada
+- **Objetivo:** Conectar a interface do dashboard privado (`/dashboard/observatorio/edicoes/[identificador]`) ao fluxo de decisão, mantendo a autenticação editorial do HML devidamente segregada da autenticação principal do Camini.
+- **Componentes:** Caixa de decisão editorial com validação de justificativa (mínimo 10 caracteres aparados), confirmação de versão/hash examinados, botões Aprovar e Rejeitar, e tratamento de replay idempotente.
+- **Verificação pós-etapa:** Build de produção aprovado, rotas compiladas sem vazamento de segredos, validações visuais operacionais.
+
+#### Etapa E — Homologação Controlada
+- **Objetivo:** Executar a matriz completa de testes de integração e concorrência sobre uma **fixture sintética isolada** (ex: `teste-c4-gate2-fixture`), sem tocar nos seis registros candidatos reais.
+- **Script de teste:** `scripts/observatorio-c4-gate2-test-plan.sql`.
+- **Cenários testados:**
+  1. Sucesso de aprovação e rejeição com justificativa e hash válidos.
+  2. Replay idempotente (mesma chave retorna `replay: true` sem duplicar histórico).
+  3. Rejeição de chave reutilizada com payload divergente (`23505`).
+  4. Bloqueio de usuário não-autenticado e usuário fora da allowlist (`42501`).
+  5. Bloqueio imediato de revisor revogado (`42501`).
+  6. Bloqueio de snapshot obsoleto ou versão divergente (`40001`).
+  7. Proteção append-only contra UPDATE ou DELETE na auditoria (`42501`).
+  8. Preservação do sincronizador C3 (continua sincronizando candidatas e é bloqueado contra mutação de edições aprovadas).
+
+#### Etapa F — Aceite Formal do Gate 2
+- **Objetivo:** Consolidar o dossiê de evidências e submeter para aprovação humana deliberada para o encerramento do Gate 2.
+- **Critérios de Aceite:**
+  - [ ] Migration aplicada com integridade estrutural e permissões verificadas no HML.
+  - [ ] `service_role` comprovadamente sem permissão de mutação direta sobre `observatorio_edicoes`.
+  - [ ] Revisor humano de homologação consegue aprovar/rejeitar a fixture de teste com registro de auditoria imutável.
+  - [ ] Nenhuma das seis edições candidatas reais foi alterada ou corrompida.
+  - [ ] O sincronizador C3 permanece operacional para candidatas e respeita a imutabilidade de edições decididas.
 
 ---
 
-### 5. Lista Exata de Operações que Exigem Autorização Prévia
+### 5. Parecer Objetivo de Prontidão
 
-Para implementar o Gate 2 persistente de forma estritamente controlada, as seguintes quatro operações dependerão de aprovação formal:
+- **Prontidão Técnica da Migration e Contratos:** **100% PRONTO.**
+  A migration SQL `supabase/migrations/20261023150000_observatorio_c4_gate2_decisao_editorial.sql` foi integralmente revisada, os locks transacionais foram reordenados para garantir concorrência determinística, a segregação do `service_role` foi blindada com C3 `SECURITY DEFINER`, as validações de tipos e do snapshot JSONB foram endurecidas, e o plano de testes está formalizado.
+- **Estado dos Testes Locais:**
+  - Contrato de decisão: 6/6 aprovados (`npm run test:observatorio-c4-contract`).
+  - Páginas públicas e sanitização: 12/12 aprovados (`npm run test:observatorio-public`).
+  - TypeScript e lint: 0 erros (`npx tsc --noEmit`).
+  - Build do Next.js: verde (86 páginas estáticas/dinâmicas compiladas).
+- **Status Operacional dos Ambientes:**
+  - **NÃO APLICADO:** Nenhuma migration foi executada no Supabase HML.
+  - **NÃO PROVISIONADO:** Nenhuma conta Auth foi criada no HML.
+  - **NÃO ATIVADO:** Nenhuma allowlist ou fixture foi inserida no HML.
+  - **PRESERVADO:** Os seis registros candidatos reais do HML permanecem intocados.
+- **Recomendação Conclusiva:**
+  Solicitar formalmente autorização humana para iniciar a **Etapa A** (aplicação controlada da migration no Supabase HML) e, sequencialmente, as etapas B a F conforme o plano acordado.
 
-1. **Operação 1 (Provisionamento Auth HML):** Criar a conta de revisor editorial em `auth.users` no Supabase HML (`hrpathjcxyzzwxgkhwnt`).
-2. **Operação 2 (Execução da Migration):** Aplicar o script `supabase/migrations/20261023150000_observatorio_c4_gate2_decisao_editorial.sql` no HML.
-3. **Operação 3 (Ativação da Allowlist):** Inserir o UUID da conta provisionada na tabela `public.observatorio_revisores_edicoes`.
-4. **Operação 4 (Criação de Fixture Isolada de Teste):** Inserir no HML um registro pontual de teste (`identificador: teste-c4-gate2-fixture`) para execução do E2E, sem tocar nas seis candidatas reais.
-
----
-
-### 6. Critérios de Aceite do Gate 2
-
-O Gate 2 só será considerado concluído quando:
-- [ ] A migration estiver aplicada sem erros e com permissões conferidas no HML.
-- [ ] `service_role` estiver expressamente sem permissão de execução na RPC de decisão.
-- [ ] O revisor humano conseguir aprovar e rejeitar a fixture de teste a partir da interface privada.
-- [ ] Replays com a mesma chave forem reconhecidos sem gerar registros adicionais de auditoria.
-- [ ] Tentativas de decisão por usuários não autorizados ou revogados forem bloqueadas no banco com `42501`.
-- [ ] Nenhuma das seis candidatas reais do HML for modificada antes do encerramento formal dos testes.
-- [ ] A sincronização C3 respeitar o snapshot aprovado e não sobrescrever edições decididas.
-
----
-
-### 7. Parecer Conclusivo
-
-- **GO para a Arquitetura e Especificação do Gate 2:** A definição do modelo de identidade (Alternativa A), o esquema de dados, a RPC transacional e o plano de 4 etapas estão consolidados, blindados e alinhados às regras do projeto.
-- **NO-GO para Persistência Imediata:** Nenhuma migration foi aplicada, nenhum usuário foi criado, nenhuma permissão foi alterada no HML e nenhuma edição foi aprovada ou rejeitada. A persistência aguarda a liberação explícita das operações listadas.
 
