@@ -33,12 +33,12 @@ export async function assertObservatorioAccess() {
   if (permissionError || !allowed) throw new ObservatorioAccessError();
 }
 
-export async function getAuthorizedObservatorioActionClient() {
+export async function getAuthorizedObservatorioActionClient(accessToken: string) {
   await assertObservatorioAccess();
-  const sessionClient = await createSessionClient();
-  const { data: { session } } = await sessionClient.auth.getSession();
-  if (!session?.access_token) throw new ObservatorioAccessError();
-  return createObservatorioHmlActionClient(session.access_token);
+  const client = createObservatorioHmlActionClient(accessToken);
+  const { data: { user }, error } = await client.auth.getUser(accessToken);
+  if (error || !user?.id) throw new ObservatorioAccessError();
+  return client;
 }
 
 export async function readAuthorizedObservatorioSnapshot(
