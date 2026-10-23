@@ -39,18 +39,35 @@ test("publication policy excludes every incomplete editorial state", () => {
 test("only a complete published snapshot reaches the public list", () => {
   const published = edition({
     status: "publicada",
-    aprovada_em: "2026-10-23T01:00:00.000Z",
-    publicada_em: "2026-10-23T02:00:00.000Z",
+    criada_em: "2026-10-23T02:32:42Z",
+    aprovada_em: "2026-10-23T03:00:00.000Z",
+    publicada_em: "2026-10-23T04:00:00.000Z",
     snapshot: {
       schemaVersion: 1,
       source: { type: "notion", notionPageId: "page", notionUrl: null, lastEditedTime: null },
-      edition: { identificador: "edicao-teste", canal: "panorama", titulo: "Edição de teste", resumo: "Resumo", criadaEm: "2026-10-23T00:00:00.000Z", publicadaEm: "2026-10-23T02:00:00.000Z", statusOriginal: "publicada", revisaoOriginal: null, slug: "edicao-teste", declaredSupabaseId: null },
+      edition: {
+        identificador: "edicao-teste",
+        canal: "panorama",
+        titulo: "Edição de teste",
+        resumo: "Resumo",
+        criadaEm: "2026-10-22",
+        publicadaEm: null,
+        statusOriginal: "publicada",
+        revisaoOriginal: null,
+        slug: "edicao-teste",
+        declaredSupabaseId: null,
+      },
       content: { complete: true, blocks: [{ id: "one", type: "paragraph", data: {}, children: [] }] },
       contentHash: "",
     },
   });
   const storedSnapshot = published.snapshot as unknown as EditorialSnapshot;
-  storedSnapshot.contentHash = hashEditorialContent({ schemaVersion: 1, notionPageId: "page", edition: storedSnapshot.edition, content: storedSnapshot.content });
+  storedSnapshot.contentHash = hashEditorialContent({
+    schemaVersion: 1,
+    notionPageId: "page",
+    edition: storedSnapshot.edition,
+    content: storedSnapshot.content,
+  });
   published.notion_page_id = "page";
   assert.deepEqual(selectPublicEditions([edition(), published]), [published]);
 });

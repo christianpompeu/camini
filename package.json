@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test:observatorio": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --test --experimental-strip-types lib/observatorio/__tests__/ingestion.test.ts",
+    "test:observatorio": "node --conditions=react-server --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --test --experimental-strip-types lib/observatorio/__tests__/ingestion.test.ts",
     "test:observatorio-backend": "node --conditions=react-server --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --test --experimental-strip-types lib/observatorio/__tests__/supabase-ingestion.test.ts",
     "test:observatorio-c3": "node --conditions=react-server --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --test --experimental-strip-types lib/observatorio/__tests__/editorial-sync.test.ts",
     "test:observatorio-c4": "node --conditions=react-server --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --test --experimental-strip-types lib/observatorio/__tests__/editorial-detail.test.ts",

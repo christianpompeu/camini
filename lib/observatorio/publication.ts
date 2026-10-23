@@ -56,8 +56,6 @@ export function publicEditionSnapshot(
     snapshotEdition.canal !== edition.canal ||
     snapshotEdition.titulo !== edition.titulo ||
     snapshotEdition.resumo !== edition.resumo ||
-    snapshotEdition.criadaEm !== edition.criada_em ||
-    snapshotEdition.publicadaEm !== edition.publicada_em ||
     snapshot.source?.notionPageId !== edition.notion_page_id ||
     snapshot.source?.notionUrl !== edition.notion_url ||
     typeof contentHash !== "string" ||

@@ -20,8 +20,8 @@ function snapshot(overrides: Partial<EditorialSnapshot> = {}): EditorialSnapshot
       canal: "panorama",
       titulo: "Edição de teste",
       resumo: "Resumo verificável.",
-      criadaEm: "2026-10-23T10:00:00.000Z",
-      publicadaEm: "2026-10-23T12:00:00.000Z",
+      criadaEm: "2026-10-22",
+      publicadaEm: null,
       statusOriginal: "Publicada",
       revisaoOriginal: "Aprovada",
       slug: null,
@@ -34,7 +34,14 @@ function snapshot(overrides: Partial<EditorialSnapshot> = {}): EditorialSnapshot
     contentHash: "",
     ...overrides,
   };
-  if (overrides.contentHash === undefined) value.contentHash = hashEditorialContent({ schemaVersion: value.schemaVersion, notionPageId: value.source.notionPageId, edition: value.edition, content: value.content });
+  if (overrides.contentHash === undefined) {
+    value.contentHash = hashEditorialContent({
+      schemaVersion: value.schemaVersion,
+      notionPageId: value.source.notionPageId,
+      edition: value.edition,
+      content: value.content,
+    });
+  }
   return value;
 }
 
@@ -51,32 +58,101 @@ function edition(overrides: Partial<Edicao> = {}): Edicao {
     notion_url: null,
     snapshot: snapshot() as never,
     versao: 1,
-    criada_em: "2026-10-23T10:00:00.000Z",
-    aprovada_em: "2026-10-23T11:00:00.000Z",
-    publicada_em: "2026-10-23T12:00:00.000Z",
+    criada_em: "2026-10-23T02:32:42Z",
+    aprovada_em: "2026-10-23T03:00:00Z",
+    publicada_em: "2026-10-23T04:00:00Z",
     ...overrides,
   };
 }
 
-test("aceita somente edição integralmente publicada", () => {
-  assert.equal(isPublicEdition(edition()), true);
+test("aceita cenário positivo simulado com formato real do HML e timestamps desacoplados", () => {
+  const validEdition = edition();
+  assert.equal(isPublicEdition(validEdition), true);
+  assert.equal(isPublicEditionForChannel(validEdition, "panorama"), true);
+  const validSnapshot = publicEditionSnapshot(validEdition);
+  assert.notEqual(validSnapshot, null);
+  assert.equal(validSnapshot?.edition.criadaEm, "2026-10-22");
+  assert.equal(validSnapshot?.edition.publicadaEm, null);
+  assert.equal(validEdition.criada_em, "2026-10-23T02:32:42Z");
+  assert.equal(validEdition.publicada_em, "2026-10-23T04:00:00Z");
+  assert.notEqual(validEdition.aprovada_em, null);
+  assert.equal(validEdition.status, "publicada");
+});
+
+test("rejeita cenários negativos de publicação e autorização operacional", () => {
+  // Candidata com snapshot válido
   assert.equal(isPublicEdition(edition({ status: "candidata" })), false);
+  assert.equal(isPublicEditionForChannel(edition({ status: "candidata" }), "panorama"), false);
+
+  // Aprovada sem publicação
   assert.equal(isPublicEdition(edition({ status: "aprovada" })), false);
+  assert.equal(isPublicEditionForChannel(edition({ status: "aprovada" }), "panorama"), false);
+
+  // Rejeitada
   assert.equal(isPublicEdition(edition({ status: "rejeitada" })), false);
+
+  // Publicada sem aprovada_em
   assert.equal(isPublicEdition(edition({ aprovada_em: null })), false);
+
+  // Publicada sem publicada_em
   assert.equal(isPublicEdition(edition({ publicada_em: null })), false);
+
+  // Sem snapshot
   assert.equal(isPublicEdition(edition({ snapshot: null })), false);
 });
 
-test("nega snapshot incompleto, divergente ou sem integridade", () => {
-  const empty = edition({ snapshot: snapshot({ content: { complete: true, blocks: [] } }) as never });
+test("nega snapshot incompleto, adulterado ou com divergência de identidade/origem", () => {
+  // Snapshot incompleto (complete = false)
+  const incomplete = edition({
+    snapshot: snapshot({ content: { complete: false as never, blocks: [{ id: "root", type: "paragraph", data: {}, children: [] }] } }) as never,
+  });
+  assert.equal(publicEditionSnapshot(incomplete), null);
+
+  // Snapshot incompleto (blocos vazios)
+  const empty = edition({
+    snapshot: snapshot({ content: { complete: true, blocks: [] } }) as never,
+  });
   assert.equal(publicEditionSnapshot(empty), null);
-  const wrongChannel = edition({ snapshot: snapshot({ edition: { ...snapshot().edition, canal: "tech" } }) as never });
+
+  // Canal divergente no snapshot
+  const wrongChannel = edition({
+    snapshot: snapshot({ edition: { ...snapshot().edition, canal: "tech" } }) as never,
+  });
   assert.equal(publicEditionSnapshot(wrongChannel), null);
-  const badHash = edition({ snapshot: snapshot({ contentHash: "invalido" }) as never });
+
+  // Identificador divergente no snapshot
+  const wrongIdentifier = edition({
+    snapshot: snapshot({ edition: { ...snapshot().edition, identificador: "outro-identificador" } }) as never,
+  });
+  assert.equal(publicEditionSnapshot(wrongIdentifier), null);
+
+  // Página de origem divergente (notion_page_id diferente na edição)
+  const wrongPageId = edition({ notion_page_id: "notion-outro" });
+  assert.equal(publicEditionSnapshot(wrongPageId), null);
+
+  // Página de origem divergente (notionPageId diferente no snapshot)
+  const wrongSnapshotPageId = edition({
+    snapshot: snapshot({ source: { type: "notion", notionPageId: "notion-outro", notionUrl: null, lastEditedTime: null } }) as never,
+  });
+  assert.equal(publicEditionSnapshot(wrongSnapshotPageId), null);
+
+  // Hash adulterado
+  const badHash = edition({
+    snapshot: snapshot({ contentHash: "a".repeat(64) }) as never,
+  });
   assert.equal(publicEditionSnapshot(badHash), null);
+
+  // Conteúdo adulterado sem atualização do hash
   const valid = snapshot();
-  const changed = edition({ snapshot: { ...valid, content: { ...valid.content, blocks: [{ ...valid.content.blocks[0], data: { rich_text: [{ plain_text: "alterado" }] } }] } } as never });
+  const changed = edition({
+    snapshot: {
+      ...valid,
+      content: {
+        ...valid.content,
+        blocks: [{ ...valid.content.blocks[0], data: { rich_text: [{ plain_text: "alterado" }] } }],
+      },
+    } as never,
+  });
   assert.equal(publicEditionSnapshot(changed), null);
 });
 

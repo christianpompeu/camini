@@ -18,6 +18,42 @@ Fluxo de leitura:
 
 A credencial HML fica restrita a `OBSERVATORIO_HML_SUPABASE_SECRET_KEY`. Não há chave privilegiada com prefixo `NEXT_PUBLIC_`. A implementação não criou migration, RPC, policy, permissão ou mutação.
 
+## Contrato público: separação de integridade, identidade e ciclo de vida
+
+Para garantir consistência sem acoplamento indevido entre fontes e persistência, o validador público (`lib/observatorio/publication.ts`) distingue estritamente as seis dimensões do contrato:
+
+1. **Validação do hash (SHA-256 canônico):**
+   - Recalculado determinísticamente via `hashEditorialContent` a partir de `schemaVersion`, `notionPageId`, metadados congelados da edição e árvore de blocos de conteúdo.
+   - Garante matematicamente a imutabilidade do snapshot e a rejeição de qualquer conteúdo adulterado ou incompleto (`complete !== true` ou blocos vazios).
+   - O algoritmo C3 de hashing não é modificado.
+
+2. **Identidade editorial:**
+   - Correspondência estrita entre o registro em `observatorio_edicoes` e o snapshot congelado para:
+     - `identificador` (com formato seguro `^[a-z0-9]+(?:-[a-z0-9]+)*$`);
+     - `canal` (`panorama` ou `tech`);
+     - `titulo`;
+     - `resumo`;
+     - Identidade e URL da página de origem no Notion (`notionPageId === edition.notion_page_id` e `notionUrl === edition.notion_url`).
+   - Impede que uma edição de um canal seja servida em outro, ou que snapshots de páginas diferentes sejam associados à mesma linha.
+
+3. **Timestamps de origem (metadados editoriais):**
+   - `snapshot.edition.criadaEm`: data editorial original no Notion (ex: `"2026-10-22"`).
+   - `snapshot.edition.publicadaEm`: data original da fonte (atualmente nula nas candidatas do Notion).
+   - Pertencem ao snapshot original e fazem parte do cômputo do hash C3. Não devem ser alterados nem comparados com timestamps operacionais do banco.
+
+4. **Timestamps operacionais (Supabase HML):**
+   - `observatorio_edicoes.criada_em`: timestamp de inserção do registro no Supabase HML (ex: `"2026-10-23T02:32:42Z"`).
+   - `observatorio_edicoes.publicada_em`: timestamp operacional preenchido exclusivamente no momento da publicação efetiva.
+   - Representam eventos de infraestrutura e persistência no HML, de natureza temporal diferente da criação editorial no Notion. O validador não exige igualdade entre esses timestamps e os de origem.
+
+5. **Autorização humana (Gate C4):**
+   - Exigência estrita de aprovação formal registrada: `edition.aprovada_em !== null`.
+   - Nenhuma edição é publicável sem a decisão editorial humana aprovada e auditada de forma append-only.
+
+6. **Publicação efetiva:**
+   - Exigência combinada de `edition.status === "publicada"`, `edition.aprovada_em !== null`, `edition.publicada_em !== null` e `publicEditionSnapshot(edition) !== null`.
+   - Sem a presença cumulativa de todos esses critérios, a edição é sumariamente descartada da projeção pública (retornando 404 seguro).
+
 ## Rotas
 
 - `/panorama` e `/tech`: páginas públicas dos canais; permanecem acessíveis sem edição publicada e exibem estado de preparação.
@@ -76,9 +112,9 @@ Não há captura fabricada de uma edição publicada: o HML permanece sem ediç�
 
 `npm run test:observatorio-public` cobre:
 
-- edição publicada válida;
+- edição publicada válida com formato realista e timestamps desacoplados;
 - candidata, aprovada sem publicação e rejeitada negadas;
-- timestamps de aprovação/publicação ausentes;
+- timestamps operacionais de aprovação/publicação ausentes;
 - snapshot ausente, vazio, divergente ou com hash inválido;
 - canal divergente;
 - identificador inválido e tentativa de manipulação;
@@ -104,24 +140,23 @@ Até essas condições existirem, as seis candidatas do HML continuam privadas e
 
 ## Auditoria final de navegação e integridade
 
-Correções aplicadas nesta rodada:
+Correções aplicadas:
 
-- `components/observatorio-public/edition-archive.tsx`: cartões publicados agora são links acessíveis para o canal e identificador validados.
-- `lib/observatorio/publication.ts`: o hash é recalculado com `hashEditorialContent`, e fonte, identidade, canal e metadados da edição precisam corresponder ao registro persistido. A autorização editorial continua sendo um gate independente.
-- `components/observatorio/public-snapshot-view.tsx`: itens consecutivos de listas são agrupados em uma única lista, inclusive em árvores aninhadas.
-- `components/observatorio/public-edition-page.tsx`: o índice percorre headings e `child_page` recursivamente, com limite de profundidade e deduplicação.
-- `components/observatorio-public/public-header.tsx` e `components/observatorio/public-edition-shell.tsx`: menus mobile acessíveis expõem Panorama, Tech e assinatura; a leitura reutiliza o logo público compartilhado.
-- `components/observatorio-public/product-hero.tsx` e `public-product-page.tsx`: quando existe edição elegível, o hero mostra título, resumo e links da edição mais recente; sem publicação, o estado de preparação permanece.
+- `lib/observatorio/publication.ts`: remoção das comparações indevidas entre timestamps de origens distintas (`snapshotEdition.criadaEm !== edition.criada_em` e `snapshotEdition.publicadaEm !== edition.publicada_em`). Todas as demais regras de integridade (status, aprovação, publicação, hash canônico, canal, identificador, identidade Notion, título, resumo e árvore de blocos) foram preservadas integralmente.
+- `lib/observatorio/__tests__/public-editions.test.ts` e `lib/observatorio/__tests__/public-pages.test.ts`: fixtures atualizadas para reproduzir o formato realista do HML (`snapshot.edition.criadaEm = "2026-10-22"`, `edition.criada_em = "2026-10-23T02:32:42Z"`, `snapshot.edition.publicadaEm = null`, `edition.publicada_em = "2026-10-23T04:00:00Z"`), cobrindo o cenário positivo e todos os cenários negativos (candidata, aprovada sem publicação, sem aprovada_em, sem publicada_em, hash adulterado, canal divergente, identificador divergente, página de origem divergente e snapshot incompleto). Nenhuma fixture grava no HML.
+- `package.json`: inclusão de `--conditions=react-server` em `test:observatorio` para alinhamento com a proteção `server-only` das dependências compartilhadas.
 
 Evidências executadas:
 
-- `npm run test:observatorio-public`: 10/10 testes aprovados, incluindo hash válido, hash divergente, alteração material do snapshot, filtragem de candidatas e ausência de persistência no cadastro.
+- `npm run test:observatorio-public`: 11/11 testes aprovados (positivo desacoplado e matriz completa de negativos).
 - `npm run test:observatorio-c3`: 13/13 aprovados.
 - `npm run test:observatorio-c4`: 5/5 aprovados.
 - `npm run test:observatorio-c4-contract`: 6/6 aprovados.
-- ESLint do escopo alterado: aprovado. O lint global ainda possui erros preexistentes fora do escopo do Observatório.
-- `npx tsc --noEmit` e `npm run build`: aprovados após regenerar o artefato inválido `.next/dev/types/validator.ts`; o build compilou e gerou 86 páginas.
+- `npm run test:observatorio`: 6/6 aprovados.
+- `npm run test:observatorio-backend`: 3/3 aprovados.
+- TypeScript (`npx tsc --noEmit`): aprovado sem erros.
+- ESLint direcionado do escopo Observatório: aprovado com 0 erros e 0 warnings.
+- Next.js build de produção (`npm run build`): aprovado gerando 86 páginas com rotas estáticas e dinâmicas corretas.
+- Zero escritas ou modificações no Notion, HML, produção ou outros módulos.
 
-Screenshots: o HML permanece sem edição elegível, portanto não foi criada captura positiva artificial de arquivo publicado. A tentativa de validação visual local não pôde ser concluída porque o navegador embutido não estava disponível nesta sessão. As capturas existentes continuam sendo somente dos estados reais sem publicação e das telas de assinatura; imagens de demonstração permanecem identificadas como demonstração.
-
-Parecer: GO para a prontidão da interface pública e dos gates de integridade verificados localmente. NO-GO para autorização de publicação real: as seis candidatas do HML continuam privadas, sem aprovação humana persistida e sem alteração de dados remotos.
+Parecer: GO para a correção do contrato público e desacoplamento de timestamps. Prontidão técnica mantida para a primeira publicação real quando os gates editoriais humanos forem concluídos.
