@@ -31,6 +31,7 @@ export interface EditorialDecisionState {
 export interface StoredDecisionFingerprint {
   idempotencyKey: string;
   fingerprint: string;
+  actorUserId: string;
   result: "aprovada" | "rejeitada";
 }
 
@@ -42,8 +43,16 @@ function normalized(value: string): string {
   return value.trim();
 }
 
-function fingerprint(request: EditorialDecisionRequest): string {
-  return [request.editionId, request.identifier, request.version, request.contentHash, request.decision, normalized(request.justification)].join("|");
+function fingerprint(request: EditorialDecisionRequest, actorUserId: string): string {
+  return JSON.stringify({
+    actorUserId,
+    contentHash: request.contentHash,
+    decision: request.decision,
+    editionId: request.editionId,
+    identifier: request.identifier,
+    justification: normalized(request.justification),
+    version: request.version,
+  });
 }
 
 export function validateEditorialDecision(
@@ -60,15 +69,18 @@ export function validateEditorialDecision(
   if (!Number.isInteger(request.version) || request.version < 1) return { ok: false, reason: "invalid_version" };
   if (!(request.decision === "aprovar" || request.decision === "rejeitar")) return { ok: false, reason: "invalid_decision" };
   if (normalized(request.justification).length < 10) return { ok: false, reason: "justification_required" };
+  const currentFingerprint = fingerprint(request, identity.userId);
+  const sameKey = previous.find((item) => item.idempotencyKey === request.idempotencyKey);
+  if (sameKey) {
+    if (sameKey.fingerprint === currentFingerprint && sameKey.actorUserId === identity.userId && ((request.decision === "aprovar" && sameKey.result === "aprovada") || (request.decision === "rejeitar" && sameKey.result === "rejeitada"))) {
+      return { ok: true, fingerprint: currentFingerprint, replay: true };
+    }
+    return { ok: false, reason: "idempotency_key_reused" };
+  }
   if (state.editionId !== request.editionId || state.identifier !== request.identifier) return { ok: false, reason: "edition_identity_mismatch" };
   if (state.status !== "candidata") return { ok: false, reason: "editorial_state_not_candidate" };
   if (state.locked) return { ok: false, reason: "concurrent_decision" };
   if (state.version !== request.version) return { ok: false, reason: "stale_version" };
   if (state.contentHash !== request.contentHash) return { ok: false, reason: "stale_content_hash" };
-  const currentFingerprint = fingerprint(request);
-  const sameKey = previous.find((item) => item.idempotencyKey === request.idempotencyKey);
-  if (sameKey) return sameKey.fingerprint === currentFingerprint
-    ? { ok: true, fingerprint: currentFingerprint, replay: true }
-    : { ok: false, reason: "idempotency_key_reused" };
   return { ok: true, fingerprint: currentFingerprint, replay: false };
 }

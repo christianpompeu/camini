@@ -103,6 +103,43 @@ Não foram alterados migrations, RPCs, permissões HML, Notion, produção, Rada
 
 **Parecer revisado:** GO para encerramento do Gate 1 de leitura privada, sujeito à conferência independente; NO-GO para identidade, decisões persistentes, migrations, RPCs ou ações editoriais do Gate 2.
 
+## Consolidação independente do contrato — replay e identidade
+
+### Problema confirmado e correção pontual
+
+O contrato anterior consultava `state.status` antes de procurar a decisão idempotente persistida. Assim, o replay legítimo depois de `candidata → aprovada/rejeitada` era rejeitado como estado encerrado. A correção agora:
+
+1. autentica e revalida a permissão/revogação do revisor;
+2. rejeita qualquer identidade enviada pelo cliente;
+3. calcula fingerprint canônico incluindo ator confiável, edição, identificador, versão, hash, decisão e justificativa normalizada;
+4. consulta a decisão anterior pela chave e fingerprint antes da validação do estado atual;
+5. reconhece somente replay com mesma chave, payload, identidade e resultado persistidos;
+6. rejeita outro revisor, fingerprint divergente ou chave reutilizada;
+7. aplica as precondições de candidata, lock, versão e hash apenas à primeira execução.
+
+Revogação continua sendo verificada antes do replay: uma permissão revogada não pode operar nem “repetir” uma decisão através do contrato ativo. O fingerprint não é autenticação nem autorização; é apenas vínculo de integridade/idempotência. A autenticação vem da sessão server-side e a autorização da permissão editorial vigente.
+
+### Proposta persistente mantida
+
+Permanece proposta, sem aplicação, uma tabela append-only própria de decisões de edições com `edicao_id`, `notion_page_id`, `identifier`, `decision`, `justification`, `version`, `content_hash`, `actor_user_id` confiável, `operation_key`, fingerprint e timestamps. A futura RPC deverá receber somente edição/versão/hash/justificativa/chave/decisão, resolver o ator no backend, usar lock transacional e congelar o snapshot aprovado. A tabela de aprovações de relações do grafo não será reutilizada.
+
+### Evidências desta revisão
+
+- Segunda tentativa de leitura do ADR Notion: indisponível pelo conector/web; nenhum conteúdo desconhecido foi presumido.
+- `npm run test:observatorio-c4-contract`: 6/6 aprovados.
+- `npm run test:observatorio-c4`: 5/5 aprovados.
+- `npm run test:observatorio-c3`: 13/13 aprovados.
+- `npx tsc --noEmit`: aprovado.
+- ESLint dos arquivos do contrato: aprovado.
+- `npm run build`: aprovado.
+- Nenhuma migration, DDL/DML, RPC, credencial, usuário, permissão ou decisão editorial foi executada.
+
+### Decisão arquitetural revisada
+
+A ponte Camini → HML continua condicionada à demonstração de autenticação server-side real, identidade não controlável pelo cliente, permissão editorial revogável no momento da operação, credencial de decisão segregada da `service_role` do sincronizador, grants mínimos/EXECUTE restrito, rotação/revogação e auditoria vinculada a ator, versão e hash. Como essa prova operacional ainda não existe, o risco é bloqueante e a alternativa recomendada permanece Auth dedicado ao HML caso a ponte não consiga demonstrar essa separação. Não iniciar implementação persistente do Gate 2.
+
+**Parecer revisado:** GO para o contrato local e sua auditoria independente; NO-GO para migration/RPC, provisionamento ou qualquer mutação até aprovação da fronteira de identidade e demonstração operacional do canal de confiança.
+
 ## Riscos bloqueantes para o Gate 2
 
 ## Preparação técnica do Gate 2 — ponte de identidade e decisão
