@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import Link from "next/link";
 import {
   Search,
   Database,
@@ -12,12 +13,15 @@ import {
   Check,
   Sparkles,
   X,
+  ExternalLink,
+  ArrowDownLeft,
 } from "lucide-react";
 import {
   RMSemanticTableWithKey,
   RMTableSummary,
   RMSemanticColumn,
   RMSemanticRelationship,
+  RMSemanticIncomingRelationship,
 } from "@/lib/totvs-rm/types";
 import {
   Dialog,
@@ -135,16 +139,34 @@ export function TableInspectorModal({
             </div>
           </div>
 
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={onClose}
-            className="h-8 w-8 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted"
-            title="Fechar"
-          >
-            <X className="h-4 w-4" />
-            <span className="sr-only">Fechar</span>
-          </Button>
+          <div className="flex items-center gap-2">
+            <Link
+              href={`/dicionario-rm${activeTable ? `?table=${encodeURIComponent(activeTable)}` : ""}`}
+              target="_blank"
+              className="hidden sm:inline-flex"
+            >
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8 gap-1.5 text-xs border-border hover:bg-muted font-medium"
+                title="Abrir dicionário completo com janelas lado a lado e histórico"
+              >
+                <ExternalLink className="h-3.5 w-3.5" />
+                <span>Abrir em Página Cheia</span>
+              </Button>
+            </Link>
+
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={onClose}
+              className="h-8 w-8 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted"
+              title="Fechar"
+            >
+              <X className="h-4 w-4" />
+              <span className="sr-only">Fechar</span>
+            </Button>
+          </div>
         </DialogHeader>
 
         <div className="flex-1 flex flex-col md:flex-row min-h-0 overflow-hidden">
@@ -297,14 +319,14 @@ export function TableInspectorModal({
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-border">
-                          {tableDetails.colunas.map((col: RMSemanticColumn) => {
+                          {tableDetails.colunas.map((col: RMSemanticColumn, idx: number) => {
                             const isPk =
                               col.nome.startsWith("COD") ||
                               col.nome.startsWith("ID") ||
                               col.nome === "CHAPA";
                             return (
                               <tr
-                                key={col.nome}
+                                key={`${col.nome}-${idx}`}
                                 className="hover:bg-muted/40 transition-colors font-mono"
                               >
                                 <td className="px-4 py-2.5 text-foreground font-semibold flex items-center gap-2">
@@ -349,6 +371,39 @@ export function TableInspectorModal({
                                   <span className="text-primary font-bold">
                                     {rel.tabela_destino}
                                   </span>
+                                </div>
+                                <div className="text-[11px] font-mono text-muted-foreground break-all">
+                                  ON {rel.chaves_ligacao}
+                                </div>
+                              </div>
+                            )
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                  {tableDetails.relacionamentos_entrada &&
+                    tableDetails.relacionamentos_entrada.length > 0 && (
+                      <div>
+                        <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-3 flex items-center gap-2">
+                          <ArrowDownLeft className="h-4 w-4 text-indigo-500" />
+                          Relacionamentos de Entrada (
+                          {tableDetails.relacionamentos_entrada.length})
+                        </h4>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                          {tableDetails.relacionamentos_entrada.map(
+                            (rel: RMSemanticIncomingRelationship, idx: number) => (
+                              <div
+                                key={idx}
+                                className="p-3 rounded-md border border-border bg-muted/20 text-xs space-y-1.5 hover:border-border/80 transition-colors"
+                              >
+                                <div className="flex items-center gap-2 font-mono font-semibold">
+                                  <span className="text-indigo-600 dark:text-indigo-400 font-bold">
+                                    {rel.tabela_origem}
+                                  </span>
+                                  <ArrowRight className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                                  <span>{tableDetails.tabela}</span>
                                 </div>
                                 <div className="text-[11px] font-mono text-muted-foreground break-all">
                                   ON {rel.chaves_ligacao}

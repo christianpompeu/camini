@@ -22,6 +22,7 @@ export function Navbar() {
   const isForca = pathname.startsWith("/forca");
   const isTotvsRm = pathname.startsWith("/totvs-rm");
   const isRadar = pathname.startsWith("/radar");
+  const isDicionario = pathname.startsWith("/dicionario");
   const isPlayground = pathname.startsWith("/playground");
   const isObservatorio = pathname.startsWith("/panorama") || pathname.startsWith("/tech");
 
@@ -45,6 +46,11 @@ export function Navbar() {
       href: "/totvs-rm",
       label: "RM SQL AI",
       isActive: isTotvsRm,
+    },
+    {
+      href: "/dicionario-rm",
+      label: "Dicionário RM",
+      isActive: isDicionario,
     },
     {
       href: "/forca",

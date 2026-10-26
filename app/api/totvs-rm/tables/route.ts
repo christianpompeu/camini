@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getRMTableCatalog, getTableDetails, RM_MODULES_MAP } from "@/lib/totvs-rm/schema-engine";
+import { searchRMTableCatalog, getTableDetails, RM_MODULES_MAP } from "@/lib/totvs-rm/schema-engine";
 
 export async function GET(req: NextRequest) {
   try {
@@ -31,31 +31,11 @@ export async function GET(req: NextRequest) {
       });
     }
 
-    // Busca no catálogo geral resumido
-    const catalog = getRMTableCatalog();
-    let filtered = catalog;
+    const limitParam = parseInt(searchParams.get("limit") || "100", 10);
+    const limit = isNaN(limitParam) ? 100 : Math.min(Math.max(limitParam, 1), 500);
 
-    if (modulePrefix) {
-      filtered = filtered.filter((t) => t.tabela.startsWith(modulePrefix));
-    }
-
-    if (query) {
-      const qLower = query.toLowerCase();
-      filtered = filtered.filter(
-        (t) =>
-          t.tabela.toLowerCase().includes(qLower) ||
-          t.descricao.toLowerCase().includes(qLower) ||
-          t.sistema.toLowerCase().includes(qLower)
-      );
-    }
-
-    // Limitar para não trafegar milhares de itens desnecessariamente (top 50 resultados)
-    const results = filtered.slice(0, 50);
-
-    return NextResponse.json({
-      totalMatches: filtered.length,
-      tables: results,
-    });
+    const result = searchRMTableCatalog(query, modulePrefix, limit);
+    return NextResponse.json(result);
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : "Erro ao pesquisar tabelas.";
     console.error("Erro na API de tabelas RM:", error);

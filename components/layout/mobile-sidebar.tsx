@@ -15,6 +15,7 @@ import {
   Radio,
   Compass,
   Cpu,
+  Layers,
 } from "lucide-react";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 
@@ -50,6 +51,7 @@ export function MobileSidebar({ isOpen, onClose }: MobileSidebarProps) {
   const isPlayground = pathname.startsWith("/playground");
   const isForca = pathname.startsWith("/forca");
   const isTotvsRm = pathname.startsWith("/totvs-rm");
+  const isDicionario = pathname.startsWith("/dicionario");
   const isCalendario = pathname.startsWith("/ctc/calendario");
   const isPanorama = pathname.startsWith("/panorama");
   const isTech = pathname.startsWith("/tech");
@@ -95,10 +97,18 @@ export function MobileSidebar({ isOpen, onClose }: MobileSidebarProps) {
     {
       href: "/totvs-rm",
       title: "RM SQL AI",
-      subtitle: "Consultas & Dicionário",
+      subtitle: "Assistente Inteligente SQL",
       badge: "TOTVS RM",
       icon: Database,
       isActive: isTotvsRm,
+    },
+    {
+      href: "/dicionario-rm",
+      title: "Dicionário RM",
+      subtitle: "9.400+ tabelas, FKs & esquemas",
+      badge: "Público",
+      icon: Layers,
+      isActive: isDicionario,
     },
     {
       href: "/forca",

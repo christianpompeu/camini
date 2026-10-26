@@ -1,12 +1,14 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
+import Link from "next/link";
 import {
   Send,
   Database,
   Settings,
   PanelLeftClose,
   PanelLeft,
+  ExternalLink,
 } from "lucide-react";
 import { Navbar } from "@/components/layout/navbar";
 import { ChatSession, ChatMessage, UserSettings } from "@/lib/totvs-rm/types";
@@ -355,10 +357,23 @@ export default function TotvsRmChatPage() {
                   setSelectedTableForInspector(undefined);
                   setInspectorOpen(true);
                 }}
+                title="Abrir modal do dicionário"
               >
                 <Database className="h-3.5 w-3.5" />
                 Dicionário RM
               </Button>
+
+              <Link href="/dicionario-rm" target="_blank" className="hidden lg:inline-flex">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 gap-1.5 text-xs text-muted-foreground hover:text-foreground"
+                  title="Abrir página dedicada com comparação lado a lado"
+                >
+                  <ExternalLink className="h-3.5 w-3.5" />
+                  <span>Página Dedicada</span>
+                </Button>
+              </Link>
 
               <Button
                 variant="ghost"

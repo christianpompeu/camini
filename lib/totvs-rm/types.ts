@@ -3,6 +3,11 @@ export interface RMSemanticRelationship {
   chaves_ligacao: string;
 }
 
+export interface RMSemanticIncomingRelationship {
+  tabela_origem: string;
+  chaves_ligacao: string;
+}
+
 export interface RMSemanticColumn {
   nome: string;
   tipo: string;
@@ -13,17 +18,22 @@ export interface RMSemanticTable {
   descricao: string;
   colunas: RMSemanticColumn[];
   relacionamentos_saida: RMSemanticRelationship[];
+  relacionamentos_entrada?: RMSemanticIncomingRelationship[];
 }
 
 export interface RMSemanticTableWithKey extends RMSemanticTable {
   tabela: string;
   Modulo?: string; // Trazido pelo /api/totvs-rm/tables
+  relacionamentos_entrada?: RMSemanticIncomingRelationship[];
 }
 
 export interface RMTableSummary {
   tabela: string;
   descricao: string;
   sistema: string;
+  matchedColumn?: string;
+  matchedColumnDesc?: string;
+  matchType?: "table_name" | "table_desc" | "column_name" | "column_desc";
 }
 
 export type RMSemanticDictionary = Record<string, RMSemanticTable>;

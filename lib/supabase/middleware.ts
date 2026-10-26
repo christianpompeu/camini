@@ -59,6 +59,9 @@ const ALWAYS_PUBLIC_PREFIXES = [
   "/radar",
   "/panorama",
   "/tech",
+  "/dicionario-rm",
+  "/dicionario",
+  "/api/totvs-rm/tables",
 ];
 
 // Prefixos conhecidos de rotas protegidas por padrão do sistema

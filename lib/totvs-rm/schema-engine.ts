@@ -1,6 +1,6 @@
 import fs from "fs";
 import path from "path";
-import { RMSemanticDictionary, RMSemanticTableWithKey } from "./types";
+import { RMSemanticDictionary, RMSemanticTableWithKey, RMSemanticColumn, RMTableSummary } from "./types";
 import { ProviderCredential } from "./llm/providers";
 
 const DATA_DIR = path.join(process.cwd(), "public", "dicionario_rm", "data");
@@ -43,25 +43,318 @@ export function loadSemanticDictionary(): RMSemanticDictionary {
   }
 }
 
-export function getRMTableCatalog(): { tabela: string; descricao: string; sistema: string }[] {
+export function getRMTableCatalog(): RMTableSummary[] {
   const dict = loadSemanticDictionary();
-  const catalog = [];
+  const catalog: RMTableSummary[] = [];
   for (const [tabela, dados] of Object.entries(dict)) {
     const firstChar = tabela.charAt(0);
     catalog.push({
       tabela,
-      descricao: dados.descricao,
+      descricao: dados.descricao || "",
       sistema: RM_MODULES_MAP[firstChar] || "Geral RM"
     });
   }
   return catalog;
 }
 
+interface ScoredTableResult extends RMTableSummary {
+  score: number;
+}
+
+/**
+ * Busca inteligente no catálogo de tabelas com suporte a:
+ * 1. Nome da tabela (ex: TMOV, FLAN)
+ * 2. Descrição da tabela (ex: movimento de estoque, lançamento financeiro)
+ * 3. Nome da coluna / campo (ex: CODFILIAL, NSEQITMMOV, VALORBRUTO, CHAPA)
+ * 4. Descrição da coluna (ex: código da filial, valor líquido, data de emissão)
+ */
+const POPULAR_TABLE_KEYS = [
+  "TMOV",
+  "FLAN",
+  "FCFO",
+  "PFUNC",
+  "GCOLIGADA",
+  "TITMMOV",
+  "GCCUSTO",
+  "TCPG",
+  "CPARAM",
+  "DCONTRATO",
+  "MPATRIMONIO",
+  "KORDEM",
+];
+
+export function searchRMTableCatalog(
+  query: string,
+  modulePrefix = "",
+  limit = 60
+): { totalMatches: number; tables: RMTableSummary[] } {
+  const dict = loadSemanticDictionary();
+  const cleanQuery = query.trim();
+  const qUpper = cleanQuery.toUpperCase();
+  const qLower = cleanQuery.toLowerCase();
+  const modUpper = modulePrefix.toUpperCase().trim();
+
+  // Sem busca nem módulo ativo: catálogo padrão com populares no topo e ordem alfabética
+  if (!cleanQuery && !modUpper) {
+    const list: RMTableSummary[] = [];
+    const added = new Set<string>();
+
+    // 1. Priorizar tabelas populares fundamentais do TOTVS RM
+    for (const popKey of POPULAR_TABLE_KEYS) {
+      if (dict[popKey] && list.length < limit) {
+        const firstChar = popKey.charAt(0);
+        list.push({
+          tabela: popKey,
+          descricao: dict[popKey].descricao || "",
+          sistema: RM_MODULES_MAP[firstChar] || "Geral RM",
+        });
+        added.add(popKey);
+      }
+    }
+
+    // 2. Adicionar tabelas normais (A-Z) em ordem alfabética limpa
+    const standardKeys = Object.keys(dict)
+      .filter((k) => /^[A-Z]/.test(k) && !added.has(k))
+      .sort((a, b) => a.localeCompare(b));
+
+    for (const tabela of standardKeys) {
+      if (list.length >= limit) break;
+      const firstChar = tabela.charAt(0);
+      list.push({
+        tabela,
+        descricao: dict[tabela].descricao || "",
+        sistema: RM_MODULES_MAP[firstChar] || "Geral RM",
+      });
+      added.add(tabela);
+    }
+
+    // 3. Demais tabelas (internas com _ etc.) se houver espaço
+    if (list.length < limit) {
+      for (const [tabela, data] of Object.entries(dict)) {
+        if (list.length >= limit) break;
+        if (added.has(tabela)) continue;
+        const firstChar = tabela.charAt(0);
+        list.push({
+          tabela,
+          descricao: data.descricao || "",
+          sistema: RM_MODULES_MAP[firstChar] || "Geral RM",
+        });
+        added.add(tabela);
+      }
+    }
+
+    return {
+      totalMatches: Object.keys(dict).length,
+      tables: list,
+    };
+  }
+
+  const scored: ScoredTableResult[] = [];
+
+  for (const [tabela, data] of Object.entries(dict)) {
+    let score = 0;
+    const tUpper = tabela.toUpperCase();
+    const dLower = (data.descricao || "").toLowerCase();
+    const firstChar = tUpper.charAt(0);
+    const sistema = RM_MODULES_MAP[firstChar] || "Geral RM";
+
+    let matchedColumn: string | undefined;
+    let matchedColumnDesc: string | undefined;
+    let matchType: "table_name" | "table_desc" | "column_name" | "column_desc" = "table_name";
+
+    if (cleanQuery) {
+      // 1. MATCH POR NOME DE TABELA
+      if (tUpper === qUpper) {
+        score = 20000;
+        matchType = "table_name";
+      } else if (tUpper.startsWith(qUpper)) {
+        score = 10000 - Math.min((tUpper.length - qUpper.length) * 10, 3000);
+        matchType = "table_name";
+      } else if (tUpper.includes(qUpper)) {
+        score = 5000 - Math.min(tUpper.indexOf(qUpper) * 10, 2000);
+        matchType = "table_name";
+      }
+
+      // 2. MATCH POR DESCRIÇÃO DA TABELA
+      if (dLower) {
+        if (dLower.startsWith(qLower)) {
+          const descScore = 3500;
+          if (descScore > score) {
+            score = descScore;
+            matchType = "table_desc";
+          }
+        } else if (dLower.includes(qLower)) {
+          const descScore = 2000;
+          if (descScore > score) {
+            score = descScore;
+            matchType = "table_desc";
+          }
+        }
+      }
+
+      // 3. MATCH POR NOME DE COLUNA E DESCRIÇÃO DE COLUNA
+      if (data.colunas && Array.isArray(data.colunas)) {
+        for (const col of data.colunas) {
+          if (!col || !col.nome) continue;
+          const colUpper = col.nome.toUpperCase();
+          const colDescLower = (col.descricao || "").toLowerCase();
+
+          // Match no nome da coluna
+          if (colUpper === qUpper) {
+            // Coluna com correspondência exata (ex: CODFILIAL, NSEQITMMOV)
+            const colScore = 6000;
+            if (colScore > score) {
+              score = colScore;
+              matchType = "column_name";
+              matchedColumn = col.nome;
+              matchedColumnDesc = col.descricao;
+            }
+          } else if (colUpper.startsWith(qUpper)) {
+            const colScore = 3200;
+            if (colScore > score) {
+              score = colScore;
+              matchType = "column_name";
+              matchedColumn = col.nome;
+              matchedColumnDesc = col.descricao;
+            }
+          } else if (colUpper.includes(qUpper)) {
+            const colScore = 2200;
+            if (colScore > score) {
+              score = colScore;
+              matchType = "column_name";
+              matchedColumn = col.nome;
+              matchedColumnDesc = col.descricao;
+            }
+          }
+
+          // Match na descrição da coluna
+          if (colDescLower) {
+            if (colDescLower.startsWith(qLower)) {
+              const colDescScore = 1800;
+              if (colDescScore > score) {
+                score = colDescScore;
+                matchType = "column_desc";
+                matchedColumn = col.nome;
+                matchedColumnDesc = col.descricao;
+              }
+            } else if (colDescLower.includes(qLower)) {
+              const colDescScore = 1200;
+              if (colDescScore > score) {
+                score = colDescScore;
+                matchType = "column_desc";
+                matchedColumn = col.nome;
+                matchedColumnDesc = col.descricao;
+              }
+            }
+          }
+        }
+      }
+
+      if (score === 0) continue;
+
+      // Ajuste de Módulo Ativo
+      if (modUpper) {
+        if (tUpper.startsWith(modUpper)) {
+          score += 400; // Bônus para tabelas do módulo ativo
+        } else {
+          // Se for match forte (exato no nome da tabela ou da coluna), preserva nos resultados
+          if (score >= 4000) {
+            score -= 100;
+          } else {
+            continue;
+          }
+        }
+      }
+    } else if (modUpper) {
+      // Apenas filtro por módulo
+      if (tUpper.startsWith(modUpper)) {
+        score = 100;
+        if (POPULAR_TABLE_KEYS.includes(tUpper)) {
+          score += 500; // Prioriza tabelas populares chave do módulo no topo
+        }
+      } else {
+        continue;
+      }
+    }
+
+    scored.push({
+      tabela,
+      descricao: data.descricao || "",
+      sistema,
+      score,
+      matchedColumn,
+      matchedColumnDesc,
+      matchType,
+    });
+  }
+
+  // Ordenação decrescente por pontuação de relevância
+  scored.sort((a, b) => {
+    if (b.score !== a.score) return b.score - a.score;
+    return a.tabela.localeCompare(b.tabela);
+  });
+
+  return {
+    totalMatches: scored.length,
+    tables: scored.slice(0, limit).map(({ score: _score, ...rest }) => rest),
+  };
+}
+
+let cachedIncomingMap: Record<string, { tabela_origem: string; chaves_ligacao: string }[]> | null = null;
+
+export function getIncomingRelationships(targetTable: string): { tabela_origem: string; chaves_ligacao: string }[] {
+  if (!cachedIncomingMap) {
+    const dict = loadSemanticDictionary();
+    const incoming: Record<string, { tabela_origem: string; chaves_ligacao: string }[]> = {};
+    for (const [origem, data] of Object.entries(dict)) {
+      if (data.relacionamentos_saida) {
+        for (const rel of data.relacionamentos_saida) {
+          if (!rel.tabela_destino) continue;
+          const dest = rel.tabela_destino.toUpperCase();
+          if (!incoming[dest]) {
+            incoming[dest] = [];
+          }
+          incoming[dest].push({
+            tabela_origem: origem,
+            chaves_ligacao: rel.chaves_ligacao,
+          });
+        }
+      }
+    }
+    cachedIncomingMap = incoming;
+  }
+  return cachedIncomingMap[targetTable.toUpperCase()] || [];
+}
+
+function deduplicateColumns(columns: RMSemanticColumn[]): RMSemanticColumn[] {
+  if (!columns || !Array.isArray(columns)) return [];
+  const seen = new Set<string>();
+  const unique: RMSemanticColumn[] = [];
+  for (const col of columns) {
+    if (!col || !col.nome) continue;
+    const key = col.nome.toUpperCase();
+    if (!seen.has(key)) {
+      seen.add(key);
+      unique.push(col);
+    }
+  }
+  return unique;
+}
+
 export function getTableDetails(tableName: string): RMSemanticTableWithKey | null {
   const dict = loadSemanticDictionary();
   const cleanName = tableName.toUpperCase().trim();
   if (dict[cleanName]) {
-    return { tabela: cleanName, ...dict[cleanName] };
+    const firstChar = cleanName.charAt(0);
+    const modulo = RM_MODULES_MAP[firstChar] || "Geral RM";
+    const raw = dict[cleanName];
+    return {
+      tabela: cleanName,
+      ...raw,
+      colunas: deduplicateColumns(raw.colunas || []),
+      Modulo: modulo,
+      relacionamentos_entrada: getIncomingRelationships(cleanName),
+    };
   }
   return null;
 }

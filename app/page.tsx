@@ -2,7 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
-import { ArrowRight, Database, Dumbbell, LayoutGrid, CalendarDays, Palette, Radio, Compass, Cpu, Sparkles } from "lucide-react";
+import { ArrowRight, Database, Dumbbell, LayoutGrid, CalendarDays, Palette, Radio, Compass, Cpu, Sparkles, Layers } from "lucide-react";
 import { Navbar } from "@/components/layout/navbar";
 import { Button } from "@/components/ui/button";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -177,6 +177,27 @@ export default function CaminiHomePage() {
                   <CardDescription className="text-sm mt-2">
                     Assistente inteligente especializado no TOTVS Corpore RM. 
                     Consulta rápida a dicionários de dados e geração de scripts.
+                  </CardDescription>
+                </CardHeader>
+              </Card>
+            </Link>
+
+            {/* Dicionário RM Público */}
+            <Link href="/dicionario-rm" className="group">
+              <Card className="h-full transition-colors hover:border-primary/50 hover:bg-muted/30 border-primary/20">
+                <CardHeader>
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="inline-flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                      <Layers className="h-5 w-5" />
+                    </div>
+                    <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                      Acesso Livre
+                    </span>
+                  </div>
+                  <CardTitle className="text-xl">Dicionário RM</CardTitle>
+                  <CardDescription className="text-sm mt-2">
+                    Catálogo com mais de 9.400 tabelas, colunas, chaves estrangeiras, 
+                    visualização lado a lado e gerador de consultas T-SQL.
                   </CardDescription>
                 </CardHeader>
               </Card>
