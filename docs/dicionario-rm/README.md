@@ -52,19 +52,22 @@ O **Dicionário de Dados TOTVS RM** (`/dicionario-rm`) é uma plataforma dedicad
 
 ---
 
-### 4. Grafo Interativo de Relacionamentos (`TableRelationGraph`)
-* **Visualização em Rede (Canvas HTML5)**:
-  * Tabela ativa centralizada em destaque com seus campos primários.
-  * Conexões direcionadas com setas e rótulos das cláusulas de junção (`ON campoA = campoB`).
+### 4. Grafo Interativo de Relacionamentos (`TableRelationGraph` com React Flow v12)
+* **Motor Profissional Baseado em React Flow (`@xyflow/react`)**:
+  * Substituição do antigo canvas SVG estático por um motor de grafos infinito e acelerado por hardware, eliminando 100% dos problemas de linhas perdidas ou cortadas durante o pan e zoom.
+  * Tabela ativa centralizada em destaque com seus campos primários, tipos e metadados.
+  * Conexões em curvas bézier suaves, permanentemente ancoradas aos nós, com setas direcionais e rótulos das cláusulas de junção (`ON campoA = campoB`).
   * Cores semânticas de conexão:
-    * 🟢 **Verde**: Chaves Primárias / Origem.
-    * 🟣 **Lilás / Roxo**: Relacionamentos de Saída (Outgoing FKs).
-    * 🔵 **Azul**: Relacionamentos de Entrada (Incoming FKs / Dependentes).
-* **Física e Controles Interativos**:
-  * Clique e arraste de nós com física elástica.
-  * Zoom suave pela roda do mouse e pan (arrastar o fundo).
-  * Seletor de profundidade de visualização (1 ou 2 níveis).
-  * Clique nos nós para navegar diretamente ou abrir ao lado para comparação.
+    * 🔵 **Azul / Primário**: Relacionamentos de Saída (Outgoing FKs).
+    * 🟣 **Índigo / Lilás**: Relacionamentos de Entrada (Incoming FKs / Dependentes).
+* **Organização em Grade para Alta Densidade**:
+  * Para tabelas com centenas de conexões (como `PFUNC` com +560 conexões ou `TMOV`), os nós são distribuídos em colunas balanceadas e organizadas, eliminando o efeito de "leque preto opaco" de linhas sobrepostas.
+  * Seletor de limite de conexões (`20 | 40 | 80 | Todas`) e campo de busca rápida direto no grafo.
+* **Interatividade & Controles de Câmera**:
+  * Clique e arraste livre de nós (`draggable`), pan com mouse ou toque e zoom com a roda.
+  * Botões de zoom in, zoom out e **Centralizar Visão (`fitView`)** com animação suave.
+  * MiniMap no canto inferior direito para navegação panorâmica.
+  * Ações rápidas em cada card (`[Ao Lado]` e `[Ver]`) e popover flutuante detalhado ao clicar em qualquer nó.
 
 ---
 
