@@ -2,6 +2,11 @@
 
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
+## Módulos Principais
+
+* **[Dicionário de Dados TOTVS RM](docs/dicionario-rm/README.md)**: Plataforma pública para exploração semântica, descoberta de relacionamentos e inspeção de +9.600 tabelas do ERP TOTVS RM com grafos interativos e visualização lado a lado.
+* **RM SQL AI**: Assistente de inteligência artificial para geração e análise de consultas SQL.
+
 ## Getting Started
 
 First, run the development server:
