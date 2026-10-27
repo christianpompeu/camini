@@ -14,6 +14,7 @@ import {
 import { Navbar } from "@/components/layout/navbar";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { CaminiLogo } from "@/components/ui/camini-logo";
 
 export default function NotFound() {
   const quickLinks = [
@@ -149,7 +150,7 @@ export default function NotFound() {
       <footer className="border-t border-border py-6 px-4 sm:px-6 bg-muted/20 text-xs text-muted-foreground">
         <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2">
-            <span className="font-semibold text-foreground">Camini</span>
+            <CaminiLogo variant="symbol-text" size="xs" href="/" />
             <span>•</span>
             <span>Hub Integrado de Gestão</span>
             <span>•</span>

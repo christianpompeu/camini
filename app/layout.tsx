@@ -17,6 +17,17 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Camini — Hub Integrado de Gestão",
   description: "Plataforma integrada de gestão acadêmica, operacional e inteligência de dados.",
+  icons: {
+    icon: [
+      { url: "/favicon.ico", sizes: "any" },
+      { url: "/icon.png", type: "image/png", sizes: "512x512" },
+      { url: "/logos/current/logo_icon_color.png", type: "image/png" },
+    ],
+    apple: [
+      { url: "/apple-icon.png", sizes: "192x192", type: "image/png" },
+      { url: "/logos/current/logo_icon_color.png", type: "image/png" },
+    ],
+  },
 };
 
 export default function RootLayout({

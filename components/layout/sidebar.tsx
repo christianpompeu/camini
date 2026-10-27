@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { 
   LayoutDashboard, 
@@ -80,8 +81,15 @@ export function AppSidebar() {
               render={<Link href="/dashboard" onClick={closeMobile} />}
               className="hover:bg-sidebar-accent"
             >
-              <div className="flex aspect-square size-8 items-center justify-center rounded-md bg-primary text-primary-foreground font-bold text-sm shrink-0">
-                C
+              <div className="flex aspect-square size-8 items-center justify-center rounded-lg overflow-hidden shrink-0">
+                <Image
+                  src="/logos/current/logo_icon_color.png"
+                  alt="Camini"
+                  width={64}
+                  height={64}
+                  priority
+                  className="size-8 object-contain"
+                />
               </div>
               <div className="flex flex-col gap-0.5 leading-none overflow-hidden">
                 <span className="font-semibold tracking-tight text-sm text-sidebar-foreground truncate">

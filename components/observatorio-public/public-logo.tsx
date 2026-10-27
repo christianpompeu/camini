@@ -7,18 +7,17 @@ export function PublicLogo({ className }: { className?: string }) {
     <Link
       href="/"
       aria-label="Camini — página inicial"
-      className={cn("inline-flex items-center gap-2 text-lg font-bold tracking-tight", className)}
+      className={cn("inline-flex items-center gap-2.5 text-lg font-bold tracking-tight group", className)}
     >
-      <span className="grid size-8 place-items-center overflow-hidden rounded-xl bg-[#5b2cff] shadow-sm shadow-violet-500/25">
-        <Image
-          src="/logos/current/camini_logos (2).png"
-          alt=""
-          width={26}
-          height={26}
-          className="size-6 object-contain"
-        />
-      </span>
-      <span>Camini</span>
+      <Image
+        src="/logos/current/logo_icon_color.png"
+        alt="Camini"
+        width={56}
+        height={56}
+        className="size-7 object-contain transition-transform duration-200 group-hover:scale-105"
+        priority
+      />
+      <span className="transition-colors group-hover:text-violet-600">Camini</span>
     </Link>
   );
 }

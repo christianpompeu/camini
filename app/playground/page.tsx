@@ -23,6 +23,7 @@ import {
 
 // Componentes Reais do Camini
 import { Navbar } from "@/components/layout/navbar";
+import { CaminiLogo } from "@/components/ui/camini-logo";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -279,6 +280,86 @@ export default function DesignSystemPlaygroundPage() {
                 <p className="text-sm text-muted-foreground">
                   Tokens semânticos neutros adaptáveis aos modos claro e escuro.
                 </p>
+              </div>
+
+              {/* Identidade Visual: Ícone & Logos Oficiais */}
+              <div className="space-y-3">
+                <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  Identidade Visual & Marcas Oficiais
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                  {/* Ícone da Aplicação / Favicon */}
+                  <div className="rounded-xl border border-border bg-card p-4 shadow-xs space-y-3 flex flex-col justify-between">
+                    <div className="h-28 w-full rounded-lg bg-muted/40 border border-border/50 flex items-center justify-center p-3">
+                      <CaminiLogo variant="icon" size="xl" />
+                    </div>
+                    <div className="space-y-1">
+                      <span className="font-semibold text-xs text-foreground block">
+                        Ícone Oficial & Favicon
+                      </span>
+                      <span className="text-[11px] text-muted-foreground block font-mono">
+                        logo_icon_color.png
+                      </span>
+                      <p className="text-[11px] text-muted-foreground leading-tight pt-1">
+                        Utilizado como favicon, ícone PWA e marca compacta em sidebars.
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Logo Preta (Light mode) */}
+                  <div className="rounded-xl border border-border bg-card p-4 shadow-xs space-y-3 flex flex-col justify-between">
+                    <div className="h-28 w-full rounded-lg bg-zinc-100 dark:bg-zinc-200 border border-border/50 flex items-center justify-center p-4">
+                      <CaminiLogo variant="black" size="lg" />
+                    </div>
+                    <div className="space-y-1">
+                      <span className="font-semibold text-xs text-foreground block">
+                        Logo Preta (Monocromática)
+                      </span>
+                      <span className="text-[11px] text-muted-foreground block font-mono">
+                        logo_black.png
+                      </span>
+                      <p className="text-[11px] text-muted-foreground leading-tight pt-1">
+                        Para fundos claros, cabeçalhos neutros e impressões.
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Logo Colorida */}
+                  <div className="rounded-xl border border-border bg-card p-4 shadow-xs space-y-3 flex flex-col justify-between">
+                    <div className="h-28 w-full rounded-lg bg-zinc-950 border border-border/50 flex items-center justify-center p-4">
+                      <CaminiLogo variant="color" size="lg" />
+                    </div>
+                    <div className="space-y-1">
+                      <span className="font-semibold text-xs text-foreground block">
+                        Logo Colorida (Dark / Destaque)
+                      </span>
+                      <span className="text-[11px] text-muted-foreground block font-mono">
+                        logo_color.png
+                      </span>
+                      <p className="text-[11px] text-muted-foreground leading-tight pt-1">
+                        Ícone gradiente com tipografia branca para fundos escuros.
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Logo Branca (Monocromática) */}
+                  <div className="rounded-xl border border-border bg-card p-4 shadow-xs space-y-3 flex flex-col justify-between">
+                    <div className="h-28 w-full rounded-lg bg-zinc-900 border border-border/50 flex items-center justify-center p-4">
+                      <CaminiLogo variant="white" size="lg" />
+                    </div>
+                    <div className="space-y-1">
+                      <span className="font-semibold text-xs text-foreground block">
+                        Logo Branca (Monocromática)
+                      </span>
+                      <span className="text-[11px] text-muted-foreground block font-mono">
+                        logo.png
+                      </span>
+                      <p className="text-[11px] text-muted-foreground leading-tight pt-1">
+                        Versão monocromática branca para superfícies escuras.
+                      </p>
+                    </div>
+                  </div>
+                </div>
               </div>
 
               {/* Grid de Cores Semânticas */}
@@ -991,7 +1072,7 @@ export default function DesignSystemPlaygroundPage() {
         <footer className="border-t border-border py-6 px-4 sm:px-6 bg-muted/20 text-xs text-muted-foreground mt-16">
           <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-2">
-              <span className="font-semibold text-foreground">Camini</span>
+              <CaminiLogo variant="symbol-text" size="xs" href="/" />
               <span>•</span>
               <span>Design System Studio Admin</span>
               <span>•</span>

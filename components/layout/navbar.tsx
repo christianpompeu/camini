@@ -12,6 +12,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { CaminiLogo } from "@/components/ui/camini-logo";
 
 export function Navbar() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -69,9 +70,7 @@ export function Navbar() {
       <header className="sticky top-0 z-40 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="mx-auto flex h-14 max-w-5xl items-center justify-between px-6">
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-2 font-bold tracking-tight text-lg">
-            Camini
-          </Link>
+          <CaminiLogo variant="symbol-text" size="sm" href="/" priority />
 
           {/* Desktop Nav */}
           <nav className="hidden md:flex items-center gap-4 lg:gap-6 text-sm font-medium">

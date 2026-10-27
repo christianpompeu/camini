@@ -2,6 +2,7 @@
 
 import React, { useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import {
   X,
@@ -169,8 +170,15 @@ export function MobileSidebar({ isOpen, onClose }: MobileSidebarProps) {
               onClick={onClose}
               className="flex items-center gap-2.5"
             >
-              <div className="h-9 w-9 rounded-lg bg-primary text-primary-foreground flex items-center justify-center font-bold text-lg">
-                C
+              <div className="h-9 w-9 rounded-lg overflow-hidden shrink-0 flex items-center justify-center">
+                <Image
+                  src="/logos/current/logo_icon_color.png"
+                  alt="Camini"
+                  width={72}
+                  height={72}
+                  priority
+                  className="h-9 w-9 object-contain"
+                />
               </div>
               <div className="flex flex-col">
                 <span className="font-bold text-lg tracking-tight leading-tight">

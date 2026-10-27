@@ -2,10 +2,12 @@
 
 import React from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { ArrowRight, Database, Dumbbell, LayoutGrid, CalendarDays, Palette, Radio, Compass, Cpu, Sparkles, Layers } from "lucide-react";
 import { Navbar } from "@/components/layout/navbar";
 import { Button } from "@/components/ui/button";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { CaminiLogo } from "@/components/ui/camini-logo";
 
 export default function CaminiHomePage() {
   return (
@@ -14,10 +16,20 @@ export default function CaminiHomePage() {
 
       <main className="flex-1">
         {/* HERO SECTION - OpenDocs Style */}
-        <section className="mx-auto flex max-w-5xl flex-col items-center justify-center gap-6 py-24 px-6 md:py-32 lg:py-40 text-center">
-          <div className="inline-flex items-center rounded-full border border-border bg-muted/50 px-3 py-1 text-sm font-medium">
-            <span className="flex h-2 w-2 rounded-full bg-primary mr-2"></span>
-            Camini v0.1 • Studio Admin
+        <section className="mx-auto flex max-w-5xl flex-col items-center justify-center gap-6 py-20 px-6 md:py-28 lg:py-36 text-center">
+          <div className="flex flex-col items-center gap-4">
+            <Image
+              src="/logos/current/logo_icon_color.png"
+              alt="Camini"
+              width={160}
+              height={160}
+              priority
+              className="size-20 sm:size-24 object-contain drop-shadow-md select-none transition-transform duration-300 hover:scale-105"
+            />
+            <div className="inline-flex items-center rounded-full border border-border bg-muted/50 px-3.5 py-1 text-sm font-medium">
+              <span className="flex h-2 w-2 rounded-full bg-emerald-500 mr-2 animate-pulse"></span>
+              Camini v0.1 • Studio Admin
+            </div>
           </div>
           
           <h1 className="text-4xl font-extrabold tracking-tight sm:text-5xl md:text-6xl lg:text-7xl">
@@ -257,7 +269,7 @@ export default function CaminiHomePage() {
       <footer className="border-t border-border py-8 md:py-12 mt-auto">
         <div className="mx-auto max-w-5xl px-6 flex flex-col md:flex-row justify-between items-center gap-6">
           <div className="flex items-center gap-4">
-            <span className="font-bold text-xl tracking-tight">Camini</span>
+            <CaminiLogo variant="symbol-text" size="sm" href="/" />
             <span className="text-muted-foreground text-sm">
               © 2026. Todos os direitos reservados.
             </span>

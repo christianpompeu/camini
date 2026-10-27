@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Eye, EyeOff, Loader2, ArrowLeft } from "lucide-react";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
+import { CaminiLogo } from "@/components/ui/camini-logo";
 
 export default function LoginPage() {
   const [state, formAction, isPending] = useActionState(login, null);
@@ -18,15 +19,7 @@ export default function LoginPage() {
       {/* Lado Esquerdo: Painel Institucional Studio Baseline (Apenas Desktop) */}
       <div className="hidden md:flex md:w-1/2 flex-col justify-between bg-zinc-950 p-10 text-white relative">
         <div className="flex items-center justify-between z-10">
-          <Link
-            href="/"
-            className="flex items-center gap-2.5 text-white hover:text-zinc-200 transition-colors"
-          >
-            <div className="h-8 w-8 rounded-md bg-white text-zinc-950 font-bold flex items-center justify-center text-sm shadow-xs">
-              C
-            </div>
-            <span className="text-xl font-semibold tracking-tight">Camini</span>
-          </Link>
+          <CaminiLogo variant="color" size="lg" href="/" priority />
           <ThemeToggle className="border-zinc-800 bg-zinc-900 text-zinc-100 hover:bg-zinc-800 hover:text-white" />
         </div>
 
@@ -62,10 +55,7 @@ export default function LoginPage() {
         <div className="w-full max-w-sm mx-auto my-auto py-8">
           <div className="flex flex-col space-y-2 mb-8">
             <div className="flex items-center gap-2 md:hidden mb-4">
-              <div className="h-7 w-7 rounded-md bg-primary text-primary-foreground font-bold flex items-center justify-center text-xs">
-                C
-              </div>
-              <span className="font-semibold text-lg tracking-tight">Camini</span>
+              <CaminiLogo variant="symbol-text" size="md" href="/" />
             </div>
             <h1 className="text-2xl font-semibold tracking-tight text-foreground">
               Acesso ao painel

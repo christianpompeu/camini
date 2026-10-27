@@ -11,6 +11,7 @@ import {
   BookOpen,
 } from "lucide-react";
 import { Navbar } from "@/components/layout/navbar";
+import { CaminiLogo } from "@/components/ui/camini-logo";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -252,7 +253,7 @@ export default async function RadarEditionDetailPage(props: PageProps) {
       <footer className="border-t border-border py-8 md:py-12 mt-auto">
         <div className="mx-auto max-w-5xl px-6 flex flex-col md:flex-row justify-between items-center gap-6">
           <div className="flex items-center gap-4">
-            <span className="font-bold text-xl tracking-tight">Camini</span>
+            <CaminiLogo variant="symbol-text" size="sm" href="/" />
             <span className="text-muted-foreground text-sm">
               Radar da Reforma Tributária • © 2026.
             </span>
