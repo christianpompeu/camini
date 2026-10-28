@@ -80,7 +80,7 @@ export async function callSemanticPlannerLlm(
 
   if (usage) {
     const lat = usage.latencyMs ? Math.round(usage.latencyMs) : "?";
-    console.log(`\x1b[36m[RAG ENGINE] [PLAN]\x1b[0m\nIntent: ${result.intent}\nDomains: ${result.domains?.join(", ")}\nEntities: ${result.entities?.join(", ")}\nFilters: ${result.filters?.length || 0}\nOperations: ${result.operations?.join(", ")}\nCandidateTables: ${result.candidateTables?.join(", ")}\n`);
+    // console.log(`\x1b[36m[RAG ENGINE] [PLAN]\x1b[0m\nIntent: ${result.intent}\nDomains: ${result.domains?.join(", ")}\nEntities: ${result.entities?.join(", ")}\nFilters: ${result.filters?.length || 0}\nOperations: ${result.operations?.join(", ")}\nCandidateTables: ${result.candidateTables?.join(", ")}\n`);
   }
 
   // Sanitização básica das tabelas retornadas

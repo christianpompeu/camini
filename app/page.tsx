@@ -3,7 +3,7 @@
 import React from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { ArrowRight, Database, Dumbbell, LayoutGrid, CalendarDays, Palette, Radio, Compass, Cpu, Sparkles, Layers } from "lucide-react";
+import { ArrowRight, Database, Dumbbell, LayoutGrid, CalendarDays, Palette, Radio, Compass, Cpu, Sparkles, Layers, ShoppingCart } from "lucide-react";
 import { Navbar } from "@/components/layout/navbar";
 import { Button } from "@/components/ui/button";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -210,6 +210,26 @@ export default function CaminiHomePage() {
                   <CardDescription className="text-sm mt-2">
                     Catálogo com mais de 9.400 tabelas, colunas, chaves estrangeiras, 
                     visualização lado a lado e gerador de consultas T-SQL.
+                  </CardDescription>
+                </CardHeader>
+              </Card>
+            </Link>
+
+            {/* Mercado & Carrinho Offline */}
+            <Link href="/mercado" className="group">
+              <Card className="h-full transition-colors hover:border-primary/50 hover:bg-muted/30 border-primary/20">
+                <CardHeader>
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="inline-flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+                      <ShoppingCart className="h-5 w-5" />
+                    </div>
+                    <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                      Offline-First
+                    </span>
+                  </div>
+                  <CardTitle className="text-xl">Mercado & Carrinho</CardTitle>
+                  <CardDescription className="text-sm mt-2">
+                    Registro inteligente de compras no supermercado com cálculo automático, fotos de produtos e captura de cupom fiscal.
                   </CardDescription>
                 </CardHeader>
               </Card>

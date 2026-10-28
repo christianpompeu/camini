@@ -41,7 +41,7 @@ export async function callRouterLlm(
   if (usage) {
     const lat = usage.latencyMs ? Math.round(usage.latencyMs) : "?";
     const tablesStr = result.tables ? result.tables.join(", ") : "nenhuma";
-    console.log(`\x1b[36m[RAG ENGINE] [ROUTER]\x1b[0m\nProvider: ${provider}\nModel: ${model}\nTables: ${tablesStr}\nInput: ${usage.inputTokens}\nOutput: ${usage.outputTokens}\nTotal: ${usage.totalTokens}\nLatency: ${lat}ms\n`);
+    // console.log(`\x1b[36m[RAG ENGINE] [ROUTER]\x1b[0m\nProvider: ${provider}\nModel: ${model}\nTables: ${tablesStr}\nInput: ${usage.inputTokens}\nOutput: ${usage.outputTokens}\nTotal: ${usage.totalTokens}\nLatency: ${lat}ms\n`);
   }
 
   // Validação/sanitização básica das tabelas retornadas

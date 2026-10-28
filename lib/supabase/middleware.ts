@@ -62,6 +62,7 @@ const ALWAYS_PUBLIC_PREFIXES = [
   "/dicionario-rm",
   "/dicionario",
   "/api/totvs-rm/tables",
+  "/mercado",
 ];
 
 // Prefixos conhecidos de rotas protegidas por padrão do sistema

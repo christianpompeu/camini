@@ -16,7 +16,7 @@ export type Assinante = {
 export async function getAssinantes() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  console.log("Session User in getAssinantes:", user?.email);
+  // console.log("Session User in getAssinantes:", user?.email);
 
   const { data, error } = await supabase
     .from("radar_assinantes")

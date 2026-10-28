@@ -27,6 +27,8 @@ export function Navbar() {
   const isPlayground = pathname.startsWith("/playground");
   const isObservatorio = pathname.startsWith("/panorama") || pathname.startsWith("/tech");
 
+  const isMercado = pathname.startsWith("/mercado");
+
   const navItems = [
     {
       href: "/",
@@ -37,6 +39,11 @@ export function Navbar() {
       href: "/dashboard",
       label: "Dashboard",
       isActive: isDashboard,
+    },
+    {
+      href: "/mercado",
+      label: "Mercado",
+      isActive: isMercado,
     },
     {
       href: "/radar",

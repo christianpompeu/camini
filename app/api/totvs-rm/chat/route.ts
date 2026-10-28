@@ -84,7 +84,7 @@ export async function POST(req: NextRequest) {
     const eT = contextMetadata.expandedTables.length ? contextMetadata.expandedTables.join(", ") : "nenhuma";
     const aT = contextMetadata.finalAllowedTables.length ? contextMetadata.finalAllowedTables.join(", ") : "nenhuma";
     
-    console.log(`\x1b[36m[RAG ENGINE] [CONTEXT]\x1b[0m\nRouterRawTables: ${rT}\nSeedTables: ${sT}\nExpandedTables: ${eT}\nAllowedTables: ${aT}\nLatency: ${Math.round(contextLatency)}ms\n`);
+    // console.log(`\x1b[36m[RAG ENGINE] [CONTEXT]\x1b[0m\nRouterRawTables: ${rT}\nSeedTables: ${sT}\nExpandedTables: ${eT}\nAllowedTables: ${aT}\nLatency: ${Math.round(contextLatency)}ms\n`);
 
     // 2. Complexity Classification
     let complexityLevel = "unknown";
@@ -97,7 +97,7 @@ export async function POST(req: NextRequest) {
       const complexity = classifyQueryComplexity(semanticPlan, contextMetadata);
       complexityLevel = complexity.level;
 
-      console.log(`\x1b[36m[RAG ENGINE] [COMPLEXITY]\x1b[0m\nLevel: ${complexity.level}\nReasons:\n- ${complexity.reasons.join("\n- ")}\n`);
+      // console.log(`\x1b[36m[RAG ENGINE] [COMPLEXITY]\x1b[0m\nLevel: ${complexity.level}\nReasons:\n- ${complexity.reasons.join("\n- ")}\n`);
 
       // 3. Deterministic Routing Policy
       const routingConfig: RoutingConfig = {
@@ -121,9 +121,9 @@ export async function POST(req: NextRequest) {
       preferredGenModel = decision.preferredModel;
       allowEscalation = decision.allowEscalation;
 
-      console.log(`\x1b[36m[RAG ENGINE] [ROUTING]\x1b[0m\nMode: ${decision.strategy}\nStrategy: ${decision.strategy}\nPreferredProvider: ${decision.preferredProvider}\nPreferredModel: ${decision.preferredModel}\nAllowRepair: ${decision.allowRepair}\nAllowEscalation: ${decision.allowEscalation}\n`);
+      // console.log(`\x1b[36m[RAG ENGINE] [ROUTING]\x1b[0m\nMode: ${decision.strategy}\nStrategy: ${decision.strategy}\nPreferredProvider: ${decision.preferredProvider}\nPreferredModel: ${decision.preferredModel}\nAllowRepair: ${decision.allowRepair}\nAllowEscalation: ${decision.allowEscalation}\n`);
     } else {
-      console.log(`\x1b[36m[RAG ENGINE] [ROUTING]\x1b[0m\nMode: static (Fallback)\nPreferredProvider: ${preferredGenProvider}\n`);
+      // console.log(`\x1b[36m[RAG ENGINE] [ROUTING]\x1b[0m\nMode: static (Fallback)\nPreferredProvider: ${preferredGenProvider}\n`);
     }
 
     const generatorChain: ProviderCredential[] = [
@@ -185,13 +185,13 @@ export async function POST(req: NextRequest) {
         totalLatency += usage.latencyMs || 0;
         
         const lat = usage.latencyMs ? Math.round(usage.latencyMs) : "?";
-        console.log(`\x1b[36m[RAG ENGINE] [GENERATOR${isEscalation ? ' ESCALATION' : ''}]\x1b[0m\nProvider: ${provider}\nModel: ${model}\nInput: ${usage.inputTokens}\nOutput: ${usage.outputTokens}\nTotal: ${usage.totalTokens}\nLatency: ${lat}ms\n`);
+        // console.log(`\x1b[36m[RAG ENGINE] [GENERATOR${isEscalation ? ' ESCALATION' : ''}]\x1b[0m\nProvider: ${provider}\nModel: ${model}\nInput: ${usage.inputTokens}\nOutput: ${usage.outputTokens}\nTotal: ${usage.totalTokens}\nLatency: ${lat}ms\n`);
       }
 
       const normalized = validateAndNormalizeTSql(result.sqlCode || "");
       const checkResult = checkSql(normalized.sql);
       
-      console.log(`\x1b[36m[RAG ENGINE] [VERIFY${isEscalation ? ' ESCALATION' : ''}]\x1b[0m\nFirstPass: ${checkResult.ok ? "PASS" : "FAIL"}\nErrors: ${checkResult.problems.length}\n`);
+      // console.log(`\x1b[36m[RAG ENGINE] [VERIFY${isEscalation ? ' ESCALATION' : ''}]\x1b[0m\nFirstPass: ${checkResult.ok ? "PASS" : "FAIL"}\nErrors: ${checkResult.problems.length}\n`);
 
       if (checkResult.ok) {
         return { ok: true, result, normalized, warnings: normalized.warnings };
@@ -224,13 +224,13 @@ export async function POST(req: NextRequest) {
            totalLatency += repairUsage.latencyMs || 0;
            
            const lat = repairUsage.latencyMs ? Math.round(repairUsage.latencyMs) : "?";
-           console.log(`\x1b[36m[RAG ENGINE] [REPAIR${isEscalation ? ' ESCALATION' : ''}]\x1b[0m\nProvider: ${repProv}\nModel: ${repMod}\nInput: ${repairUsage.inputTokens}\nOutput: ${repairUsage.outputTokens}\nTotal: ${repairUsage.totalTokens}\nLatency: ${lat}ms\n`);
+           // console.log(`\x1b[36m[RAG ENGINE] [REPAIR${isEscalation ? ' ESCALATION' : ''}]\x1b[0m\nProvider: ${repProv}\nModel: ${repMod}\nInput: ${repairUsage.inputTokens}\nOutput: ${repairUsage.outputTokens}\nTotal: ${repairUsage.totalTokens}\nLatency: ${lat}ms\n`);
         }
         
         const normalizedRepair = validateAndNormalizeTSql(repaired.sqlCode || "");
         const secondCheck = checkSql(normalizedRepair.sql);
         
-        console.log(`\x1b[36m[RAG ENGINE] [VERIFY${isEscalation ? ' ESCALATION' : ''}]\x1b[0m\nAfterRepair: ${secondCheck.ok ? "PASS" : "FAIL"}\n`);
+        // console.log(`\x1b[36m[RAG ENGINE] [VERIFY${isEscalation ? ' ESCALATION' : ''}]\x1b[0m\nAfterRepair: ${secondCheck.ok ? "PASS" : "FAIL"}\n`);
 
         if (secondCheck.ok) {
           wasRepaired = true;
@@ -247,7 +247,7 @@ export async function POST(req: NextRequest) {
       const attempt1 = await runGenerationCycle(generatorChain, false);
       if (attempt1.ok) {
         const pipelineLatency = performance.now() - requestStartTime;
-        console.log(`\x1b[36m[RAG ENGINE] [RESULT]\x1b[0m\nPlannerTokens: ${contextMetadata.routerMetadata?.usage?.totalTokens || 0}\nGeneratorTokens: ${generatorTokens}\nRepairTokens: ${repairTokens}\nEscalationTokens: ${escalationTokens}\nRequestInputTokens: ${totalInput}\nRequestOutputTokens: ${totalOutput}\nRequestTotalTokens: ${totalTokens}\nRequestPipelineLatency: ${Math.round(pipelineLatency)}ms\n`);
+        // console.log(`\x1b[36m[RAG ENGINE] [RESULT]\x1b[0m\nPlannerTokens: ${contextMetadata.routerMetadata?.usage?.totalTokens || 0}\nGeneratorTokens: ${generatorTokens}\nRepairTokens: ${repairTokens}\nEscalationTokens: ${escalationTokens}\nRequestInputTokens: ${totalInput}\nRequestOutputTokens: ${totalOutput}\nRequestTotalTokens: ${totalTokens}\nRequestPipelineLatency: ${Math.round(pipelineLatency)}ms\n`);
         return NextResponse.json({
           content: attempt1.result!.sqlExplanation || "Consulta gerada com sucesso.",
           sqlCode: attempt1.normalized!.sql,
@@ -271,7 +271,7 @@ export async function POST(req: NextRequest) {
         const escalationRoute = determineEscalationRoute(preferredGenProvider, preferredGenModel, routingConfig);
         
         if (escalationRoute) {
-          console.log(`\x1b[36m[RAG ENGINE] [ESCALATION]\x1b[0m\nFromProvider: ${preferredGenProvider}\nFromModel: ${preferredGenModel}\nToProvider: ${escalationRoute.provider}\nToModel: ${escalationRoute.model}\nReason: verifier_failed_after_repair\nEscalation: 1/1\n`);
+          // console.log(`\x1b[36m[RAG ENGINE] [ESCALATION]\x1b[0m\nFromProvider: ${preferredGenProvider}\nFromModel: ${preferredGenModel}\nToProvider: ${escalationRoute.provider}\nToModel: ${escalationRoute.model}\nReason: verifier_failed_after_repair\nEscalation: 1/1\n`);
           
           const escalationChain: ProviderCredential[] = [
             { id: escalationRoute.provider as LlmProviderId, apiKey: keyFor(escalationRoute.provider as LlmProviderId), model: escalationRoute.model }
@@ -281,7 +281,7 @@ export async function POST(req: NextRequest) {
           if (attempt2.ok) {
             wasEscalated = true;
             const pipelineLatency = performance.now() - requestStartTime;
-            console.log(`\x1b[36m[RAG ENGINE] [RESULT]\x1b[0m\nPlannerTokens: ${contextMetadata.routerMetadata?.usage?.totalTokens || 0}\nGeneratorTokens: ${generatorTokens}\nRepairTokens: ${repairTokens}\nEscalationTokens: ${escalationTokens}\nRequestInputTokens: ${totalInput}\nRequestOutputTokens: ${totalOutput}\nRequestTotalTokens: ${totalTokens}\nRequestPipelineLatency: ${Math.round(pipelineLatency)}ms\n`);
+            // console.log(`\x1b[36m[RAG ENGINE] [RESULT]\x1b[0m\nPlannerTokens: ${contextMetadata.routerMetadata?.usage?.totalTokens || 0}\nGeneratorTokens: ${generatorTokens}\nRepairTokens: ${repairTokens}\nEscalationTokens: ${escalationTokens}\nRequestInputTokens: ${totalInput}\nRequestOutputTokens: ${totalOutput}\nRequestTotalTokens: ${totalTokens}\nRequestPipelineLatency: ${Math.round(pipelineLatency)}ms\n`);
             return NextResponse.json({
               content: attempt2.result!.sqlExplanation || "Consulta gerada com sucesso.",
               sqlCode: attempt2.normalized!.sql,
@@ -304,7 +304,7 @@ export async function POST(req: NextRequest) {
     const normalizedFallback = validateAndNormalizeTSql(fallbackResponse.sqlCode);
 
     const pipelineLatency = performance.now() - requestStartTime;
-    console.log(`\x1b[36m[RAG ENGINE] [RESULT]\x1b[0m\nPlannerTokens: ${contextMetadata.routerMetadata?.usage?.totalTokens || 0}\nGeneratorTokens: ${generatorTokens}\nRepairTokens: ${repairTokens}\nEscalationTokens: ${escalationTokens}\nRequestInputTokens: ${totalInput}\nRequestOutputTokens: ${totalOutput}\nRequestTotalTokens: ${totalTokens}\nRequestPipelineLatency: ${Math.round(pipelineLatency)}ms\n`);
+    // console.log(`\x1b[36m[RAG ENGINE] [RESULT]\x1b[0m\nPlannerTokens: ${contextMetadata.routerMetadata?.usage?.totalTokens || 0}\nGeneratorTokens: ${generatorTokens}\nRepairTokens: ${repairTokens}\nEscalationTokens: ${escalationTokens}\nRequestInputTokens: ${totalInput}\nRequestOutputTokens: ${totalOutput}\nRequestTotalTokens: ${totalTokens}\nRequestPipelineLatency: ${Math.round(pipelineLatency)}ms\n`);
 
     return NextResponse.json({
       content: fallbackResponse.sqlExplanation,

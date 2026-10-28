@@ -16,12 +16,23 @@ import {
   DialogTrigger,
   DialogFooter,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { addAssinante, toggleStatusAssinante, deleteAssinante, type Assinante } from "./actions";
 
 export function AssinantesClient({ assinantes }: { assinantes: Assinante[] }) {
   const [searchTerm, setSearchTerm] = useState("");
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [subscriberToDelete, setSubscriberToDelete] = useState<string | null>(null);
 
   const filtered = assinantes.filter(
     (a) =>
@@ -50,8 +61,14 @@ export function AssinantesClient({ assinantes }: { assinantes: Assinante[] }) {
     else toast.success(current === "ativo" ? "Assinatura cancelada." : "Assinatura reativada.");
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm("Tem certeza que deseja excluir permanentemente este assinante?")) return;
+  const handleDelete = (id: string) => {
+    setSubscriberToDelete(id);
+  };
+
+  const confirmDeleteSubscriber = async () => {
+    if (!subscriberToDelete) return;
+    const id = subscriberToDelete;
+    setSubscriberToDelete(null);
     const result = await deleteAssinante(id);
     if (result.error) toast.error(result.error);
     else toast.success("Assinante excluído.");
@@ -194,6 +211,37 @@ export function AssinantesClient({ assinantes }: { assinantes: Assinante[] }) {
           </table>
         </div>
       </Card>
+
+      {/* Modal de Confirmação para Excluir Assinante */}
+      <AlertDialog
+        open={Boolean(subscriberToDelete)}
+        onOpenChange={(open) => !open && setSubscriberToDelete(null)}
+      >
+        <AlertDialogContent className="max-w-sm rounded-2xl p-6 bg-background border border-border shadow-2xl">
+          <AlertDialogHeader className="space-y-2 text-left">
+            <AlertDialogTitle className="text-lg font-bold text-foreground">
+              Excluir assinante?
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-sm text-muted-foreground">
+              Tem certeza que deseja excluir permanentemente este assinante? Esta ação não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="flex flex-row justify-end gap-2 pt-4">
+            <AlertDialogCancel
+              onClick={() => setSubscriberToDelete(null)}
+              className="rounded-xl"
+            >
+              Cancelar
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDeleteSubscriber}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90 rounded-xl font-medium"
+            >
+              Excluir Assinante
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

@@ -17,6 +17,7 @@ import {
   Compass,
   Cpu,
   Layers,
+  ShoppingCart,
 } from "lucide-react";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 
@@ -56,6 +57,7 @@ export function MobileSidebar({ isOpen, onClose }: MobileSidebarProps) {
   const isCalendario = pathname.startsWith("/ctc/calendario");
   const isPanorama = pathname.startsWith("/panorama");
   const isTech = pathname.startsWith("/tech");
+  const isMercado = pathname.startsWith("/mercado");
 
   const publications = [
     {
@@ -110,6 +112,14 @@ export function MobileSidebar({ isOpen, onClose }: MobileSidebarProps) {
       badge: "Público",
       icon: Layers,
       isActive: isDicionario,
+    },
+    {
+      href: "/mercado",
+      title: "Mercado & Carrinho",
+      subtitle: "Carrinho offline & cupom fiscal",
+      badge: "Público",
+      icon: ShoppingCart,
+      isActive: isMercado,
     },
     {
       href: "/forca",

@@ -276,7 +276,7 @@ export async function chatCompleteWithFailover<T = LlmSqlJson>(
       else if (params.stage === "generator" && process.env.GROQ_GENERATOR_MODEL) actualModel = process.env.GROQ_GENERATOR_MODEL.trim();
     }
 
-    console.log(`\x1b[36m[RAG ENGINE] [${stageName} ATTEMPT]\x1b[0m\nProvider: ${cred.id}\nModel: ${actualModel}\nAttempt: ${attempt}\n`);
+    // console.log(`\x1b[36m[RAG ENGINE] [${stageName} ATTEMPT]\x1b[0m\nProvider: ${cred.id}\nModel: ${actualModel}\nAttempt: ${attempt}\n`);
 
     try {
       if (cred.id === "gemini") {
@@ -308,7 +308,7 @@ export async function chatCompleteWithFailover<T = LlmSqlJson>(
         else errorType = err.name;
       }
       
-      console.log(`\x1b[31m[RAG ENGINE] [${stageName} FAILOVER]\x1b[0m\nProvider: ${cred.id}\nModel: ${actualModel}\nStatus: ${status}\nErrorType: ${errorType}\nMessage: ${message.substring(0, 300)}\n`);
+      // console.log(`\x1b[31m[RAG ENGINE] [${stageName} FAILOVER]\x1b[0m\nProvider: ${cred.id}\nModel: ${actualModel}\nStatus: ${status}\nErrorType: ${errorType}\nMessage: ${message.substring(0, 300)}\n`);
       
       errors.push(`${cred.id}: ${message}`);
       attempt++;

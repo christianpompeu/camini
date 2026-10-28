@@ -48,7 +48,7 @@ class OutboxQueue {
     };
     this.tasks.push(task);
     this.saveToStorage();
-    console.log(`[Outbox] Task ${task.id} of type ${type} enqueued.`);
+    // console.log(`[Outbox] Task ${task.id} of type ${type} enqueued.`);
   }
 
   getPendingTasks() {
@@ -66,7 +66,7 @@ class OutboxQueue {
   markAsCompleted(taskId: string) {
     this.tasks = this.tasks.filter(t => t.id !== taskId);
     this.saveToStorage();
-    console.log(`[Outbox] Task ${taskId} completed and removed.`);
+    // console.log(`[Outbox] Task ${taskId} completed and removed.`);
   }
 
   markAsFailed(taskId: string) {
@@ -75,7 +75,7 @@ class OutboxQueue {
       task.status = "failed";
       task.retryCount += 1;
       this.saveToStorage();
-      console.log(`[Outbox] Task ${taskId} failed (Attempt ${task.retryCount}).`);
+      // console.log(`[Outbox] Task ${taskId} failed (Attempt ${task.retryCount}).`);
     }
   }
 }
