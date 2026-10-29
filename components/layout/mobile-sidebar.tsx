@@ -18,6 +18,7 @@ import {
   Cpu,
   Layers,
   ShoppingCart,
+  Receipt,
 } from "lucide-react";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 
@@ -50,6 +51,7 @@ export function MobileSidebar({ isOpen, onClose }: MobileSidebarProps) {
   const isHome = pathname === "/";
   const isDashboard = pathname.startsWith("/dashboard");
   const isRadar = pathname.startsWith("/radar");
+  const isNfePag = pathname.startsWith("/nfe-pag");
   const isPlayground = pathname.startsWith("/playground");
   const isForca = pathname.startsWith("/forca");
   const isTotvsRm = pathname.startsWith("/totvs-rm");
@@ -96,6 +98,14 @@ export function MobileSidebar({ isOpen, onClose }: MobileSidebarProps) {
       badge: "Editorial",
       icon: Radio,
       isActive: isRadar,
+    },
+    {
+      href: "/nfe-pag",
+      title: "Guia NF-e <pag>",
+      subtitle: "Simulador, Validações & MOC 7.0",
+      badge: "Público",
+      icon: Receipt,
+      isActive: isNfePag,
     },
     {
       href: "/totvs-rm",

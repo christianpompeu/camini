@@ -23,6 +23,8 @@ export function Navbar() {
   const isForca = pathname.startsWith("/forca");
   const isTotvsRm = pathname.startsWith("/totvs-rm");
   const isRadar = pathname.startsWith("/radar");
+  const isNfePag = pathname.startsWith("/nfe-pag");
+  const isFiscal = isRadar || isNfePag;
   const isDicionario = pathname.startsWith("/dicionario");
   const isPlayground = pathname.startsWith("/playground");
   const isObservatorio = pathname.startsWith("/panorama") || pathname.startsWith("/tech");
@@ -30,11 +32,6 @@ export function Navbar() {
   const isMercado = pathname.startsWith("/mercado");
 
   const navItems = [
-    {
-      href: "/",
-      label: "Início",
-      isActive: isHome && !isDashboard && !isObservatorio,
-    },
     {
       href: "/dashboard",
       label: "Dashboard",
@@ -44,11 +41,6 @@ export function Navbar() {
       href: "/mercado",
       label: "Mercado",
       isActive: isMercado,
-    },
-    {
-      href: "/radar",
-      label: "Radar Tributário",
-      isActive: isRadar,
     },
     {
       href: "/totvs-rm",
@@ -84,7 +76,7 @@ export function Navbar() {
             <Link
               href="/"
               className={`transition-colors hover:text-foreground/80 ${
-                isHome && !isDashboard && !isObservatorio ? "text-foreground" : "text-foreground/60"
+                isHome && !isDashboard && !isObservatorio && !isFiscal ? "text-foreground" : "text-foreground/60"
               }`}
             >
               Início
@@ -135,7 +127,52 @@ export function Navbar() {
               </DropdownMenuContent>
             </DropdownMenu>
 
-            {navItems.slice(1).map((item) => (
+            {/* Fiscal Dropdown */}
+            <DropdownMenu>
+              <DropdownMenuTrigger
+                className={`inline-flex items-center gap-1 transition-colors hover:text-foreground/80 focus-visible:outline-none cursor-pointer ${
+                  isFiscal ? "text-foreground font-semibold" : "text-foreground/60"
+                }`}
+              >
+                <span>Fiscal & DF-e</span>
+                <ChevronDown className="h-3.5 w-3.5 opacity-60" />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className="w-68 p-1.5 shadow-lg border border-border bg-popover text-popover-foreground">
+                <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground px-2 py-1 select-none">
+                  Documentos & Reforma
+                </div>
+                <DropdownMenuItem
+                  render={<Link href="/nfe-pag" />}
+                  className="flex flex-col items-start gap-0.5 p-2 rounded-md cursor-pointer hover:bg-muted/60 focus:bg-muted/60"
+                >
+                  <div className="flex items-center justify-between w-full">
+                    <span className="font-semibold text-sm">Guia NF-e &lt;pag&gt;</span>
+                    <span className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300">
+                      Interativo
+                    </span>
+                  </div>
+                  <span className="text-xs text-muted-foreground">
+                    Validador, simulador e regras do Grupo &lt;pag&gt;
+                  </span>
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  render={<Link href="/radar" />}
+                  className="flex flex-col items-start gap-0.5 p-2 rounded-md cursor-pointer hover:bg-muted/60 focus:bg-muted/60"
+                >
+                  <div className="flex items-center justify-between w-full">
+                    <span className="font-semibold text-sm">Radar Tributário</span>
+                    <span className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-amber-100 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300">
+                      IBS / CBS
+                    </span>
+                  </div>
+                  <span className="text-xs text-muted-foreground">
+                    Monitoramento da Reforma Tributária
+                  </span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            {navItems.map((item) => (
               <Link
                 key={item.href}
                 href={item.href}

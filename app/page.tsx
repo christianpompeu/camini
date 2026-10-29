@@ -3,7 +3,7 @@
 import React from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { ArrowRight, Database, Dumbbell, LayoutGrid, CalendarDays, Palette, Radio, Compass, Cpu, Sparkles, Layers, ShoppingCart } from "lucide-react";
+import { ArrowRight, Database, Dumbbell, LayoutGrid, CalendarDays, Palette, Radio, Compass, Cpu, Sparkles, Layers, ShoppingCart, Receipt } from "lucide-react";
 import { Navbar } from "@/components/layout/navbar";
 import { Button } from "@/components/ui/button";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -173,6 +173,26 @@ export default function CaminiHomePage() {
                   <CardTitle className="text-xl">Radar Tributário</CardTitle>
                   <CardDescription className="text-sm mt-2">
                     Monitoramento técnico e fiscal da Reforma Tributária (IBS, CBS, NFS-e, NF-e, CGIBS e Receita Federal).
+                  </CardDescription>
+                </CardHeader>
+              </Card>
+            </Link>
+
+            {/* Guia NF-e Grupo <pag> */}
+            <Link href="/nfe-pag" className="group">
+              <Card className="h-full transition-colors hover:border-primary/50 hover:bg-muted/30 border-emerald-500/20">
+                <CardHeader>
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="inline-flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+                      <Receipt className="h-5 w-5" />
+                    </div>
+                    <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                      Acesso Livre
+                    </span>
+                  </div>
+                  <CardTitle className="text-xl">Guia Grupo &lt;pag&gt;</CardTitle>
+                  <CardDescription className="text-sm mt-2">
+                    Painel técnico interativo, tabelas de domínio tPag/tBand, regras de validação SEFAZ e simulador de XML para NF-e e NFC-e.
                   </CardDescription>
                 </CardHeader>
               </Card>
