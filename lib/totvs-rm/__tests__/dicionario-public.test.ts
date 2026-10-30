@@ -175,11 +175,16 @@ test("SQL Studio - Modal de Salvar Consulta no Histórico e Paginação de Tabel
     "sql-studio-sidebar deve indicar o fim da lista quando todas forem carregadas"
   );
 
-  // 4. A rota da API deve permitir carregamento até pelo menos 3000 tabelas
+  // 4. A rota da API não deve impor teto artificial rígido (permite carregar até o total real de tabelas)
   assert.match(
     routeCode,
-    /3000/,
-    "A rota de tabelas deve suportar limites maiores para paginação completa"
+    /Math\.max\(limitParam,\s*1\)/,
+    "A rota de tabelas deve permitir que o limite cresça até o total real de tabelas"
+  );
+  assert.doesNotMatch(
+    routeCode,
+    /Math\.min/,
+    "A rota de tabelas não deve conter Math.min artificial travando o carregamento"
   );
 });
 

@@ -32,7 +32,8 @@ export async function GET(req: NextRequest) {
     }
 
     const limitParam = parseInt(searchParams.get("limit") || "100", 10);
-    const limit = isNaN(limitParam) ? 100 : Math.min(Math.max(limitParam, 1), 3000);
+    // Permite que o limite cresça progressivamente com o "carregar mais" até o total de tabelas
+    const limit = isNaN(limitParam) ? 100 : Math.max(limitParam, 1);
 
     const result = searchRMTableCatalog(query, modulePrefix, limit);
     return NextResponse.json(result);

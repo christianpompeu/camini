@@ -958,8 +958,8 @@ export function DicionarioClient() {
           activeSecondaryTable={secondaryTable}
           inputRef={searchInputRef}
           totalMatches={totalMatches}
-          onLoadMore={() => setCatalogLimit((prev) => Math.min(prev + 100, 500))}
-          hasMore={catalogTables.length < totalMatches && catalogLimit < 500}
+          onLoadMore={() => setCatalogLimit((prev) => prev + 100)}
+          hasMore={catalogTables.length < totalMatches}
         />
 
         {/* Área Central de Visualização */}
