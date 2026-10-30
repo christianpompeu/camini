@@ -23,6 +23,7 @@ import {
   RMSemanticRelationship,
   RMSemanticIncomingRelationship,
 } from "@/lib/totvs-rm/types";
+import { formatRmJoinInline } from "@/lib/totvs-rm/sql-format";
 import {
   Dialog,
   DialogContent,
@@ -373,7 +374,13 @@ export function TableInspectorModal({
                                   </span>
                                 </div>
                                 <div className="text-[11px] font-mono text-muted-foreground break-all">
-                                  ON {rel.chaves_ligacao}
+                                  ON{" "}
+                                  {formatRmJoinInline(
+                                    tableDetails.tabela,
+                                    rel.tabela_destino,
+                                    rel.chaves_ligacao,
+                                    false
+                                  )}
                                 </div>
                               </div>
                             )
@@ -406,7 +413,13 @@ export function TableInspectorModal({
                                   <span>{tableDetails.tabela}</span>
                                 </div>
                                 <div className="text-[11px] font-mono text-muted-foreground break-all">
-                                  ON {rel.chaves_ligacao}
+                                  ON{" "}
+                                  {formatRmJoinInline(
+                                    tableDetails.tabela,
+                                    rel.tabela_origem,
+                                    rel.chaves_ligacao,
+                                    true
+                                  )}
                                 </div>
                               </div>
                             )

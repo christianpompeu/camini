@@ -40,6 +40,11 @@ import { RMSemanticTableWithKey } from "@/lib/totvs-rm/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { RM_MODULES_CONFIG } from "./types";
+import { SqlCodeBlock } from "./sql-code-block";
+import {
+  formatRmJoinSnippet,
+  formatRmJoinInline,
+} from "@/lib/totvs-rm/sql-format";
 
 interface TableRelationGraphProps {
   rootTable: RMSemanticTableWithKey;
@@ -67,6 +72,7 @@ interface RelatedNodeData extends Record<string, unknown> {
   tableName: string;
   direction: "outgoing" | "incoming";
   chaves: string;
+  rootTableName: string;
   moduleConfig: { shortLabel: string; badgeClass: string };
   isSecondary: boolean;
   onSelectTable?: (tableName: string) => void;
@@ -151,6 +157,7 @@ function RelatedTableNode({ data, id }: NodeProps<Node<RelatedNodeData>>) {
     tableName,
     direction,
     chaves,
+    rootTableName,
     moduleConfig,
     isSecondary,
     onSelectTable,
@@ -159,6 +166,26 @@ function RelatedTableNode({ data, id }: NodeProps<Node<RelatedNodeData>>) {
     isCopied,
   } = data;
   const isOut = direction === "outgoing";
+
+  // Formatação limpa em 1 linha para o nó do canvas
+  const inlineCondition = formatRmJoinInline(
+    rootTableName,
+    tableName,
+    chaves,
+    !isOut
+  );
+
+  // Bloco INNER JOIN completo com indentação de 3 níveis para cópia
+  const fullJoinSnippet = formatRmJoinSnippet(
+    rootTableName,
+    tableName,
+    chaves,
+    {
+      joinType: "INNER JOIN",
+      isIncoming: !isOut,
+      indentBase: 4,
+    }
+  );
 
   return (
     <div
@@ -206,19 +233,19 @@ function RelatedTableNode({ data, id }: NodeProps<Node<RelatedNodeData>>) {
         </div>
       </div>
 
-      {/* Cláusula ON de junção */}
+      {/* Cláusula ON de junção formatada em 1 linha limpa */}
       <div className="text-[10px] font-mono text-muted-foreground truncate bg-muted/40 px-1.5 py-0.5 rounded border border-border/40 flex items-center justify-between gap-1">
-        <span className="truncate" title={`ON ${chaves}`}>
-          ON {chaves.split("=")[0]?.trim()}
+        <span className="truncate" title={`ON ${inlineCondition}`}>
+          ON {inlineCondition}
         </span>
         {onCopyKey && (
           <button
             onClick={(e) => {
               e.stopPropagation();
-              onCopyKey(`ON ${chaves}`, id);
+              onCopyKey(fullJoinSnippet, id);
             }}
             className="text-muted-foreground hover:text-foreground cursor-pointer shrink-0"
-            title="Copiar condição de junção ON"
+            title="Copiar bloco INNER JOIN formatado"
           >
             {isCopied ? (
               <Check className="h-2.5 w-2.5 text-emerald-500" />
@@ -403,6 +430,7 @@ function TableRelationGraphInner({
           tableName: rel.tabela_destino,
           direction: "outgoing",
           chaves: rel.chaves_ligacao,
+          rootTableName: rootTable.tabela,
           moduleConfig: modConfig,
           isSecondary: activeSecondaryTable === rel.tabela_destino,
           onSelectTable,
@@ -464,6 +492,7 @@ function TableRelationGraphInner({
           tableName: rel.tabela_origem,
           direction: "incoming",
           chaves: rel.chaves_ligacao,
+          rootTableName: rootTable.tabela,
           moduleConfig: modConfig,
           isSecondary: activeSecondaryTable === rel.tabela_origem,
           onSelectTable,
@@ -718,92 +747,110 @@ function TableRelationGraphInner({
         </ReactFlow>
 
         {/* 3. Popover Informativo Flutuante ao Clicar em um Nó Conectado */}
-        {selectedNode && (
-          <div className="absolute bottom-4 left-4 z-30 w-72 rounded-xl border border-border bg-background/95 p-3.5 shadow-2xl backdrop-blur-md space-y-2.5 animate-in fade-in-50 slide-in-from-bottom-2 duration-150">
-            <div className="flex items-center justify-between border-b border-border pb-1.5">
-              <div className="flex items-center gap-1.5">
-                <span className="font-mono font-bold text-sm text-foreground">
-                  {selectedNode.tableName}
-                </span>
-                <span
-                  className={`text-[9px] font-semibold px-1.5 py-0.2 rounded ${
-                    selectedNode.direction === "outgoing"
-                      ? "bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20"
-                      : "bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20"
-                  }`}
-                >
-                  {selectedNode.direction === "outgoing" ? "FK Saída" : "FK Entrada"}
-                </span>
-              </div>
+        {selectedNode && (() => {
+          const isIncomingNode = selectedNode.direction === "incoming";
+          const snippet = formatRmJoinSnippet(
+            rootTable.tabela,
+            selectedNode.tableName,
+            selectedNode.chaves,
+            {
+              joinType: "INNER JOIN",
+              isIncoming: isIncomingNode,
+              indentBase: 4,
+            }
+          );
 
-              <button
-                onClick={() => setSelectedNodeId(null)}
-                className="text-muted-foreground hover:text-foreground p-0.5 cursor-pointer rounded hover:bg-muted"
-              >
-                <X className="h-3.5 w-3.5" />
-              </button>
-            </div>
+          return (
+            <div className="absolute bottom-4 left-4 z-30 w-80 sm:w-96 rounded-xl border border-border bg-background/95 p-3.5 shadow-2xl backdrop-blur-md space-y-2.5 animate-in fade-in-50 slide-in-from-bottom-2 duration-150">
+              <div className="flex items-center justify-between border-b border-border pb-1.5">
+                <div className="flex items-center gap-1.5">
+                  <span className="font-mono font-bold text-sm text-foreground">
+                    {selectedNode.tableName}
+                  </span>
+                  <span
+                    className={`text-[9px] font-semibold px-1.5 py-0.2 rounded ${
+                      selectedNode.direction === "outgoing"
+                        ? "bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20"
+                        : "bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20"
+                    }`}
+                  >
+                    {selectedNode.direction === "outgoing" ? "FK Saída" : "FK Entrada"}
+                  </span>
+                </div>
 
-            <div className="p-2 rounded bg-muted/40 border border-border space-y-1">
-              <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground flex items-center justify-between">
-                <span>Chaves de Ligação (ON):</span>
                 <button
-                  onClick={() =>
-                    handleCopyKey(`ON ${selectedNode.chaves}`, `pop_${selectedNode.tableName}`)
-                  }
-                  className="text-primary hover:underline text-[10px] flex items-center gap-1 cursor-pointer font-medium"
+                  onClick={() => setSelectedNodeId(null)}
+                  className="text-muted-foreground hover:text-foreground p-0.5 cursor-pointer rounded hover:bg-muted"
                 >
-                  {copiedKeyId === `pop_${selectedNode.tableName}` ? (
-                    <>
-                      <Check className="h-3 w-3 text-emerald-500" />
-                      <span>Copiado</span>
-                    </>
-                  ) : (
-                    <>
-                      <Copy className="h-3 w-3" />
-                      <span>Copiar</span>
-                    </>
-                  )}
+                  <X className="h-3.5 w-3.5" />
                 </button>
               </div>
-              <div className="font-mono text-xs text-foreground break-all">
-                ON {selectedNode.chaves}
+
+              <div className="space-y-1.5">
+                <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground flex items-center justify-between">
+                  <span>Chaves de Ligação (JOIN):</span>
+                  <button
+                    onClick={() =>
+                      handleCopyKey(snippet, `pop_${selectedNode.tableName}`)
+                    }
+                    className="text-primary hover:underline text-[10px] flex items-center gap-1 cursor-pointer font-medium"
+                  >
+                    {copiedKeyId === `pop_${selectedNode.tableName}` ? (
+                      <>
+                        <Check className="h-3 w-3 text-emerald-500" />
+                        <span>Copiado</span>
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="h-3 w-3" />
+                        <span>Copiar JOIN</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+
+                <SqlCodeBlock
+                  code={snippet}
+                  showLineNumbers={false}
+                  maxHeight="160px"
+                  className="text-[11px]"
+                />
+              </div>
+
+              <div className="flex items-center gap-2 pt-1">
+                {onOpenSideBySide && (
+                  <Button
+                    variant="default"
+                    size="sm"
+                    onClick={() => {
+                      onOpenSideBySide(selectedNode.tableName);
+                      setSelectedNodeId(null);
+                    }}
+                    className="flex-1 text-xs gap-1.5 h-8 font-medium shadow-xs cursor-pointer"
+                  >
+                    <Columns2 className="h-3.5 w-3.5" />
+                    <span>Abrir Lado a Lado</span>
+                  </Button>
+                )}
+
+                {onSelectTable && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      onSelectTable(selectedNode.tableName);
+                      setSelectedNodeId(null);
+                    }}
+                    className="text-xs gap-1.5 h-8 font-medium border-border cursor-pointer"
+                  >
+                    <ArrowRight className="h-3.5 w-3.5" />
+                    <span>Navegar</span>
+                  </Button>
+                )}
               </div>
             </div>
-
-            <div className="flex items-center gap-2 pt-1">
-              {onOpenSideBySide && (
-                <Button
-                  variant="default"
-                  size="sm"
-                  onClick={() => {
-                    onOpenSideBySide(selectedNode.tableName);
-                    setSelectedNodeId(null);
-                  }}
-                  className="flex-1 text-xs gap-1.5 h-8 font-medium shadow-xs cursor-pointer"
-                >
-                  <Columns2 className="h-3.5 w-3.5" />
-                  <span>Abrir Lado a Lado</span>
-                </Button>
-              )}
-
-              {onSelectTable && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    onSelectTable(selectedNode.tableName);
-                    setSelectedNodeId(null);
-                  }}
-                  className="text-xs gap-1.5 h-8 font-medium border-border cursor-pointer"
-                >
-                  <ArrowRight className="h-3.5 w-3.5" />
-                  <span>Navegar</span>
-                </Button>
-              )}
-            </div>
-          </div>
-        )}
+          );
+        })()}
       </div>
 
       {/* 4. Rodapé Informativo do Grafo */}
