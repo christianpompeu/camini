@@ -6,6 +6,7 @@ import {
   formatRmJoinInline,
   generateSelectScript,
   generateJoinScript,
+  formatRmSqlQuery,
 } from "../sql-format.ts";
 import type { RMSemanticTableWithKey } from "../types.ts";
 
@@ -115,4 +116,47 @@ test("T-SQL Formatter - generateJoinScript projeta colunas sem TABELA.* e format
     "Nível 3 do LEFT JOIN deve ter 12 espaços com ON na CODCOLIGADA"
   );
   assert.ok(sql.endsWith(";"), "Deve finalizar com ponto e vírgula");
+});
+
+test("T-SQL Formatter - formatRmSqlQuery no caso SELECT * FROM CORPORE.DBO.GCOLIGADA", () => {
+  // Caso relatado pelo usuário: não pode duplicar CORPORE.DBO nem gerar CORPORE AS CORPORE
+  const input = "SELECT * FROM CORPORE.DBO.GCOLIGADA";
+  const output = formatRmSqlQuery(input);
+
+  assert.equal(
+    output,
+    `SELECT\n        *\nFROM CORPORE.DBO.GCOLIGADA AS GCOLIGADA WITH (NOLOCK);`
+  );
+  assert.ok(!output.includes("CORPORE.DBO.CORPORE"), "Não pode duplicar CORPORE");
+  assert.ok(!output.includes("WITH (NOLOCK).DBO"), "Não pode deixar resto de schema após WITH (NOLOCK)");
+  assert.ok(output.includes("\nFROM CORPORE.DBO.GCOLIGADA"), "FROM deve iniciar sem espaços na linha");
+});
+
+test("T-SQL Formatter - formatRmSqlQuery com alias entre colchetes [ALIAS] em todas as colunas", () => {
+  const input = "SELECT FLAN.IDLAN, FCFO.NOMEFANTASIA FROM FLAN WHERE FLAN.CODCOLIGADA = 1 AND FLAN.STATUSLAN = 0";
+  const output = formatRmSqlQuery(input);
+
+  assert.ok(output.includes("AS [IDLAN]"), "Cada coluna deve ter alias entre colchetes");
+  assert.ok(output.includes("AS [NOMEFANTASIA]"), "Cada coluna deve ter alias entre colchetes");
+  assert.ok(output.includes("\nFROM CORPORE.DBO.FLAN AS FLAN WITH (NOLOCK)"), "FROM sem espaços no início");
+  assert.ok(output.includes("\nWHERE FLAN.CODCOLIGADA = 1\n  AND FLAN.STATUSLAN = 0;"), "WHERE sem espaço no início e AND alinhado");
+});
+
+test("T-SQL Formatter - formatRmSqlQuery com JOIN aninhado em 3 níveis e desambiguação de duplicata", () => {
+  const input = `/* Consulta de Teste */
+SELECT FLAN.CODCOLIGADA, FLAN.IDLAN, FCFO.CODCOLIGADA, FCFO.NOMEFANTASIA
+  FROM FLAN
+ INNER JOIN FCFO ON FLAN.CODCOLCFO = FCFO.CODCOLIGADA AND FLAN.CODCFO = FCFO.CODCFO
+ WHERE FLAN.CODCOLIGADA = 1
+ ORDER BY FLAN.IDLAN DESC`;
+
+  const output = formatRmSqlQuery(input);
+
+  assert.ok(output.startsWith("/* Consulta de Teste */\nSELECT"));
+  assert.ok(output.includes("AS [CODCOLIGADA]"));
+  assert.ok(output.includes("AS [FCFO_CODCOLIGADA]"), "Duplicata de CODCOLIGADA deve gerar alias desambiguado FCFO_CODCOLIGADA");
+  assert.ok(output.includes("\nFROM CORPORE.DBO.FLAN AS FLAN WITH (NOLOCK)"));
+  assert.ok(output.includes("    INNER JOIN\n        CORPORE.DBO.FCFO AS FCFO WITH (NOLOCK)\n            ON  FLAN.CODCOLCFO = FCFO.CODCOLIGADA\n            AND FLAN.CODCFO = FCFO.CODCFO"), "JOIN deve ser aninhado em 3 níveis");
+  assert.ok(output.includes("\nWHERE FLAN.CODCOLIGADA = 1"));
+  assert.ok(output.includes("\nORDER BY\n    FLAN.IDLAN DESC;"));
 });

@@ -329,3 +329,391 @@ ${projectionLines.join("\n")}
 ${fromClause}
 ${joinBlocks.join("\n")}`;
 }
+
+export interface ColumnProjectionParsed {
+  expr: string;
+  alias: string;
+}
+
+/**
+ * Divide expressões de projeção (colunas do SELECT) respeitando parênteses e strings literais.
+ */
+export function splitSqlProjectionItems(rawCols: string): string[] {
+  const items: string[] = [];
+  let current = "";
+  let parenDepth = 0;
+  let inString = false;
+
+  // Normaliza leading commas (ex: "\n      , CAMPO") para vírgulas padrão (", CAMPO")
+  const cleanRaw = rawCols
+    .replace(/\r?\n\s*,/g, ", ")
+    .replace(/\r?\n/g, " ");
+
+  for (let i = 0; i < cleanRaw.length; i++) {
+    const char = cleanRaw[i];
+
+    if (char === "'" && cleanRaw[i - 1] !== "\\") {
+      inString = !inString;
+      current += char;
+    } else if (!inString && char === "(") {
+      parenDepth++;
+      current += char;
+    } else if (!inString && char === ")") {
+      parenDepth = Math.max(0, parenDepth - 1);
+      current += char;
+    } else if (!inString && parenDepth === 0 && char === ",") {
+      const trimmed = current.trim();
+      if (trimmed) items.push(trimmed);
+      current = "";
+    } else {
+      current += char;
+    }
+  }
+
+  const lastTrimmed = current.trim();
+  if (lastTrimmed) items.push(lastTrimmed);
+
+  return items;
+}
+
+/**
+ * Normaliza e gera alias entre colchetes [ALIAS] para cada coluna da projeção,
+ * resolvendo duplicidades automaticamente com base no nome da tabela.
+ */
+export function parseAndNormalizeColumns(colItems: string[]): ColumnProjectionParsed[] {
+  const usedAliases = new Set<string>();
+  const results: ColumnProjectionParsed[] = [];
+
+  for (const item of colItems) {
+    const trimmed = item.trim();
+    if (!trimmed) continue;
+
+    if (trimmed === "*") {
+      results.push({ expr: "*", alias: "" });
+      continue;
+    }
+
+    // Procura alias explícito no final: expr AS [ALIAS] ou expr AS ALIAS ou expr [ALIAS] ou expr ALIAS
+    const aliasRegex = /\s+(?:AS\s+)?(?:\[([^\]]+)\]|([A-Za-z0-9_]+))$/i;
+    const match = trimmed.match(aliasRegex);
+
+    let expr = trimmed;
+    let explicitAlias = "";
+
+    if (match) {
+      explicitAlias = match[1] || match[2] || "";
+      expr = trimmed.substring(0, match.index).trim();
+    }
+
+    let finalAlias = explicitAlias;
+
+    if (!finalAlias) {
+      // Se não há alias explícito, infere a partir do campo
+      const dotParts = expr.split(".");
+      const candidate = dotParts[dotParts.length - 1].replace(/[^A-Za-z0-9_]/g, "").trim().toUpperCase();
+
+      if (candidate && !usedAliases.has(candidate)) {
+        finalAlias = candidate;
+      } else if (candidate && dotParts.length >= 2) {
+        // Duplicidade! Cria alias desambiguado com o nome da tabela: TABELA_CAMPO
+        const tblName = dotParts[dotParts.length - 2].replace(/[^A-Za-z0-9_]/g, "").trim().toUpperCase();
+        const disambiguated = `${tblName}_${candidate}`;
+        if (!usedAliases.has(disambiguated)) {
+          finalAlias = disambiguated;
+        } else {
+          let count = 2;
+          while (usedAliases.has(`${disambiguated}_${count}`)) {
+            count++;
+          }
+          finalAlias = `${disambiguated}_${count}`;
+        }
+      } else if (candidate) {
+        let count = 2;
+        while (usedAliases.has(`${candidate}_${count}`)) {
+          count++;
+        }
+        finalAlias = `${candidate}_${count}`;
+      } else {
+        finalAlias = "CAMPO";
+      }
+    }
+
+    usedAliases.add(finalAlias.toUpperCase());
+    results.push({ expr, alias: finalAlias });
+  }
+
+  return results;
+}
+
+/**
+ * Formata de forma robusta e inteligente qualquer consulta T-SQL para o padrão corporativo TOTVS RM:
+ * - Preserva cabeçalhos e comentários em bloco
+ * - Transforma comentários inline -- em /* ... *\/
+ * - Projeção de colunas com alias obrigatório entre colchetes [ALIAS] e vírgulas alinhadas à esquerda
+ * - Cláusula FROM com schema CORPORE.DBO.{TABELA} AS {ALIAS} WITH (NOLOCK) sem espaços desnecessários no início
+ * - Cláusulas JOIN aninhadas em 3 níveis (Nível 1: JOIN, Nível 2: TABELA, Nível 3: ON/AND alinhados)
+ * - Cláusula WHERE sem espaço inicial e com AND/OR alinhados
+ * - Cláusula ORDER BY sem espaço inicial
+ * - Finalização com ';'
+ */
+export function formatRmSqlQuery(sql: string): string {
+  if (!sql || !sql.trim()) return sql;
+
+  let text = sql.trim();
+
+  // 1. Converte comentários inline -- para /* ... */
+  text = text.replace(/--([^\r\n]*)/g, "/* $1 */");
+
+  // 2. Extrai comentários de cabeçalho no topo
+  const headerComments: string[] = [];
+  while (text.startsWith("/*")) {
+    const endIdx = text.indexOf("*/");
+    if (endIdx === -1) break;
+    headerComments.push(text.substring(0, endIdx + 2).trim());
+    text = text.substring(endIdx + 2).trim();
+  }
+
+  // 3. Verifica se possui estrutura SELECT ... FROM
+  const selectMatch = text.match(/^\s*SELECT\b([\s\S]*?)\bFROM\b/i);
+  if (!selectMatch) {
+    // Se não for um SELECT padrão, faz substituições seguras de FROM e JOIN sem duplicar
+    let fallback = text.replace(
+      /\bFROM\s+([A-Za-z0-9_.]+(?:\.[A-Za-z0-9_.]+)*)(?:\s+(?:AS\s+)?(?!\b(?:WHERE|INNER|LEFT|RIGHT|FULL|CROSS|JOIN|GROUP|HAVING|ORDER|UNION|WITH)\b)([A-Za-z0-9_]+))?(?:\s+WITH\s*\([^)]*\))?/gi,
+      (m, rawTbl, alias) => {
+        const parts = rawTbl.split(".");
+        const uTbl = parts[parts.length - 1].toUpperCase();
+        const uAlias = (alias || uTbl).toUpperCase();
+        return `FROM CORPORE.DBO.${uTbl} AS ${uAlias} WITH (NOLOCK)`;
+      }
+    );
+    fallback = fallback.replace(
+      /\b((?:INNER|LEFT|RIGHT|FULL|CROSS)\s+(?:OUTER\s+)?JOIN)\s+([A-Za-z0-9_.]+(?:\.[A-Za-z0-9_.]+)*)(?:\s+(?:AS\s+)?(?!\b(?:ON|WHERE|INNER|LEFT|RIGHT|FULL|CROSS|JOIN|GROUP|HAVING|ORDER|UNION|WITH)\b)([A-Za-z0-9_]+))?(?:\s+WITH\s*\([^)]*\))?/gi,
+      (m, jType, rawTbl, alias) => {
+        const uType = jType.replace(/\s+/g, " ").toUpperCase();
+        const parts = rawTbl.split(".");
+        const uTbl = parts[parts.length - 1].toUpperCase();
+        const uAlias = (alias || uTbl).toUpperCase();
+        return `    ${uType}\n        CORPORE.DBO.${uTbl} AS ${uAlias} WITH (NOLOCK)`;
+      }
+    );
+    return headerComments.length > 0 ? `${headerComments.join("\n")}\n${fallback}` : fallback;
+  }
+
+  // Bloco SELECT
+  const rawSelectCols = selectMatch[1].trim();
+  let selectPrefix = "SELECT";
+  let colContent = rawSelectCols;
+
+  const topMatch = colContent.match(/^(DISTINCT\s+)?(TOP\s+\d+\s+)?([\s\S]*)$/i);
+  if (topMatch && (topMatch[1] || topMatch[2])) {
+    const distinct = topMatch[1] ? topMatch[1].trim().toUpperCase() + " " : "";
+    const top = topMatch[2] ? topMatch[2].trim().toUpperCase() : "";
+    const prefix = `${distinct}${top}`.trim();
+    if (prefix) {
+      selectPrefix = `SELECT\n        ${prefix}`;
+    }
+    colContent = topMatch[3] ? topMatch[3].trim() : "";
+  }
+
+  let selectClause = "";
+  if (colContent === "*" || colContent === "") {
+    if (selectPrefix === "SELECT") {
+      selectClause = "SELECT\n        *";
+    } else {
+      selectClause = `${selectPrefix} *`;
+    }
+  } else {
+    const rawItems = splitSqlProjectionItems(colContent);
+    const parsedCols = parseAndNormalizeColumns(rawItems);
+
+    // Calcula padEnd para alinhar verticalmente todos os "AS [ALIAS]"
+    const maxExprLen = Math.max(30, ...parsedCols.map((c) => c.expr.length));
+
+    const formattedCols = parsedCols.map((col, idx) => {
+      const prefix = idx === 0 && selectPrefix === "SELECT" ? "        " : "      , ";
+      if (!col.alias) {
+        return `${prefix}${col.expr}`;
+      }
+      const paddedExpr = col.expr.padEnd(maxExprLen, " ");
+      return `${prefix}${paddedExpr}AS [${col.alias}]`;
+    });
+
+    if (selectPrefix === "SELECT") {
+      selectClause = `SELECT\n${formattedCols.join("\n")}`;
+    } else {
+      selectClause = `${selectPrefix}\n${formattedCols.join("\n")}`;
+    }
+  }
+
+  // Restante a partir do FROM
+  const fromAndBeyond = text.substring(selectMatch[0].length - 4);
+
+  // 1. Cláusula FROM (sem espaços no início)
+  const fromMatch = fromAndBeyond.match(
+    /\bFROM\s+([A-Za-z0-9_.]+(?:\.[A-Za-z0-9_.]+)*)(?:\s+(?:AS\s+)?(?!\b(?:WHERE|INNER|LEFT|RIGHT|FULL|CROSS|JOIN|GROUP|HAVING|ORDER|UNION|WITH)\b)([A-Za-z0-9_]+))?(?:\s+WITH\s*\([^)]*\))?/i
+  );
+
+  if (!fromMatch) {
+    return text;
+  }
+
+  const rawFromTable = fromMatch[1].trim();
+  const fromParts = rawFromTable.split(".");
+  const pureFromTable = fromParts[fromParts.length - 1].toUpperCase();
+  const fromAlias = (fromMatch[2] || pureFromTable).toUpperCase();
+  const formattedFrom = `FROM CORPORE.DBO.${pureFromTable} AS ${fromAlias} WITH (NOLOCK)`;
+
+  const afterFrom = fromAndBeyond.substring(fromMatch.index! + fromMatch[0].length);
+
+  // Divide o restante em seções
+  const joinBlocks: string[] = [];
+  let whereBlock = "";
+  let groupByBlock = "";
+  let havingBlock = "";
+  let orderByBlock = "";
+
+  const regexClauses = /\b((?:INNER|LEFT|RIGHT|FULL|CROSS)\s+(?:OUTER\s+)?JOIN|WHERE|GROUP\s+BY|HAVING|ORDER\s+BY)\b/gi;
+  const tokens: { keyword: string; index: number; fullMatch: string }[] = [];
+  let m: RegExpExecArray | null;
+
+  while ((m = regexClauses.exec(afterFrom)) !== null) {
+    tokens.push({
+      keyword: m[1].replace(/\s+/g, " ").toUpperCase(),
+      index: m.index,
+      fullMatch: m[0],
+    });
+  }
+
+  if (tokens.length === 0) {
+    let cleanRest = afterFrom.trim();
+    if (cleanRest.startsWith(";")) cleanRest = "";
+    const result = `${selectClause}\n${formattedFrom}${cleanRest ? `\n${cleanRest}` : ""};`;
+    return headerComments.length > 0 ? `${headerComments.join("\n")}\n${result}` : result;
+  }
+
+  // Processa as seções
+  for (let i = 0; i < tokens.length; i++) {
+    const cur = tokens[i];
+    const next = tokens[i + 1];
+    const sectionBody = afterFrom
+      .substring(cur.index + cur.fullMatch.length, next ? next.index : undefined)
+      .trim();
+
+    if (cur.keyword.endsWith("JOIN")) {
+      const joinTblMatch = sectionBody.match(
+        /^([A-Za-z0-9_.]+(?:\.[A-Za-z0-9_.]+)*)(?:\s+(?:AS\s+)?(?!\b(?:ON|WHERE|INNER|LEFT|RIGHT|FULL|CROSS|JOIN|GROUP|HAVING|ORDER|UNION|WITH)\b)([A-Za-z0-9_]+))?(?:\s+WITH\s*\([^)]*\))?(?:\s+ON\s+([\s\S]*))?$/i
+      );
+
+      if (joinTblMatch) {
+        const rawTbl = joinTblMatch[1];
+        const jParts = rawTbl.split(".");
+        const pureJTable = jParts[jParts.length - 1].toUpperCase();
+        const jAlias = (joinTblMatch[2] || pureJTable).toUpperCase();
+        const onContent = joinTblMatch[3] ? joinTblMatch[3].trim() : "";
+
+        // JOIN Aninhado em 3 níveis:
+        // Nível 1: 4 espaços: "    INNER JOIN"
+        // Nível 2: 8 espaços: "        CORPORE.DBO.TABELA AS ALIAS WITH (NOLOCK)"
+        // Nível 3: 12 espaços: "            ON  ..." / "            AND ..."
+        const level1 = `    ${cur.keyword}`;
+        const level2 = `        CORPORE.DBO.${pureJTable} AS ${jAlias} WITH (NOLOCK)`;
+
+        if (onContent) {
+          const onConditions = onContent
+            .split(/\b(AND|OR)\b/i)
+            .map((s) => s.trim())
+            .filter(Boolean);
+
+          const formattedConditions: string[] = [];
+          let pendingOperator = "";
+
+          for (let cIdx = 0; cIdx < onConditions.length; cIdx++) {
+            const item = onConditions[cIdx];
+            const uItem = item.toUpperCase();
+            if (uItem === "AND" || uItem === "OR") {
+              pendingOperator = uItem;
+            } else {
+              if (formattedConditions.length === 0) {
+                formattedConditions.push(`            ON  ${item}`);
+              } else {
+                const op = pendingOperator || "AND";
+                const pad = op === "AND" ? "            AND " : "            OR  ";
+                formattedConditions.push(`${pad}${item}`);
+                pendingOperator = "";
+              }
+            }
+          }
+          joinBlocks.push(`${level1}\n${level2}\n${formattedConditions.join("\n")}`);
+        } else {
+          joinBlocks.push(`${level1}\n${level2}`);
+        }
+      } else {
+        joinBlocks.push(`    ${cur.keyword}\n        ${sectionBody}`);
+      }
+    } else if (cur.keyword === "WHERE") {
+      const whereConditions = sectionBody
+        .split(/\b(AND|OR)\b/i)
+        .map((s) => s.trim())
+        .filter(Boolean);
+
+      const formattedWhere: string[] = [];
+      let pendingOp = "";
+
+      for (let wIdx = 0; wIdx < whereConditions.length; wIdx++) {
+        const item = whereConditions[wIdx];
+        const uItem = item.toUpperCase();
+        if (uItem === "AND" || uItem === "OR") {
+          pendingOp = uItem;
+        } else {
+          if (formattedWhere.length === 0) {
+            // WHERE sem espaço no início da linha
+            formattedWhere.push(`WHERE ${item}`);
+          } else {
+            const op = pendingOp || "AND";
+            const pad = op === "AND" ? "  AND " : "   OR ";
+            formattedWhere.push(`${pad}${item}`);
+            pendingOp = "";
+          }
+        }
+      }
+      whereBlock = formattedWhere.join("\n");
+    } else if (cur.keyword === "GROUP BY") {
+      groupByBlock = `GROUP BY\n    ${sectionBody.replace(/\s+/g, " ")}`;
+    } else if (cur.keyword === "HAVING") {
+      havingBlock = `HAVING ${sectionBody.replace(/\s+/g, " ")}`;
+    } else if (cur.keyword === "ORDER BY") {
+      let cleanOrder = sectionBody.replace(/;+$/, "").trim();
+      // ORDER BY sem espaço no início da linha, campos indentados com 4 espaços
+      orderByBlock = `ORDER BY\n    ${cleanOrder}`;
+    }
+  }
+
+  // Monta a consulta final
+  const queryParts = [selectClause, formattedFrom];
+  if (joinBlocks.length > 0) {
+    queryParts.push(joinBlocks.join("\n"));
+  }
+  if (whereBlock) {
+    queryParts.push(whereBlock);
+  }
+  if (groupByBlock) {
+    queryParts.push(groupByBlock);
+  }
+  if (havingBlock) {
+    queryParts.push(havingBlock);
+  }
+  if (orderByBlock) {
+    queryParts.push(orderByBlock);
+  }
+
+  let finalQuery = queryParts.join("\n");
+  if (!finalQuery.endsWith(";")) {
+    finalQuery += ";";
+  }
+
+  return headerComments.length > 0
+    ? `${headerComments.join("\n")}\n${finalQuery}`
+    : finalQuery;
+}
+
+

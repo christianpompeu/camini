@@ -12,7 +12,7 @@ import {
   findAvailableJoins,
   appendColumnToSelect,
 } from "@/lib/totvs-rm/query-parser";
-import { formatRmJoinSnippet } from "@/lib/totvs-rm/sql-format";
+import { formatRmJoinSnippet, formatRmSqlQuery } from "@/lib/totvs-rm/sql-format";
 import { RMTableSummary, RMSemanticTableWithKey } from "@/lib/totvs-rm/types";
 import { SavedSqlQuery } from "./types";
 import { SQL_STUDIO_TEMPLATES, SqlStudioTemplate } from "@/lib/totvs-rm/sql-studio-templates";
@@ -159,33 +159,7 @@ export function SqlStudioClient() {
   // Formatação automática no padrão estrito TOTVS RM
   const handleFormatSql = useCallback(() => {
     if (!sql.trim()) return;
-
-    let formatted = sql;
-
-    // 1. Substitui comentários inline -- por /* ... */
-    formatted = formatted.replace(/--([^\r\n]*)/g, "/* $1 */");
-
-    // 2. Garante que FROM tenha CORPORE.DBO. e WITH (NOLOCK)
-    formatted = formatted.replace(
-      /\bFROM\s+([A-Za-z0-9_]+)(?:\s+(?:AS\s+)?([A-Za-z0-9_]+))?(?:\s+WITH\s*\([^)]*\))?/gi,
-      (match, tbl, alias) => {
-        const uTbl = tbl.toUpperCase();
-        const uAlias = (alias || uTbl).toUpperCase();
-        return `FROM CORPORE.DBO.${uTbl} AS ${uAlias} WITH (NOLOCK)`;
-      }
-    );
-
-    // 3. Garante que JOINs tenham CORPORE.DBO. e WITH (NOLOCK)
-    formatted = formatted.replace(
-      /\b((?:INNER|LEFT|RIGHT|FULL)\s+JOIN)\s+([A-Za-z0-9_]+)(?:\s+(?:AS\s+)?([A-Za-z0-9_]+))?(?:\s+WITH\s*\([^)]*\))?/gi,
-      (match, jType, tbl, alias) => {
-        const uType = jType.replace(/\s+/g, " ").toUpperCase();
-        const uTbl = tbl.toUpperCase();
-        const uAlias = (alias || uTbl).toUpperCase();
-        return `${uType} CORPORE.DBO.${uTbl} AS ${uAlias} WITH (NOLOCK)`;
-      }
-    );
-
+    const formatted = formatRmSqlQuery(sql);
     setSql(formatted);
   }, [sql]);
 
