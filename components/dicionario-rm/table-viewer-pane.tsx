@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useRef } from "react";
 import Link from "next/link";
 import {
   Layers,
@@ -19,6 +19,7 @@ import {
   ArrowDownLeft,
   Filter,
   Share2,
+  ArrowUp,
 } from "lucide-react";
 import {
   RMSemanticTableWithKey,
@@ -30,6 +31,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PaneTab, ColumnCategoryFilter, RM_MODULES_CONFIG } from "./types";
 import { TableRelationGraph } from "./table-relation-graph";
+import { SqlCodeBlock } from "./sql-code-block";
+import {
+  generateSelectScript,
+  generateJoinScript,
+  formatRmJoinSnippet,
+  formatRmJoinInline,
+} from "@/lib/totvs-rm/sql-format";
 
 interface TableViewerPaneProps {
   table: RMSemanticTableWithKey;
@@ -58,6 +66,7 @@ export function TableViewerPane({
   const [columnSearch, setColumnSearch] = useState("");
   const [columnTypeFilter, setColumnTypeFilter] = useState<ColumnCategoryFilter>("all");
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
+  const tableScrollRef = useRef<HTMLDivElement>(null);
 
   // Mapeamento automático de colunas para tabelas relacionadas (FKs documentadas + heurísticas padrão RM)
   const columnToTargetTableMap = useMemo(() => {
@@ -232,56 +241,13 @@ export function TableViewerPane({
     return { total: uniqueColumns.length, keys, text, number, date };
   }, [uniqueColumns]);
 
-  // Gerador de SQL
+  // Gerador de SQL (Padrão Corporativo T-SQL TOTVS RM: CORPORE.DBO.{TABELA} AS {TABELA} WITH (NOLOCK))
   const sqlSelectScript = useMemo(() => {
-    const colList = table.colunas
-      .slice(0, 15)
-      .map((c) => `    ${c.nome}`)
-      .join(",\n");
-    const moreNotice =
-      table.colunas.length > 15
-        ? `\n    -- ... mais ${table.colunas.length - 15} colunas disponíveis\n`
-        : "\n";
-
-    return `-- Consulta rápida na tabela ${table.tabela} (${moduleConfig.label})
-SELECT TOP 100
-${colList}${moreNotice}FROM ${table.tabela} WITH (NOLOCK);`;
-  }, [table, moduleConfig]);
+    return generateSelectScript(table, moduleConfig.label);
+  }, [table, moduleConfig.label]);
 
   const sqlJoinTemplate = useMemo(() => {
-    const rels = table.relacionamentos_saida || [];
-    if (rels.length === 0) {
-      return `-- Tabela ${table.tabela} não possui relacionamentos de saída documentados.
-SELECT TOP 100 * FROM ${table.tabela} WITH (NOLOCK);`;
-    }
-
-    let script = `-- Consulta com JOINs automáticos para ${table.tabela}
-SELECT TOP 100
-    ${table.tabela}.*`;
-
-    rels.slice(0, 3).forEach((r) => {
-      script += `,\n    ${r.tabela_destino}.*`;
-    });
-
-    script += `\nFROM ${table.tabela} WITH (NOLOCK)\n`;
-
-    rels.slice(0, 3).forEach((r) => {
-      const parts = r.chaves_ligacao.split("=");
-      let onClause = r.chaves_ligacao;
-      if (parts.length === 2) {
-        const left = parts[0].split(",").map((c) => c.trim());
-        const right = parts[1].split(",").map((c) => c.trim());
-        const n = Math.min(left.length, right.length);
-        const conds: string[] = [];
-        for (let i = 0; i < n; i++) {
-          conds.push(`${table.tabela}.${left[i]} = ${r.tabela_destino}.${right[i]}`);
-        }
-        onClause = conds.join(" AND ");
-      }
-      script += `LEFT JOIN ${r.tabela_destino} WITH (NOLOCK) ON ${onClause}\n`;
-    });
-
-    return script;
+    return generateJoinScript(table);
   }, [table]);
 
   return (
@@ -318,8 +284,8 @@ SELECT TOP 100
       )}
 
       {/* Pane Top Header */}
-      <div className="p-4 sm:p-5 border-b border-border bg-muted/15 shrink-0">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+      <div className="px-4 py-2.5 sm:px-5 sm:py-3 border-b border-border bg-muted/15 shrink-0">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
           {/* Informações da tabela */}
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2 flex-wrap">
@@ -330,7 +296,7 @@ SELECT TOP 100
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-7 w-7 text-muted-foreground hover:text-foreground"
+                className="h-7 w-7 text-muted-foreground hover:text-foreground shrink-0"
                 onClick={() => handleCopy(table.tabela, "table_name")}
                 title="Copiar nome da tabela"
               >
@@ -352,20 +318,25 @@ SELECT TOP 100
                   Janela Secundária
                 </span>
               )}
+
+              {table.descricao && (
+                <>
+                  <span className="text-muted-foreground/60 hidden sm:inline">•</span>
+                  <span className="text-xs sm:text-sm text-muted-foreground truncate max-w-xl font-medium">
+                    {table.descricao}
+                  </span>
+                </>
+              )}
             </div>
 
-            <p className="text-xs sm:text-sm text-muted-foreground mt-1 line-clamp-2 leading-relaxed">
-              {table.descricao || "Tabela sem descrição catalogada"}
-            </p>
-
             {/* Métricas rápidas */}
-            <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground">
-              <span className="flex items-center gap-1">
+            <div className="flex items-center gap-3 text-xs text-muted-foreground pt-1">
+              <span className="flex items-center gap-1 font-medium">
                 <Layers className="h-3.5 w-3.5 text-foreground" />
                 <strong className="text-foreground">{table.colunas.length}</strong> colunas
               </span>
               <span>•</span>
-              <span className="flex items-center gap-1">
+              <span className="flex items-center gap-1 font-medium">
                 <Link2 className="h-3.5 w-3.5 text-primary" />
                 <strong className="text-foreground">
                   {table.relacionamentos_saida?.length || 0}
@@ -375,7 +346,7 @@ SELECT TOP 100
               {table.relacionamentos_entrada && table.relacionamentos_entrada.length > 0 && (
                 <>
                   <span>•</span>
-                  <span className="flex items-center gap-1">
+                  <span className="flex items-center gap-1 font-medium">
                     <ArrowDownLeft className="h-3.5 w-3.5 text-indigo-500" />
                     <strong className="text-foreground">
                       {table.relacionamentos_entrada.length}
@@ -554,190 +525,277 @@ SELECT TOP 100
           </div>
         )}
 
-        {/* TAB 1: COLUNAS */}
+        {/* TAB 1: COLUNAS - Tabela Flutuante com Padding Compacto e Rodapé Útil */}
         {activeTab === "columns" && (
-          <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
-            {/* Barra de Busca de Colunas & Filtro de Tipo */}
-            <div className="p-3 border-b border-border bg-muted/10 flex flex-col sm:flex-row items-stretch sm:items-center gap-2 shrink-0">
-              <div className="relative flex-1">
-                <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-muted-foreground" />
-                <Input
-                  type="text"
-                  placeholder="Filtrar colunas desta tabela (ex: CODFILIAL, DATA)..."
-                  value={columnSearch}
-                  onChange={(e) => setColumnSearch(e.target.value)}
-                  className="pl-8 h-8 text-xs font-mono bg-background"
-                />
-                {columnSearch && (
+          <div className="flex-1 flex flex-col min-h-0 overflow-hidden p-3 sm:p-4 bg-muted/10">
+            {/* Card Flutuante da Tabela */}
+            <div className="flex-1 flex flex-col min-h-0 overflow-hidden rounded-xl border border-border/80 bg-card shadow-xs">
+              {/* Barra de Busca de Colunas & Filtro de Tipo (Topo do Card) */}
+              <div className="p-2.5 sm:p-3 border-b border-border bg-muted/20 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2 shrink-0">
+                <div className="relative flex-1">
+                  <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-muted-foreground" />
+                  <Input
+                    type="text"
+                    placeholder="Filtrar colunas desta tabela (ex: CODFILIAL, DATA)..."
+                    value={columnSearch}
+                    onChange={(e) => setColumnSearch(e.target.value)}
+                    className="pl-8 h-8 text-xs font-mono bg-background"
+                  />
+                  {columnSearch && (
+                    <button
+                      onClick={() => setColumnSearch("")}
+                      className="absolute right-2.5 top-2.5 text-muted-foreground hover:text-foreground"
+                    >
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                  )}
+                </div>
+
+                {/* Filtro por categoria com contagens */}
+                <div className="flex items-center gap-1 overflow-x-auto scrollbar-none text-[11px]">
                   <button
-                    onClick={() => setColumnSearch("")}
-                    className="absolute right-2.5 top-2.5 text-muted-foreground hover:text-foreground"
+                    onClick={() => setColumnTypeFilter("all")}
+                    className={`px-2.5 py-1 rounded text-[11px] font-medium transition-colors whitespace-nowrap ${
+                      columnTypeFilter === "all"
+                        ? "bg-foreground text-background shadow-xs"
+                        : "bg-muted text-muted-foreground hover:text-foreground"
+                    }`}
                   >
-                    <X className="h-3.5 w-3.5" />
+                    Todas ({categoryCounts.total})
                   </button>
+                  <button
+                    onClick={() => setColumnTypeFilter("keys")}
+                    className={`px-2.5 py-1 rounded text-[11px] font-medium transition-colors whitespace-nowrap flex items-center gap-1 ${
+                      columnTypeFilter === "keys"
+                        ? "bg-amber-500 text-white shadow-xs"
+                        : "bg-amber-500/10 text-amber-600 dark:text-amber-400 hover:bg-amber-500/20"
+                    }`}
+                  >
+                    <Key className="h-3 w-3" />
+                    Chaves ({categoryCounts.keys})
+                  </button>
+                  <button
+                    onClick={() => setColumnTypeFilter("text")}
+                    className={`px-2.5 py-1 rounded text-[11px] font-medium transition-colors whitespace-nowrap ${
+                      columnTypeFilter === "text"
+                        ? "bg-sky-500 text-white shadow-xs"
+                        : "bg-sky-500/10 text-sky-600 dark:text-sky-400 hover:bg-sky-500/20"
+                    }`}
+                  >
+                    Texto ({categoryCounts.text})
+                  </button>
+                  <button
+                    onClick={() => setColumnTypeFilter("number")}
+                    className={`px-2.5 py-1 rounded text-[11px] font-medium transition-colors whitespace-nowrap ${
+                      columnTypeFilter === "number"
+                        ? "bg-emerald-500 text-white shadow-xs"
+                        : "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/20"
+                    }`}
+                  >
+                    Números ({categoryCounts.number})
+                  </button>
+                  <button
+                    onClick={() => setColumnTypeFilter("date")}
+                    className={`px-2.5 py-1 rounded text-[11px] font-medium transition-colors whitespace-nowrap ${
+                      columnTypeFilter === "date"
+                        ? "bg-purple-500 text-white shadow-xs"
+                        : "bg-purple-500/10 text-purple-600 dark:text-purple-400 hover:bg-purple-500/20"
+                    }`}
+                  >
+                    Datas ({categoryCounts.date})
+                  </button>
+                </div>
+              </div>
+
+              {/* Tabela de Colunas com scroll interno */}
+              <div ref={tableScrollRef} className="flex-1 min-h-0 overflow-y-auto">
+                {filteredColumns.length === 0 ? (
+                  <div className="p-12 text-center text-xs text-muted-foreground flex flex-col items-center gap-2">
+                    <Filter className="h-6 w-6 text-muted-foreground/40" />
+                    <span>Nenhum campo encontrado para o filtro aplicado.</span>
+                    {(columnSearch || columnTypeFilter !== "all") && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          setColumnSearch("");
+                          setColumnTypeFilter("all");
+                        }}
+                        className="text-xs mt-1"
+                      >
+                        Limpar todos os filtros
+                      </Button>
+                    )}
+                  </div>
+                ) : (
+                  <table className="w-full text-left text-xs border-collapse">
+                    <thead className="bg-muted/75 sticky top-0 z-10 border-b border-border backdrop-blur-md shadow-[0_1px_2px_rgba(0,0,0,0.03)]">
+                      <tr className="h-7.5">
+                        <th className="px-3 py-1 font-semibold text-muted-foreground text-[10.5px] uppercase tracking-wider w-[34%] align-middle">
+                          Coluna
+                        </th>
+                        <th className="px-3 py-1 font-semibold text-muted-foreground text-[10.5px] uppercase tracking-wider w-[22%] align-middle">
+                          Tipo
+                        </th>
+                        <th className="px-3 py-1 font-semibold text-muted-foreground text-[10.5px] uppercase tracking-wider align-middle">
+                          Descrição
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-border/50">
+                      {filteredColumns.map((col: RMSemanticColumn, colIdx: number) => {
+                        const isPk =
+                          col.nome.startsWith("COD") ||
+                          col.nome.startsWith("ID") ||
+                          col.nome === "CHAPA" ||
+                          col.nome === "NSEQITMMOV";
+
+                        const typeColor = getColumnTypeBadge(col.tipo);
+
+                        return (
+                          <tr
+                            key={`${col.nome}-${colIdx}`}
+                            className="hover:bg-muted/35 transition-colors group h-7.5"
+                          >
+                            <td className="px-3 py-0.5 align-middle">
+                              <div className="flex items-center justify-between gap-1.5 text-foreground font-mono text-xs font-semibold">
+                                <div className="flex items-center gap-1.5 min-w-0">
+                                  {isPk && (
+                                    <span title="Coluna de Chave Primária / Identificador">
+                                      <Key className="h-3 w-3 text-amber-500 shrink-0" />
+                                    </span>
+                                  )}
+                                  <span className="truncate">{col.nome}</span>
+
+                                  {/* Atalho direto para detalhar a tabela relacionada ao lado */}
+                                  {columnToTargetTableMap[col.nome.toUpperCase()] && onOpenSideBySide && (
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        onOpenSideBySide(columnToTargetTableMap[col.nome.toUpperCase()]);
+                                      }}
+                                      className="inline-flex items-center gap-1 px-1.5 py-0.2 rounded text-[9px] font-mono font-bold bg-primary/10 text-primary hover:bg-primary/20 border border-primary/25 transition-colors cursor-pointer"
+                                      title={`Abrir ${columnToTargetTableMap[col.nome.toUpperCase()]} ao lado como detalhamento deste campo`}
+                                    >
+                                      <span>➔ {columnToTargetTableMap[col.nome.toUpperCase()]}</span>
+                                      <Columns2 className="h-2.5 w-2.5" />
+                                    </button>
+                                  )}
+                                </div>
+
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-4.5 w-4.5 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-foreground shrink-0"
+                                  onClick={() => handleCopy(col.nome, `col_${col.nome}`)}
+                                  title="Copiar nome do campo"
+                                >
+                                  {copiedKey === `col_${col.nome}` ? (
+                                    <Check className="h-2.5 w-2.5 text-emerald-500" />
+                                  ) : (
+                                    <Copy className="h-2.5 w-2.5" />
+                                  )}
+                                </Button>
+                              </div>
+                            </td>
+
+                            <td className="px-3 py-0.5 align-middle">
+                              <span
+                                className={`px-1.5 py-0.2 rounded font-mono text-[10px] font-medium border leading-none inline-flex items-center ${typeColor}`}
+                              >
+                                {col.tipo}
+                              </span>
+                            </td>
+
+                            <td className="px-3 py-0.5 align-middle text-muted-foreground text-xs leading-normal font-sans">
+                              <span className="truncate block" title={col.descricao || undefined}>
+                                {col.descricao || "—"}
+                              </span>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
                 )}
               </div>
 
-              {/* Filtro por categoria com contagens */}
-              <div className="flex items-center gap-1 overflow-x-auto scrollbar-none text-[11px]">
-                <button
-                  onClick={() => setColumnTypeFilter("all")}
-                  className={`px-2.5 py-1 rounded text-[11px] font-medium transition-colors whitespace-nowrap ${
-                    columnTypeFilter === "all"
-                      ? "bg-foreground text-background"
-                      : "bg-muted text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  Todas ({categoryCounts.total})
-                </button>
-                <button
-                  onClick={() => setColumnTypeFilter("keys")}
-                  className={`px-2.5 py-1 rounded text-[11px] font-medium transition-colors whitespace-nowrap flex items-center gap-1 ${
-                    columnTypeFilter === "keys"
-                      ? "bg-amber-500 text-white"
-                      : "bg-amber-500/10 text-amber-600 dark:text-amber-400 hover:bg-amber-500/20"
-                  }`}
-                >
-                  <Key className="h-3 w-3" />
-                  Chaves ({categoryCounts.keys})
-                </button>
-                <button
-                  onClick={() => setColumnTypeFilter("text")}
-                  className={`px-2.5 py-1 rounded text-[11px] font-medium transition-colors whitespace-nowrap ${
-                    columnTypeFilter === "text"
-                      ? "bg-sky-500 text-white"
-                      : "bg-sky-500/10 text-sky-600 dark:text-sky-400 hover:bg-sky-500/20"
-                  }`}
-                >
-                  Texto ({categoryCounts.text})
-                </button>
-                <button
-                  onClick={() => setColumnTypeFilter("number")}
-                  className={`px-2.5 py-1 rounded text-[11px] font-medium transition-colors whitespace-nowrap ${
-                    columnTypeFilter === "number"
-                      ? "bg-emerald-500 text-white"
-                      : "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/20"
-                  }`}
-                >
-                  Números ({categoryCounts.number})
-                </button>
-                <button
-                  onClick={() => setColumnTypeFilter("date")}
-                  className={`px-2.5 py-1 rounded text-[11px] font-medium transition-colors whitespace-nowrap ${
-                    columnTypeFilter === "date"
-                      ? "bg-purple-500 text-white"
-                      : "bg-purple-500/10 text-purple-600 dark:text-purple-400 hover:bg-purple-500/20"
-                  }`}
-                >
-                  Datas ({categoryCounts.date})
-                </button>
-              </div>
-            </div>
+              {/* Rodapé Útil Fixo no Card da Tabela */}
+              <div className="shrink-0 border-t border-border bg-muted/20 px-3.5 py-2 flex flex-wrap items-center justify-between gap-2 text-xs">
+                {/* Lado Esquerdo: Contadores e Status de Filtros */}
+                <div className="flex items-center gap-2 text-muted-foreground text-[11.5px]">
+                  <span>
+                    Exibindo <strong className="text-foreground font-mono font-semibold">{filteredColumns.length}</strong> de{" "}
+                    <span className="font-mono">{uniqueColumns.length}</span> colunas
+                  </span>
 
-            {/* Tabela de Colunas */}
-            <div className="flex-1 overflow-y-auto">
-              {filteredColumns.length === 0 ? (
-                <div className="p-12 text-center text-xs text-muted-foreground flex flex-col items-center gap-2">
-                  <Filter className="h-6 w-6 text-muted-foreground/40" />
-                  <span>Nenhum campo encontrado para o filtro aplicado.</span>
-                  {columnSearch && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setColumnSearch("")}
-                      className="text-xs mt-1"
-                    >
-                      Limpar filtro de busca
-                    </Button>
+                  {(columnSearch || columnTypeFilter !== "all") && (
+                    <div className="flex items-center gap-1.5 pl-2 border-l border-border">
+                      <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-primary/10 text-primary text-[10px] font-medium">
+                        Filtro ativo
+                      </span>
+                      <button
+                        onClick={() => {
+                          setColumnSearch("");
+                          setColumnTypeFilter("all");
+                        }}
+                        className="text-[11px] text-muted-foreground hover:text-foreground underline underline-offset-2 transition-colors cursor-pointer"
+                      >
+                        Limpar
+                      </button>
+                    </div>
+                  )}
+
+                  {!columnSearch && columnTypeFilter === "all" && (
+                    <span className="hidden lg:inline-flex items-center gap-2 pl-2 border-l border-border text-[11px] text-muted-foreground/80">
+                      <span>{categoryCounts.keys} chaves</span>
+                      <span>•</span>
+                      <span>{categoryCounts.text} textos</span>
+                      <span>•</span>
+                      <span>{categoryCounts.number} números</span>
+                      <span>•</span>
+                      <span>{categoryCounts.date} datas</span>
+                    </span>
                   )}
                 </div>
-              ) : (
-                <table className="w-full text-left text-xs border-collapse">
-                  <thead className="bg-muted/40 sticky top-0 z-10 border-b border-border backdrop-blur-sm">
-                    <tr>
-                      <th className="px-4 py-2.5 font-semibold text-muted-foreground w-[35%]">
-                        Coluna
-                      </th>
-                      <th className="px-3 py-2.5 font-semibold text-muted-foreground w-[25%]">
-                        Tipo
-                      </th>
-                      <th className="px-4 py-2.5 font-semibold text-muted-foreground">
-                        Descrição
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-border">
-                    {filteredColumns.map((col: RMSemanticColumn, colIdx: number) => {
-                      const isPk =
-                        col.nome.startsWith("COD") ||
-                        col.nome.startsWith("ID") ||
-                        col.nome === "CHAPA" ||
-                        col.nome === "NSEQITMMOV";
 
-                      const typeColor = getColumnTypeBadge(col.tipo);
+                {/* Lado Direito: Ações Úteis (Copiar CSV das Colunas e Voltar ao Topo) */}
+                <div className="flex items-center gap-1.5">
+                  <button
+                    onClick={() => {
+                      const csv = filteredColumns.map((c) => c.nome).join(", ");
+                      handleCopy(csv, "csv_columns");
+                    }}
+                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-medium bg-background border border-border hover:bg-muted/60 text-foreground transition-colors shadow-2xs cursor-pointer"
+                    title="Copiar lista de colunas filtradas separadas por vírgula (ideal para SELECT ou relatórios)"
+                  >
+                    {copiedKey === "csv_columns" ? (
+                      <>
+                        <Check className="h-3 w-3 text-emerald-500" />
+                        <span className="text-emerald-600 dark:text-emerald-400 font-semibold">Copiado (CSV)</span>
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="h-3 w-3 text-muted-foreground" />
+                        <span>Copiar Colunas (CSV)</span>
+                      </>
+                    )}
+                  </button>
 
-                      return (
-                        <tr
-                          key={`${col.nome}-${colIdx}`}
-                          className="hover:bg-muted/30 transition-colors group"
-                        >
-                          <td className="px-4 py-2.5 text-foreground font-mono font-semibold flex items-center justify-between gap-2">
-                            <div className="flex items-center gap-1.5 min-w-0 flex-wrap">
-                              {isPk && (
-                                <span title="Coluna de Chave Primária / Identificador">
-                                  <Key className="h-3.5 w-3.5 text-amber-500 shrink-0" />
-                                </span>
-                              )}
-                              <span className="truncate">{col.nome}</span>
-
-                              {/* Atalho direto para detalhar a tabela relacionada ao lado */}
-                              {columnToTargetTableMap[col.nome.toUpperCase()] && onOpenSideBySide && (
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    onOpenSideBySide(columnToTargetTableMap[col.nome.toUpperCase()]);
-                                  }}
-                                  className="inline-flex items-center gap-1 px-1.5 py-0.2 rounded text-[10px] font-mono font-bold bg-primary/10 text-primary hover:bg-primary/20 border border-primary/25 transition-colors cursor-pointer"
-                                  title={`Abrir ${columnToTargetTableMap[col.nome.toUpperCase()]} ao lado como detalhamento deste campo`}
-                                >
-                                  <span>➔ {columnToTargetTableMap[col.nome.toUpperCase()]}</span>
-                                  <Columns2 className="h-2.5 w-2.5" />
-                                </button>
-                              )}
-                            </div>
-
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-foreground shrink-0"
-                              onClick={() => handleCopy(col.nome, `col_${col.nome}`)}
-                              title="Copiar nome do campo"
-                            >
-                              {copiedKey === `col_${col.nome}` ? (
-                                <Check className="h-3 w-3 text-emerald-500" />
-                              ) : (
-                                <Copy className="h-3 w-3" />
-                              )}
-                            </Button>
-                          </td>
-
-                          <td className="px-3 py-2.5">
-                            <span
-                              className={`px-2 py-0.5 rounded font-mono text-[11px] font-medium border ${typeColor}`}
-                            >
-                              {col.tipo}
-                            </span>
-                          </td>
-
-                          <td className="px-4 py-2.5 text-muted-foreground text-xs leading-relaxed font-sans">
-                            {col.descricao || "—"}
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              )}
+                  <button
+                    onClick={() => {
+                      if (tableScrollRef.current) {
+                        tableScrollRef.current.scrollTo({ top: 0, behavior: "smooth" });
+                      }
+                    }}
+                    className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[11px] text-muted-foreground hover:text-foreground hover:bg-muted/50 border border-transparent hover:border-border transition-colors cursor-pointer"
+                    title="Voltar ao início da tabela"
+                  >
+                    <ArrowUp className="h-3 w-3" />
+                    <span className="hidden sm:inline">Topo</span>
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         )}
@@ -814,7 +872,13 @@ SELECT TOP 100
 
                       <div className="p-2 rounded bg-muted/40 border border-border font-mono text-[11px] text-muted-foreground break-all flex items-center justify-between gap-2">
                         <span>
-                          <strong className="text-foreground">ON</strong> {rel.chaves_ligacao}
+                          <strong className="text-foreground">ON</strong>{" "}
+                          {formatRmJoinInline(
+                            table.tabela,
+                            rel.tabela_destino,
+                            rel.chaves_ligacao,
+                            false
+                          )}
                         </span>
 
                         <Button
@@ -822,9 +886,21 @@ SELECT TOP 100
                           size="icon"
                           className="h-6 w-6 text-muted-foreground hover:text-foreground shrink-0"
                           onClick={() =>
-                            handleCopy(`ON ${rel.chaves_ligacao}`, `rel_${idx}`)
+                            handleCopy(
+                              formatRmJoinSnippet(
+                                table.tabela,
+                                rel.tabela_destino,
+                                rel.chaves_ligacao,
+                                {
+                                  joinType: "INNER JOIN",
+                                  isIncoming: false,
+                                  indentBase: 4,
+                                }
+                              ),
+                              `rel_${idx}`
+                            )
                           }
-                          title="Copiar cláusula ON"
+                          title="Copiar bloco INNER JOIN formatado"
                         >
                           {copiedKey === `rel_${idx}` ? (
                             <Check className="h-3 w-3 text-emerald-500" />
@@ -912,7 +988,13 @@ SELECT TOP 100
 
                       <div className="p-2 rounded bg-muted/40 border border-border font-mono text-[11px] text-muted-foreground break-all flex items-center justify-between gap-2">
                         <span>
-                          <strong className="text-foreground">ON</strong> {rel.chaves_ligacao}
+                          <strong className="text-foreground">ON</strong>{" "}
+                          {formatRmJoinInline(
+                            table.tabela,
+                            rel.tabela_origem,
+                            rel.chaves_ligacao,
+                            true
+                          )}
                         </span>
 
                         <Button
@@ -920,9 +1002,21 @@ SELECT TOP 100
                           size="icon"
                           className="h-6 w-6 text-muted-foreground hover:text-foreground shrink-0"
                           onClick={() =>
-                            handleCopy(`ON ${rel.chaves_ligacao}`, `in_rel_${idx}`)
+                            handleCopy(
+                              formatRmJoinSnippet(
+                                table.tabela,
+                                rel.tabela_origem,
+                                rel.chaves_ligacao,
+                                {
+                                  joinType: "INNER JOIN",
+                                  isIncoming: true,
+                                  indentBase: 4,
+                                }
+                              ),
+                              `in_rel_${idx}`
+                            )
                           }
-                          title="Copiar cláusula ON"
+                          title="Copiar bloco INNER JOIN formatado"
                         >
                           {copiedKey === `in_rel_${idx}` ? (
                             <Check className="h-3 w-3 text-emerald-500" />
@@ -941,69 +1035,51 @@ SELECT TOP 100
 
         {/* TAB 4: SQL GENERATOR */}
         {activeTab === "sql" && (
-          <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-5">
-            {/* Script 1: SELECT TOP 100 */}
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
-                  <Code2 className="h-3.5 w-3.5 text-primary" />
-                  Template de Consulta SELECT (T-SQL)
-                </h4>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleCopy(sqlSelectScript, "sql_select")}
-                  className="h-7 px-2.5 text-xs gap-1.5"
-                >
-                  {copiedKey === "sql_select" ? (
-                    <>
-                      <Check className="h-3 w-3 text-emerald-500" />
-                      <span className="text-emerald-500 font-semibold">Copiado</span>
-                    </>
-                  ) : (
-                    <>
-                      <Copy className="h-3 w-3" />
-                      <span>Copiar Script</span>
-                    </>
-                  )}
-                </Button>
+          <div className="flex-1 flex flex-col min-h-0 p-3 sm:p-4 overflow-hidden">
+            <div
+              className={`grid grid-cols-1 ${
+                isSplitActive ? "2xl:grid-cols-2" : "xl:grid-cols-2"
+              } gap-3.5 flex-1 min-h-0 h-full items-stretch`}
+            >
+              {/* Coluna 1: SELECT TOP 100 */}
+              <div className="flex flex-col min-w-0 min-h-0 h-full space-y-1.5">
+                <div className="flex items-center justify-between shrink-0">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+                    <Code2 className="h-3.5 w-3.5 text-primary" />
+                    Template de Consulta SELECT (T-SQL)
+                  </h4>
+                  <span className="text-[10px] font-mono text-muted-foreground">
+                    Top 100 • 15 Colunas
+                  </span>
+                </div>
+
+                <SqlCodeBlock
+                  code={sqlSelectScript}
+                  title={`CORPORE.DBO.${table.tabela} • Consulta SELECT`}
+                  showLineNumbers={true}
+                  className="flex-1 min-h-0 h-full"
+                />
               </div>
 
-              <pre className="p-3.5 rounded-lg border border-border bg-muted/20 font-mono text-xs text-foreground overflow-x-auto leading-relaxed">
-                {sqlSelectScript}
-              </pre>
-            </div>
+              {/* Coluna 2: Template com JOINs */}
+              <div className="flex flex-col min-w-0 min-h-0 h-full space-y-1.5">
+                <div className="flex items-center justify-between shrink-0">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+                    <Sparkles className="h-3.5 w-3.5 text-violet-500" />
+                    Template com JOINs Documentados
+                  </h4>
+                  <span className="text-[10px] font-mono text-muted-foreground">
+                    LEFT JOINs • Relacionamentos
+                  </span>
+                </div>
 
-            {/* Script 2: Template com JOINs */}
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
-                  <Sparkles className="h-3.5 w-3.5 text-violet-500" />
-                  Template com JOINs Documentados
-                </h4>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleCopy(sqlJoinTemplate, "sql_join")}
-                  className="h-7 px-2.5 text-xs gap-1.5"
-                >
-                  {copiedKey === "sql_join" ? (
-                    <>
-                      <Check className="h-3 w-3 text-emerald-500" />
-                      <span className="text-emerald-500 font-semibold">Copiado</span>
-                    </>
-                  ) : (
-                    <>
-                      <Copy className="h-3 w-3" />
-                      <span>Copiar JOINs</span>
-                    </>
-                  )}
-                </Button>
+                <SqlCodeBlock
+                  code={sqlJoinTemplate}
+                  title={`CORPORE.DBO.${table.tabela} • Consulta com LEFT JOINs`}
+                  showLineNumbers={true}
+                  className="flex-1 min-h-0 h-full"
+                />
               </div>
-
-              <pre className="p-3.5 rounded-lg border border-border bg-muted/20 font-mono text-xs text-foreground overflow-x-auto leading-relaxed">
-                {sqlJoinTemplate}
-              </pre>
             </div>
           </div>
         )}
