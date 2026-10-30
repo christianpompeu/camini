@@ -170,9 +170,11 @@ export function SqlStudioClient() {
       // Inicia nova consulta padrão com esta tabela
       const initial = `/* Consulta TOTVS RM: ${cleanTable} */
 SELECT
-        ${cleanTable}.CODCOLIGADA
-  FROM CORPORE.DBO.${cleanTable} AS ${cleanTable} WITH (NOLOCK)
- WHERE ${cleanTable}.CODCOLIGADA = 1;`;
+        ${cleanTable}.CODCOLIGADA               AS [CODCOLIGADA]
+FROM
+    CORPORE.DBO.${cleanTable} AS ${cleanTable} WITH (NOLOCK)
+WHERE
+    ${cleanTable}.CODCOLIGADA = 1;`;
       setSql(initial);
       return;
     }

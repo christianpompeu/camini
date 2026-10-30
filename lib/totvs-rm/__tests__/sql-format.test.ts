@@ -125,11 +125,11 @@ test("T-SQL Formatter - formatRmSqlQuery no caso SELECT * FROM CORPORE.DBO.GCOLI
 
   assert.equal(
     output,
-    `SELECT\n        *\nFROM CORPORE.DBO.GCOLIGADA AS GCOLIGADA WITH (NOLOCK);`
+    `SELECT\n        *\nFROM\n    CORPORE.DBO.GCOLIGADA AS GCOLIGADA WITH (NOLOCK);`
   );
   assert.ok(!output.includes("CORPORE.DBO.CORPORE"), "Não pode duplicar CORPORE");
   assert.ok(!output.includes("WITH (NOLOCK).DBO"), "Não pode deixar resto de schema após WITH (NOLOCK)");
-  assert.ok(output.includes("\nFROM CORPORE.DBO.GCOLIGADA"), "FROM deve iniciar sem espaços na linha");
+  assert.ok(output.includes("\nFROM\n    CORPORE.DBO.GCOLIGADA"), "FROM deve ter ENTER e 4 espaços antes da tabela");
 });
 
 test("T-SQL Formatter - formatRmSqlQuery com alias entre colchetes [ALIAS] em todas as colunas", () => {
@@ -138,8 +138,8 @@ test("T-SQL Formatter - formatRmSqlQuery com alias entre colchetes [ALIAS] em to
 
   assert.ok(output.includes("AS [IDLAN]"), "Cada coluna deve ter alias entre colchetes");
   assert.ok(output.includes("AS [NOMEFANTASIA]"), "Cada coluna deve ter alias entre colchetes");
-  assert.ok(output.includes("\nFROM CORPORE.DBO.FLAN AS FLAN WITH (NOLOCK)"), "FROM sem espaços no início");
-  assert.ok(output.includes("\nWHERE FLAN.CODCOLIGADA = 1\n  AND FLAN.STATUSLAN = 0;"), "WHERE sem espaço no início e AND alinhado");
+  assert.ok(output.includes("\nFROM\n    CORPORE.DBO.FLAN AS FLAN WITH (NOLOCK)"), "FROM com ENTER e 4 espaços");
+  assert.ok(output.includes("\nWHERE\n    FLAN.CODCOLIGADA = 1\n    AND FLAN.STATUSLAN = 0;"), "WHERE com ENTER e 4 espaços");
 });
 
 test("T-SQL Formatter - formatRmSqlQuery com JOIN aninhado em 3 níveis e desambiguação de duplicata", () => {
@@ -155,8 +155,8 @@ SELECT FLAN.CODCOLIGADA, FLAN.IDLAN, FCFO.CODCOLIGADA, FCFO.NOMEFANTASIA
   assert.ok(output.startsWith("/* Consulta de Teste */\nSELECT"));
   assert.ok(output.includes("AS [CODCOLIGADA]"));
   assert.ok(output.includes("AS [FCFO_CODCOLIGADA]"), "Duplicata de CODCOLIGADA deve gerar alias desambiguado FCFO_CODCOLIGADA");
-  assert.ok(output.includes("\nFROM CORPORE.DBO.FLAN AS FLAN WITH (NOLOCK)"));
+  assert.ok(output.includes("\nFROM\n    CORPORE.DBO.FLAN AS FLAN WITH (NOLOCK)"));
   assert.ok(output.includes("    INNER JOIN\n        CORPORE.DBO.FCFO AS FCFO WITH (NOLOCK)\n            ON  FLAN.CODCOLCFO = FCFO.CODCOLIGADA\n            AND FLAN.CODCFO = FCFO.CODCFO"), "JOIN deve ser aninhado em 3 níveis");
-  assert.ok(output.includes("\nWHERE FLAN.CODCOLIGADA = 1"));
+  assert.ok(output.includes("\nWHERE\n    FLAN.CODCOLIGADA = 1"));
   assert.ok(output.includes("\nORDER BY\n    FLAN.IDLAN DESC;"));
 });

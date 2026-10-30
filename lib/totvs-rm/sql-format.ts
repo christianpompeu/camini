@@ -483,7 +483,7 @@ export function formatRmSqlQuery(sql: string): string {
         const parts = rawTbl.split(".");
         const uTbl = parts[parts.length - 1].toUpperCase();
         const uAlias = (alias || uTbl).toUpperCase();
-        return `FROM CORPORE.DBO.${uTbl} AS ${uAlias} WITH (NOLOCK)`;
+        return `FROM\n    CORPORE.DBO.${uTbl} AS ${uAlias} WITH (NOLOCK)`;
       }
     );
     fallback = fallback.replace(
@@ -548,7 +548,7 @@ export function formatRmSqlQuery(sql: string): string {
   // Restante a partir do FROM
   const fromAndBeyond = text.substring(selectMatch[0].length - 4);
 
-  // 1. Cláusula FROM (sem espaços no início)
+  // 1. Cláusula FROM com ENTER e 4 espaços de indentação
   const fromMatch = fromAndBeyond.match(
     /\bFROM\s+([A-Za-z0-9_.]+(?:\.[A-Za-z0-9_.]+)*)(?:\s+(?:AS\s+)?(?!\b(?:WHERE|INNER|LEFT|RIGHT|FULL|CROSS|JOIN|GROUP|HAVING|ORDER|UNION|WITH)\b)([A-Za-z0-9_]+))?(?:\s+WITH\s*\([^)]*\))?/i
   );
@@ -561,7 +561,7 @@ export function formatRmSqlQuery(sql: string): string {
   const fromParts = rawFromTable.split(".");
   const pureFromTable = fromParts[fromParts.length - 1].toUpperCase();
   const fromAlias = (fromMatch[2] || pureFromTable).toUpperCase();
-  const formattedFrom = `FROM CORPORE.DBO.${pureFromTable} AS ${fromAlias} WITH (NOLOCK)`;
+  const formattedFrom = `FROM\n    CORPORE.DBO.${pureFromTable} AS ${fromAlias} WITH (NOLOCK)`;
 
   const afterFrom = fromAndBeyond.substring(fromMatch.index! + fromMatch[0].length);
 
@@ -656,7 +656,7 @@ export function formatRmSqlQuery(sql: string): string {
         .map((s) => s.trim())
         .filter(Boolean);
 
-      const formattedWhere: string[] = [];
+      const formattedWhere: string[] = ["WHERE"];
       let pendingOp = "";
 
       for (let wIdx = 0; wIdx < whereConditions.length; wIdx++) {
@@ -665,12 +665,12 @@ export function formatRmSqlQuery(sql: string): string {
         if (uItem === "AND" || uItem === "OR") {
           pendingOp = uItem;
         } else {
-          if (formattedWhere.length === 0) {
-            // WHERE sem espaço no início da linha
-            formattedWhere.push(`WHERE ${item}`);
+          if (formattedWhere.length === 1) {
+            // Primeira condição com 4 espaços após WHERE
+            formattedWhere.push(`    ${item}`);
           } else {
             const op = pendingOp || "AND";
-            const pad = op === "AND" ? "  AND " : "   OR ";
+            const pad = op === "AND" ? "    AND " : "    OR  ";
             formattedWhere.push(`${pad}${item}`);
             pendingOp = "";
           }

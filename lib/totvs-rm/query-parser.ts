@@ -300,7 +300,7 @@ export function appendJoinToQuery(currentSql: string, joinSnippet: string): stri
  */
 export function appendColumnToSelect(currentSql: string, columnExpr: string): string {
   if (!currentSql.trim()) {
-    return `SELECT\n        ${columnExpr}\n  FROM ...`;
+    return `SELECT\n        ${columnExpr}\nFROM ...`;
   }
 
   const fromMatch = currentSql.match(/\bFROM\b/i);
@@ -313,10 +313,10 @@ export function appendColumnToSelect(currentSql: string, columnExpr: string): st
 
   // Se o SELECT ainda estiver com asterisco '*', substitui
   if (/\bSELECT\s+\*\s*$/i.test(beforeFrom)) {
-    return `SELECT\n        ${columnExpr}\n  ${fromOnwards}`;
+    return `SELECT\n        ${columnExpr}\n${fromOnwards}`;
   }
 
   // Formato vírgula à esquerda: "      , COLUNA"
-  const updatedSelect = `${beforeFrom}\n      , ${columnExpr}\n  ${fromOnwards}`;
+  const updatedSelect = `${beforeFrom}\n      , ${columnExpr}\n${fromOnwards}`;
   return updatedSelect;
 }
