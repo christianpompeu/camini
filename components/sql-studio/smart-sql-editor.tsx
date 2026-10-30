@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef, useEffect, useMemo } from "react";
+import React, { useState, useRef, useEffect, useMemo, useCallback } from "react";
 import {
   Code2,
   Copy,
@@ -19,6 +19,8 @@ import {
   Binary,
   Layers,
   Key,
+  Undo2,
+  Redo2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -29,10 +31,11 @@ import {
   appendJoinToQuery,
   appendColumnToSelect,
 } from "@/lib/totvs-rm/query-parser";
-import { RMSemanticTableWithKey, RMSemanticColumn } from "@/lib/totvs-rm/types";
+import { RMSemanticTableWithKey, RMSemanticColumn, RMTableSummary } from "@/lib/totvs-rm/types";
 import { getCaretCoordinates, CaretCoordinates } from "./caret-utils";
 import { SqlAutocompleteCard, ColumnSuggestionItem } from "./sql-autocomplete-card";
 import { detectAutocompleteContext, AutocompleteState } from "./use-sql-autocomplete";
+import type { GenericSuggestionItem } from "@/lib/totvs-rm/sql-autocomplete-data";
 
 interface SmartSqlEditorProps {
   sql: string;
@@ -45,6 +48,7 @@ interface SmartSqlEditorProps {
   onSaveQuery: () => void;
   onSaveAsTemplate: (params: { title: string; description: string; moduleLabel: string }) => void;
   isAuthenticated?: boolean;
+  catalogTables?: RMTableSummary[];
 }
 
 const TSQL_KEYWORDS = new Set([
@@ -170,6 +174,7 @@ export function SmartSqlEditor({
   onSaveQuery,
   onSaveAsTemplate,
   isAuthenticated = false,
+  catalogTables = [],
 }: SmartSqlEditorProps) {
   const [copied, setCopied] = useState(false);
   const [showAllJoinsModal, setShowAllJoinsModal] = useState(false);
@@ -199,6 +204,94 @@ export function SmartSqlEditor({
   const [caretCoords, setCaretCoords] = useState<CaretCoordinates | null>(null);
   const [autocompleteSelectedIndex, setAutocompleteSelectedIndex] = useState(0);
 
+  // Histórico de Undo / Redo (Ctrl+Z / Ctrl+Y)
+  const historyRef = useRef<{ sql: string; cursorPos?: number }[]>([{ sql, cursorPos: 0 }]);
+  const historyIndexRef = useRef<number>(0);
+  const isNavigatingHistoryRef = useRef<boolean>(false);
+  const lastRecordTimeRef = useRef<number>(Date.now());
+  const [canUndo, setCanUndo] = useState(false);
+  const [canRedo, setCanRedo] = useState(false);
+
+  const updateHistoryButtons = () => {
+    setCanUndo(historyIndexRef.current > 0);
+    setCanRedo(historyIndexRef.current < historyRef.current.length - 1);
+  };
+
+  const pushHistorySnapshot = (newSql: string, newPos?: number, immediate = false) => {
+    if (isNavigatingHistoryRef.current) return;
+    const currentEntry = historyRef.current[historyIndexRef.current];
+    if (currentEntry && currentEntry.sql === newSql) return;
+
+    const now = Date.now();
+    const isRapidTyping =
+      !immediate &&
+      now - lastRecordTimeRef.current < 450 &&
+      Math.abs(newSql.length - (currentEntry?.sql.length || 0)) <= 3;
+    lastRecordTimeRef.current = now;
+
+    if (isRapidTyping && historyIndexRef.current > 0) {
+      historyRef.current[historyIndexRef.current] = { sql: newSql, cursorPos: newPos };
+    } else {
+      const nextStack = historyRef.current.slice(0, historyIndexRef.current + 1);
+      nextStack.push({ sql: newSql, cursorPos: newPos });
+      if (nextStack.length > 100) nextStack.shift();
+      historyRef.current = nextStack;
+      historyIndexRef.current = nextStack.length - 1;
+    }
+    updateHistoryButtons();
+  };
+
+  const handleUndo = useCallback(() => {
+    if (historyIndexRef.current <= 0) return;
+    historyIndexRef.current -= 1;
+    const entry = historyRef.current[historyIndexRef.current];
+    if (!entry) return;
+
+    isNavigatingHistoryRef.current = true;
+    onChangeSql(entry.sql);
+    updateHistoryButtons();
+
+    requestAnimationFrame(() => {
+      if (textareaRef.current) {
+        textareaRef.current.focus();
+        if (typeof entry.cursorPos === "number") {
+          textareaRef.current.setSelectionRange(entry.cursorPos, entry.cursorPos);
+        }
+      }
+      isNavigatingHistoryRef.current = false;
+    });
+  }, [onChangeSql]);
+
+  const handleRedo = useCallback(() => {
+    if (historyIndexRef.current >= historyRef.current.length - 1) return;
+    historyIndexRef.current += 1;
+    const entry = historyRef.current[historyIndexRef.current];
+    if (!entry) return;
+
+    isNavigatingHistoryRef.current = true;
+    onChangeSql(entry.sql);
+    updateHistoryButtons();
+
+    requestAnimationFrame(() => {
+      if (textareaRef.current) {
+        textareaRef.current.focus();
+        if (typeof entry.cursorPos === "number") {
+          textareaRef.current.setSelectionRange(entry.cursorPos, entry.cursorPos);
+        }
+      }
+      isNavigatingHistoryRef.current = false;
+    });
+  }, [onChangeSql]);
+
+  // Observa mudanças externas de sql (ex: ao carregar templates ou auto-formatar)
+  useEffect(() => {
+    if (isNavigatingHistoryRef.current) return;
+    const currentEntry = historyRef.current[historyIndexRef.current];
+    if (!currentEntry || currentEntry.sql !== sql) {
+      pushHistorySnapshot(sql, textareaRef.current?.selectionStart ?? sql.length, true);
+    }
+  }, [sql]);
+
   const handleCopy = () => {
     navigator.clipboard.writeText(sql);
     setCopied(true);
@@ -223,21 +316,38 @@ export function SmartSqlEditor({
   };
 
   // Atualiza detecção contextual do autocomplete
-  const updateAutocomplete = (currentSql: string, cursorIndex: number) => {
+  const updateAutocomplete = (
+    currentSql: string,
+    cursorIndex: number,
+    force = false
+  ) => {
     if (!textareaRef.current) return;
     const detected = detectAutocompleteContext(
       currentSql,
       cursorIndex,
       tablesInQuery,
       tableDetailsMap,
-      joinOpportunities
+      joinOpportunities,
+      force,
+      catalogTables
     );
 
     if (detected) {
       const coords = getCaretCoordinates(textareaRef.current, cursorIndex);
       setCaretCoords(coords);
-      setAutocompleteState(detected);
-      setAutocompleteSelectedIndex(0);
+      setAutocompleteState((prev) => {
+        // Se já estava aberto para o mesmo contexto, tipo e prefixo, preserva a navegação atual
+        if (
+          prev &&
+          prev.type === detected.type &&
+          prev.tableLabel === detected.tableLabel &&
+          prev.prefix === detected.prefix
+        ) {
+          return detected;
+        }
+        setAutocompleteSelectedIndex(0);
+        return detected;
+      });
     } else {
       setAutocompleteState(null);
     }
@@ -247,6 +357,7 @@ export function SmartSqlEditor({
     const val = e.target.value;
     const pos = e.target.selectionStart;
     onChangeSql(val);
+    pushHistorySnapshot(val, pos, false);
     updateAutocomplete(val, pos);
   };
 
@@ -254,6 +365,28 @@ export function SmartSqlEditor({
     if (!textareaRef.current) return;
     const pos = textareaRef.current.selectionStart;
     updateAutocomplete(sql, pos);
+  };
+
+  const handleKeyUp = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    // Teclas de navegação do autocomplete e atalhos de controle não devem acionar recálculo
+    if (
+      [
+        "ArrowUp",
+        "ArrowDown",
+        "ArrowLeft",
+        "ArrowRight",
+        "Enter",
+        "Tab",
+        "Escape",
+        "Control",
+        "Shift",
+        "Alt",
+        "Meta",
+      ].includes(e.key)
+    ) {
+      return;
+    }
+    handleCursorActivity();
   };
 
   const handleApplyColumnSuggestion = (item: ColumnSuggestionItem) => {
@@ -265,6 +398,7 @@ export function SmartSqlEditor({
       sql.slice(autocompleteState.replaceEnd);
 
     const newPos = autocompleteState.replaceStart + colName.length;
+    pushHistorySnapshot(newSql, newPos, true);
     onChangeSql(newSql);
     setAutocompleteState(null);
 
@@ -285,6 +419,29 @@ export function SmartSqlEditor({
       sql.slice(autocompleteState.replaceEnd);
 
     const newPos = autocompleteState.replaceStart + snippet.length;
+    pushHistorySnapshot(newSql, newPos, true);
+    onChangeSql(newSql);
+    setAutocompleteState(null);
+
+    requestAnimationFrame(() => {
+      if (textareaRef.current) {
+        textareaRef.current.focus();
+        textareaRef.current.setSelectionRange(newPos, newPos);
+      }
+    });
+  };
+
+  const handleApplyGenericSuggestion = (item: GenericSuggestionItem) => {
+    if (!autocompleteState) return;
+    const insertText = item.insertText;
+    const newSql =
+      sql.slice(0, autocompleteState.replaceStart) +
+      insertText +
+      sql.slice(autocompleteState.replaceEnd);
+
+    const offset = item.cursorOffset || 0;
+    const newPos = autocompleteState.replaceStart + insertText.length - offset;
+    pushHistorySnapshot(newSql, newPos, true);
     onChangeSql(newSql);
     setAutocompleteState(null);
 
@@ -297,43 +454,73 @@ export function SmartSqlEditor({
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (!autocompleteState) return;
-
-    const total =
-      autocompleteState.type === "column"
-        ? autocompleteState.columnItems?.length || 0
-        : autocompleteState.joinItems?.length || 0;
-
-    if (total === 0) return;
-
-    if (e.key === "ArrowDown") {
+    // 1. Atalhos de Undo / Redo
+    if ((e.ctrlKey || e.metaKey) && !e.shiftKey && (e.key === "z" || e.key === "Z")) {
       e.preventDefault();
-      setAutocompleteSelectedIndex((prev) => (prev + 1) % total);
+      handleUndo();
       return;
     }
 
-    if (e.key === "ArrowUp") {
+    if (
+      (e.ctrlKey || e.metaKey) &&
+      (e.key === "y" || e.key === "Y" || (e.shiftKey && (e.key === "z" || e.key === "Z")))
+    ) {
       e.preventDefault();
-      setAutocompleteSelectedIndex((prev) => (prev - 1 + total) % total);
+      handleRedo();
       return;
     }
 
-    if (e.key === "Enter" || e.key === "Tab") {
+    // 2. Atalho CTRL + SPACE para forçar sugestões
+    if ((e.ctrlKey || e.metaKey) && (e.code === "Space" || e.key === " ")) {
       e.preventDefault();
-      if (autocompleteState.type === "column" && autocompleteState.columnItems) {
-        const item = autocompleteState.columnItems[autocompleteSelectedIndex];
-        if (item) handleApplyColumnSuggestion(item);
-      } else if (autocompleteState.type === "join" && autocompleteState.joinItems) {
-        const opp = autocompleteState.joinItems[autocompleteSelectedIndex];
-        if (opp) handleApplyJoinSuggestion(opp);
+      const pos = e.currentTarget.selectionStart;
+      updateAutocomplete(sql, pos, true);
+      return;
+    }
+
+    // 3. Navegação do Autocomplete se estiver aberto
+    if (autocompleteState) {
+      const total =
+        autocompleteState.type === "column"
+          ? autocompleteState.columnItems?.length || 0
+          : autocompleteState.type === "join"
+          ? autocompleteState.joinItems?.length || 0
+          : autocompleteState.genericItems?.length || 0;
+
+      if (total > 0) {
+        if (e.key === "ArrowDown") {
+          e.preventDefault();
+          setAutocompleteSelectedIndex((prev) => (prev + 1) % total);
+          return;
+        }
+
+        if (e.key === "ArrowUp") {
+          e.preventDefault();
+          setAutocompleteSelectedIndex((prev) => (prev - 1 + total) % total);
+          return;
+        }
+
+        if (e.key === "Enter" || e.key === "Tab") {
+          e.preventDefault();
+          if (autocompleteState.type === "column" && autocompleteState.columnItems) {
+            const item = autocompleteState.columnItems[autocompleteSelectedIndex];
+            if (item) handleApplyColumnSuggestion(item);
+          } else if (autocompleteState.type === "join" && autocompleteState.joinItems) {
+            const opp = autocompleteState.joinItems[autocompleteSelectedIndex];
+            if (opp) handleApplyJoinSuggestion(opp);
+          } else if (autocompleteState.genericItems) {
+            const item = autocompleteState.genericItems[autocompleteSelectedIndex];
+            if (item) handleApplyGenericSuggestion(item);
+          }
+          return;
+        }
+
+        if (e.key === "Escape") {
+          e.preventDefault();
+          setAutocompleteState(null);
+          return;
+        }
       }
-      return;
-    }
-
-    if (e.key === "Escape") {
-      e.preventDefault();
-      setAutocompleteState(null);
-      return;
     }
   };
 
@@ -485,6 +672,26 @@ export function SmartSqlEditor({
 
           {/* Lado Direito: Visualizadores, Formatação, Cópia e Salvar como Modelo */}
           <div className="flex items-center gap-1.5 flex-wrap">
+            {/* Controles de Desfazer / Refazer (Ctrl+Z / Ctrl+Y) */}
+            <div className="flex items-center gap-0.5 border border-border rounded-md bg-background p-0.5 h-7">
+              <button
+                onClick={handleUndo}
+                disabled={!canUndo}
+                className="h-6 w-6 inline-flex items-center justify-center rounded text-muted-foreground hover:text-foreground disabled:opacity-30 disabled:pointer-events-none hover:bg-muted cursor-pointer transition-colors"
+                title="Desfazer (Ctrl+Z)"
+              >
+                <Undo2 className="h-3.5 w-3.5" />
+              </button>
+              <button
+                onClick={handleRedo}
+                disabled={!canRedo}
+                className="h-6 w-6 inline-flex items-center justify-center rounded text-muted-foreground hover:text-foreground disabled:opacity-30 disabled:pointer-events-none hover:bg-muted cursor-pointer transition-colors"
+                title="Refazer (Ctrl+Y ou Ctrl+Shift+Z)"
+              >
+                <Redo2 className="h-3.5 w-3.5" />
+              </button>
+            </div>
+
             {/* Toggle: Visualizador de Espaços (Pontos Cinza) */}
             <button
               onClick={() => setShowWhitespaceDots(!showWhitespaceDots)}
@@ -805,9 +1012,17 @@ export function SmartSqlEditor({
               value={sql}
               onChange={handleTextareaChange}
               onKeyDown={handleKeyDown}
-              onClick={handleCursorActivity}
-              onKeyUp={handleCursorActivity}
-              onSelect={handleCursorActivity}
+              onClick={() => {
+                if (textareaRef.current) {
+                  updateAutocomplete(sql, textareaRef.current.selectionStart);
+                }
+              }}
+              onKeyUp={handleKeyUp}
+              onSelect={() => {
+                if (!autocompleteState && textareaRef.current) {
+                  updateAutocomplete(sql, textareaRef.current.selectionStart);
+                }
+              }}
               onScroll={handleScroll}
               spellCheck={false}
               autoCapitalize="none"
@@ -818,7 +1033,7 @@ export function SmartSqlEditor({
               }`}
             />
 
-            {/* Card Flutuante de Autocomplete e IntelliSense (Fase 1) */}
+            {/* Card Flutuante de Autocomplete e IntelliSense (Fase 1 e Fase 2) */}
             {autocompleteState && caretCoords && (
               <SqlAutocompleteCard
                 type={autocompleteState.type}
@@ -830,10 +1045,12 @@ export function SmartSqlEditor({
                 columnItems={autocompleteState.columnItems}
                 tableLabel={autocompleteState.tableLabel}
                 joinItems={autocompleteState.joinItems}
+                genericItems={autocompleteState.genericItems}
                 selectedIndex={autocompleteSelectedIndex}
                 onSelectIndex={setAutocompleteSelectedIndex}
                 onApplyColumn={handleApplyColumnSuggestion}
                 onApplyJoin={handleApplyJoinSuggestion}
+                onApplyGeneric={handleApplyGenericSuggestion}
                 onClose={() => setAutocompleteState(null)}
               />
             )}

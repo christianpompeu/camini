@@ -335,6 +335,7 @@ WHERE
           onSaveQuery={handleSaveQuery}
           onSaveAsTemplate={handleSaveAsTemplate}
           isAuthenticated={isAuthenticated}
+          catalogTables={catalogTables}
         />
 
         {/* Painel Direito: Inspetor de Tabelas e Campos */}

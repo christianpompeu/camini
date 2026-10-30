@@ -1,11 +1,19 @@
 "use client";
 
 import React, { useEffect, useRef } from "react";
-import { Key, Binary, Link2, Columns2, Sparkles, CornerDownLeft } from "lucide-react";
+import { Key, Binary, Link2, Columns2, Sparkles, CornerDownLeft, Table2, Code2 } from "lucide-react";
 import type { RMSemanticColumn } from "../../lib/totvs-rm/types.ts";
 import type { JoinOpportunity } from "../../lib/totvs-rm/query-parser.ts";
+import type { GenericSuggestionItem } from "../../lib/totvs-rm/sql-autocomplete-data.ts";
 
-export type AutocompleteTriggerType = "column" | "join";
+export type AutocompleteTriggerType =
+  | "column"
+  | "join"
+  | "table"
+  | "keyword"
+  | "function"
+  | "snippet"
+  | "mixed";
 
 export interface ColumnSuggestionItem {
   tableName: string;
@@ -22,11 +30,14 @@ export interface SqlAutocompleteCardProps {
   tableLabel?: string;
   // Itens para JOINs
   joinItems?: JoinOpportunity[];
+  // Itens Genéricos (Keywords, Funções, Snippets, Tabelas)
+  genericItems?: GenericSuggestionItem[];
   // Índice selecionado
   selectedIndex: number;
   onSelectIndex: (index: number) => void;
   onApplyColumn: (item: ColumnSuggestionItem) => void;
   onApplyJoin: (item: JoinOpportunity) => void;
+  onApplyGeneric: (item: GenericSuggestionItem) => void;
   onClose: () => void;
 }
 
@@ -37,15 +48,22 @@ export const SqlAutocompleteCard: React.FC<SqlAutocompleteCardProps> = ({
   columnItems = [],
   tableLabel = "",
   joinItems = [],
+  genericItems = [],
   selectedIndex,
   onSelectIndex,
   onApplyColumn,
   onApplyJoin,
+  onApplyGeneric,
 }) => {
   const listRef = useRef<HTMLDivElement>(null);
   const cardRef = useRef<HTMLDivElement>(null);
 
-  const totalItems = type === "column" ? columnItems.length : joinItems.length;
+  const totalItems =
+    type === "column"
+      ? columnItems.length
+      : type === "join"
+      ? joinItems.length
+      : genericItems.length;
 
   // Auto-scroll para manter o item selecionado visível na rolagem
   useEffect(() => {
@@ -70,7 +88,8 @@ export const SqlAutocompleteCard: React.FC<SqlAutocompleteCardProps> = ({
   }
 
   // Ajuste de colisão de bordas para evitar que o card saia do container
-  const CARD_WIDTH = type === "column" ? 340 : 420;
+  const CARD_WIDTH =
+    type === "column" ? 340 : type === "join" ? 430 : type === "table" ? 390 : 360;
   const CARD_MAX_HEIGHT = 260;
 
   // Se estiver muito embaixo, abre para cima do caret
@@ -98,16 +117,29 @@ export const SqlAutocompleteCard: React.FC<SqlAutocompleteCardProps> = ({
       {/* Cabeçalho do Card com Contexto Ativo */}
       <div className="px-3 py-1.5 border-b border-border bg-muted/40 flex items-center justify-between text-[11px] text-muted-foreground shrink-0">
         <div className="flex items-center gap-1.5 font-semibold text-foreground">
-          {type === "column" ? (
+          {type === "column" && (
             <>
               <Columns2 className="h-3.5 w-3.5 text-primary" />
               <span>Colunas de</span>
               <span className="font-mono text-primary font-bold">{tableLabel}</span>
             </>
-          ) : (
+          )}
+          {type === "join" && (
             <>
               <Link2 className="h-3.5 w-3.5 text-primary" />
               <span>Sugestões de JOIN (Grafo Semântico)</span>
+            </>
+          )}
+          {type === "table" && (
+            <>
+              <Table2 className="h-3.5 w-3.5 text-emerald-500" />
+              <span>Tabelas TOTVS RM (Catálogo)</span>
+            </>
+          )}
+          {(type === "keyword" || type === "function" || type === "snippet" || type === "mixed") && (
+            <>
+              <Sparkles className="h-3.5 w-3.5 text-primary" />
+              <span>IntelliSense & Snippets RM</span>
             </>
           )}
         </div>
@@ -134,7 +166,7 @@ export const SqlAutocompleteCard: React.FC<SqlAutocompleteCardProps> = ({
             return (
               <div
                 key={item.column.nome}
-                onMouseEnter={() => onSelectIndex(idx)}
+                onMouseMove={() => onSelectIndex(idx)}
                 onClick={() => onApplyColumn(item)}
                 className={`px-2.5 py-1.5 rounded-lg flex items-center justify-between gap-2 cursor-pointer transition-colors ${
                   isSelected
@@ -196,7 +228,7 @@ export const SqlAutocompleteCard: React.FC<SqlAutocompleteCardProps> = ({
             return (
               <div
                 key={`${opp.baseTable}-${opp.targetTable}-${idx}`}
-                onMouseEnter={() => onSelectIndex(idx)}
+                onMouseMove={() => onSelectIndex(idx)}
                 onClick={() => onApplyJoin(opp)}
                 className={`px-2.5 py-2 rounded-lg flex flex-col gap-1 cursor-pointer transition-colors ${
                   isSelected
@@ -253,6 +285,109 @@ export const SqlAutocompleteCard: React.FC<SqlAutocompleteCardProps> = ({
                   title={opp.chavesLigacao}
                 >
                   ON {opp.chavesLigacao}
+                </div>
+              </div>
+            );
+          })}
+
+        {type !== "column" &&
+          type !== "join" &&
+          genericItems.map((item, idx) => {
+            const isSelected = idx === selectedIndex;
+
+            return (
+              <div
+                key={`${item.type}-${item.label}-${idx}`}
+                onMouseMove={() => onSelectIndex(idx)}
+                onClick={() => onApplyGeneric(item)}
+                className={`px-2.5 py-1.5 rounded-lg flex items-center justify-between gap-2 cursor-pointer transition-colors ${
+                  isSelected
+                    ? "bg-primary text-primary-foreground font-medium shadow-2xs"
+                    : "hover:bg-muted/60 text-foreground"
+                }`}
+              >
+                <div className="flex items-center gap-2 min-w-0 flex-1">
+                  {item.type === "keyword" && (
+                    <Code2
+                      className={`h-3.5 w-3.5 shrink-0 ${
+                        isSelected ? "text-primary-foreground" : "text-sky-500"
+                      }`}
+                    />
+                  )}
+                  {item.type === "function" && (
+                    <Binary
+                      className={`h-3.5 w-3.5 shrink-0 ${
+                        isSelected ? "text-primary-foreground" : "text-emerald-500"
+                      }`}
+                    />
+                  )}
+                  {item.type === "snippet" && (
+                    <Sparkles
+                      className={`h-3.5 w-3.5 shrink-0 ${
+                        isSelected ? "text-amber-200" : "text-purple-500"
+                      }`}
+                    />
+                  )}
+                  {item.type === "table" && (
+                    <Table2
+                      className={`h-3.5 w-3.5 shrink-0 ${
+                        isSelected ? "text-emerald-200" : "text-emerald-500"
+                      }`}
+                    />
+                  )}
+
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-1.5">
+                      <span className="font-mono text-xs font-semibold truncate">
+                        {item.label}
+                      </span>
+                    </div>
+                    {item.description && (
+                      <p
+                        className={`text-[10px] truncate ${
+                          isSelected ? "text-primary-foreground/80" : "text-muted-foreground"
+                        }`}
+                      >
+                        {item.description}
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-1.5 shrink-0">
+                  {item.detail && (
+                    <span
+                      className={`text-[9px] font-mono truncate max-w-[120px] px-1 py-0.5 rounded ${
+                        isSelected
+                          ? "text-primary-foreground/80 bg-primary-foreground/15"
+                          : "text-muted-foreground bg-muted"
+                      }`}
+                      title={item.detail}
+                    >
+                      {item.detail}
+                    </span>
+                  )}
+                  <span
+                    className={`text-[8.5px] font-mono uppercase px-1.5 py-0.5 rounded font-bold border ${
+                      isSelected
+                        ? "bg-primary-foreground/20 text-primary-foreground border-primary-foreground/30"
+                        : item.type === "snippet"
+                        ? "bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20"
+                        : item.type === "table"
+                        ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20"
+                        : item.type === "function"
+                        ? "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20"
+                        : "bg-muted text-muted-foreground border-border/40"
+                    }`}
+                  >
+                    {item.type === "snippet"
+                      ? "SNIPPET"
+                      : item.type === "function"
+                      ? "FUNC"
+                      : item.type === "table"
+                      ? "TABELA"
+                      : "KEYWORD"}
+                  </span>
                 </div>
               </div>
             );
