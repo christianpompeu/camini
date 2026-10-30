@@ -38,6 +38,9 @@ export function SqlStudioClient() {
   // Catálogo de Tabelas
   const [catalogTables, setCatalogTables] = useState<RMTableSummary[]>([]);
   const [loadingCatalog, setLoadingCatalog] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [totalMatches, setTotalMatches] = useState(0);
+  const [catalogLimit, setCatalogLimit] = useState(80);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedModule, setSelectedModule] = useState("");
 
@@ -89,31 +92,61 @@ export function SqlStudioClient() {
   }, [sql]);
 
   // Carregamento de catálogo via API
-  const fetchCatalog = useCallback(async (query: string, modulePrefix: string) => {
+  const fetchCatalog = useCallback(async (query: string, modulePrefix: string, limit: number) => {
     try {
-      setLoadingCatalog(true);
+      if (limit > 80) {
+        setLoadingMore(true);
+      } else {
+        setLoadingCatalog(true);
+      }
       const params = new URLSearchParams();
       if (query.trim()) params.set("q", query.trim());
       if (modulePrefix) params.set("module", modulePrefix);
-      params.set("limit", "120");
+      params.set("limit", limit.toString());
 
       const res = await fetch(`/api/totvs-rm/tables?${params.toString()}`);
       if (!res.ok) throw new Error("Falha ao buscar catálogo");
       const data = await res.json();
       setCatalogTables(data.tables || []);
+      setTotalMatches(data.totalMatches || (data.tables ? data.tables.length : 0));
     } catch (err) {
       console.error("Erro ao carregar catálogo RM:", err);
     } finally {
       setLoadingCatalog(false);
+      setLoadingMore(false);
     }
   }, []);
 
+  // Debounce para busca textual
+  const [debouncedSearch, setDebouncedSearch] = useState(searchTerm);
+
   useEffect(() => {
     const timer = setTimeout(() => {
-      fetchCatalog(searchTerm, selectedModule);
-    }, 250);
+      setDebouncedSearch(searchTerm);
+    }, 200);
     return () => clearTimeout(timer);
-  }, [searchTerm, selectedModule, fetchCatalog]);
+  }, [searchTerm]);
+
+  useEffect(() => {
+    fetchCatalog(debouncedSearch, selectedModule, catalogLimit);
+  }, [debouncedSearch, selectedModule, catalogLimit, fetchCatalog]);
+
+  const handleSearchChange = (val: string) => {
+    setSearchTerm(val);
+    setCatalogLimit(80);
+  };
+
+  const handleSelectModule = (prefix: string) => {
+    setSelectedModule(prefix);
+    setCatalogLimit(80);
+  };
+
+  const handleLoadMore = () => {
+    if (loadingCatalog || loadingMore) return;
+    setCatalogLimit((prev) => prev + 80);
+  };
+
+  const hasMore = catalogTables.length < totalMatches;
 
   // Análise em tempo real das tabelas presentes na query
   const tablesInQuery = useMemo(() => {
@@ -214,13 +247,12 @@ WHERE
   };
 
   // Salvar no histórico local
-  const handleSaveQuery = () => {
-    const promptTitle = window.prompt("Nome identificador para esta consulta:", `Consulta ${tablesInQuery.map(t => t.tableName).join(" + ") || "T-SQL"}`);
-    if (!promptTitle) return;
+  const handleSaveQuery = (title: string) => {
+    const finalTitle = title.trim() || `Consulta ${tablesInQuery.map((t) => t.tableName).join(" + ") || "T-SQL"}`;
 
     const newQuery: SavedSqlQuery = {
       id: `query_${Date.now()}`,
-      title: promptTitle.trim(),
+      title: finalTitle,
       sql,
       createdAt: Date.now(),
       updatedAt: Date.now(),
@@ -308,10 +340,14 @@ WHERE
           onToggleOpen={() => setIsSidebarOpen(!isSidebarOpen)}
           catalogTables={catalogTables}
           loadingCatalog={loadingCatalog}
+          loadingMore={loadingMore}
+          totalMatches={totalMatches}
+          hasMore={hasMore}
+          onLoadMore={handleLoadMore}
           searchTerm={searchTerm}
-          onSearchChange={setSearchTerm}
+          onSearchChange={handleSearchChange}
           selectedModule={selectedModule}
-          onSelectModule={setSelectedModule}
+          onSelectModule={handleSelectModule}
           onInsertTableToQuery={handleInsertTableToQuery}
           savedQueries={savedQueries}
           onSelectSavedQuery={handleSelectSavedQuery}

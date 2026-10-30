@@ -45,6 +45,10 @@ interface SqlStudioSidebarProps {
   // Catálogo
   catalogTables: RMTableSummary[];
   loadingCatalog: boolean;
+  totalMatches?: number;
+  hasMore?: boolean;
+  loadingMore?: boolean;
+  onLoadMore?: () => void;
   searchTerm: string;
   onSearchChange: (value: string) => void;
   selectedModule: string;
@@ -67,6 +71,10 @@ export function SqlStudioSidebar({
   onToggleOpen,
   catalogTables,
   loadingCatalog,
+  totalMatches = 0,
+  hasMore = false,
+  loadingMore = false,
+  onLoadMore,
   searchTerm,
   onSearchChange,
   selectedModule,
@@ -350,7 +358,7 @@ export function SqlStudioSidebar({
                     <Button
                       size="sm"
                       variant="outline"
-                      className="h-6 px-1.5 text-[10.5px] opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
+                      className="h-6 px-1.5 text-[10.5px] opacity-0 group-hover:opacity-100 transition-opacity shrink-0 cursor-pointer"
                       onClick={() => onInsertTableToQuery(t.tabela)}
                       title={`Inserir ${t.tabela} na consulta ativa`}
                     >
@@ -360,6 +368,40 @@ export function SqlStudioSidebar({
                   </div>
                 );
               })
+            )}
+
+            {/* Opção Carregar Mais Tabelas */}
+            {hasMore && onLoadMore && !loadingCatalog && (
+              <div className="pt-2 pb-3 px-1 text-center">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={onLoadMore}
+                  disabled={loadingMore}
+                  className="w-full text-xs h-8 gap-1.5 text-muted-foreground hover:text-foreground cursor-pointer border-dashed border-border hover:border-primary/50 hover:bg-muted/50 transition-all font-medium"
+                >
+                  {loadingMore ? (
+                    <>
+                      <span className="inline-block animate-spin h-3.5 w-3.5 border-2 border-primary border-t-transparent rounded-full" />
+                      <span>Carregando mais tabelas...</span>
+                    </>
+                  ) : (
+                    <>
+                      <ChevronDown className="h-3.5 w-3.5 text-primary" />
+                      <span>
+                        Carregar mais tabelas ({catalogTables.length} de {totalMatches})
+                      </span>
+                    </>
+                  )}
+                </Button>
+              </div>
+            )}
+
+            {/* Indicador de Fim da Lista */}
+            {!hasMore && catalogTables.length > 0 && !loadingCatalog && (
+              <div className="py-2.5 px-2 text-center text-[10.5px] text-muted-foreground/70 border-t border-border/40 mt-2">
+                ✓ Fim da lista ({catalogTables.length} {catalogTables.length === 1 ? "tabela carregada" : "tabelas carregadas"})
+              </div>
             )}
           </div>
         </div>

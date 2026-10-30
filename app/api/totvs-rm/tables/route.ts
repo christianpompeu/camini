@@ -32,7 +32,7 @@ export async function GET(req: NextRequest) {
     }
 
     const limitParam = parseInt(searchParams.get("limit") || "100", 10);
-    const limit = isNaN(limitParam) ? 100 : Math.min(Math.max(limitParam, 1), 500);
+    const limit = isNaN(limitParam) ? 100 : Math.min(Math.max(limitParam, 1), 3000);
 
     const result = searchRMTableCatalog(query, modulePrefix, limit);
     return NextResponse.json(result);

@@ -21,7 +21,12 @@ import {
   Key,
   Undo2,
   Redo2,
+  History,
+  Clock,
+  Database,
+  Save,
 } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -45,7 +50,7 @@ interface SmartSqlEditorProps {
   tableDetailsMap: Record<string, RMSemanticTableWithKey>;
   joinOpportunities: JoinOpportunity[];
   qualityChecks: QueryQualityCheck[];
-  onSaveQuery: () => void;
+  onSaveQuery: (title: string) => void;
   onSaveAsTemplate: (params: { title: string; description: string; moduleLabel: string }) => void;
   isAuthenticated?: boolean;
   catalogTables?: RMTableSummary[];
@@ -180,6 +185,8 @@ export function SmartSqlEditor({
   const [showAllJoinsModal, setShowAllJoinsModal] = useState(false);
   const [showColumnPicker, setShowColumnPicker] = useState(false);
   const [showSaveTemplateModal, setShowSaveTemplateModal] = useState(false);
+  const [showSaveHistoryModal, setShowSaveHistoryModal] = useState(false);
+  const [historyTitle, setHistoryTitle] = useState("");
   const [columnSearchQuery, setColumnSearchQuery] = useState("");
   const [selectedTableForColumns, setSelectedTableForColumns] = useState<string>("all");
   const [showQualityPopover, setShowQualityPopover] = useState(false);
@@ -478,6 +485,13 @@ export function SmartSqlEditor({
       return;
     }
 
+    // 3. Atalho CTRL + S para Salvar Consulta no Histórico
+    if ((e.ctrlKey || e.metaKey) && (e.key === "s" || e.key === "S")) {
+      e.preventDefault();
+      handleOpenSaveHistoryModal();
+      return;
+    }
+
     // 3. Navegação do Autocomplete se estiver aberto
     if (autocompleteState) {
       const total =
@@ -592,6 +606,22 @@ export function SmartSqlEditor({
     setShowSaveTemplateModal(false);
     setTemplateTitle("");
     setTemplateDesc("");
+  };
+
+  const handleOpenSaveHistoryModal = () => {
+    const defaultTitle = `Consulta ${tablesInQuery.map((t) => t.tableName).join(" + ") || "T-SQL"}`;
+    setHistoryTitle(defaultTitle);
+    setShowSaveHistoryModal(true);
+  };
+
+  const handleConfirmSaveHistory = () => {
+    const trimmed = historyTitle.trim();
+    if (!trimmed) return;
+    onSaveQuery(trimmed);
+    setShowSaveHistoryModal(false);
+    toast.success("Consulta salva no histórico local com sucesso!", {
+      description: trimmed,
+    });
   };
 
   const hasErrors = qualityChecks.some((c) => !c.passed && c.severity === "error");
@@ -757,10 +787,11 @@ export function SmartSqlEditor({
             <Button
               size="sm"
               variant="outline"
-              className="h-7 text-xs gap-1 cursor-pointer bg-background"
-              onClick={onSaveQuery}
-              title="Salvar consulta no Histórico de trabalho"
+              className="h-7 text-xs gap-1 cursor-pointer bg-background hover:bg-muted"
+              onClick={handleOpenSaveHistoryModal}
+              title="Salvar consulta no Histórico de trabalho (Ctrl+S)"
             >
+              <History className="h-3.5 w-3.5 text-muted-foreground" />
               <span>Salvar Histórico</span>
             </Button>
 
@@ -1188,6 +1219,116 @@ export function SmartSqlEditor({
                 className="text-xs h-7.5 font-semibold bg-primary text-primary-foreground"
               >
                 Salvar Modelo
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL: SALVAR CONSULTA NO HISTÓRICO LOCAL */}
+      {showSaveHistoryModal && (
+        <div
+          className="fixed inset-0 z-50 bg-background/80 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-150"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setShowSaveHistoryModal(false);
+          }}
+          onKeyDown={(e) => {
+            if (e.key === "Escape") setShowSaveHistoryModal(false);
+          }}
+        >
+          <div className="w-full max-w-md rounded-xl border border-border bg-card shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+            <div className="p-3.5 border-b border-border flex items-center justify-between bg-muted/20">
+              <div className="flex items-center gap-2">
+                <div className="p-1.5 rounded-md bg-primary/10 text-primary">
+                  <History className="h-4 w-4" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-sm text-foreground leading-none">
+                    Salvar Consulta no Histórico
+                  </h3>
+                  <p className="text-[10.5px] text-muted-foreground mt-0.5">
+                    Histórico local de trabalho do SQL Studio
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowSaveHistoryModal(false)}
+                className="text-muted-foreground hover:text-foreground p-1 rounded-md hover:bg-muted transition-colors cursor-pointer"
+                title="Fechar (Esc)"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="p-4 space-y-3.5 text-xs">
+              <div>
+                <label className="block font-semibold text-foreground mb-1">
+                  Nome identificador da consulta *
+                </label>
+                <Input
+                  value={historyTitle}
+                  onChange={(e) => setHistoryTitle(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && historyTitle.trim()) {
+                      e.preventDefault();
+                      handleConfirmSaveHistory();
+                    } else if (e.key === "Escape") {
+                      setShowSaveHistoryModal(false);
+                    }
+                  }}
+                  placeholder="Ex: Consulta FLAN + FCFO + GFILIAL"
+                  className="h-8.5 text-xs bg-background font-medium"
+                  autoFocus
+                  onFocus={(e) => e.target.select()}
+                />
+              </div>
+
+              {/* Tabelas Identificadas */}
+              {tablesInQuery.length > 0 && (
+                <div>
+                  <label className="block text-[11px] font-medium text-muted-foreground mb-1.5">
+                    Tabelas identificadas ({tablesInQuery.length})
+                  </label>
+                  <div className="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto">
+                    {tablesInQuery.map((t) => (
+                      <span
+                        key={t.tableName}
+                        className="inline-flex items-center gap-1 px-2 py-0.5 rounded border border-border bg-muted/50 font-mono text-[10.5px] text-foreground"
+                      >
+                        <Database className="h-2.5 w-2.5 text-primary" />
+                        {t.tableName}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Informação sobre Armazenamento Local */}
+              <div className="p-2.5 rounded-lg border border-border/80 bg-muted/30 text-xs flex items-start gap-2.5 text-muted-foreground">
+                <Clock className="h-4 w-4 shrink-0 text-primary mt-0.5" />
+                <p className="text-[11px] leading-relaxed">
+                  Esta consulta será armazenada com segurança no seu navegador e ficará acessível imediatamente na aba <strong className="text-foreground">Histórico</strong> da barra lateral esquerda.
+                </p>
+              </div>
+            </div>
+
+            <div className="p-3 border-t border-border bg-muted/10 flex items-center justify-end gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowSaveHistoryModal(false)}
+                className="text-xs h-7.5 cursor-pointer"
+              >
+                Cancelar
+              </Button>
+              <Button
+                size="sm"
+                onClick={handleConfirmSaveHistory}
+                disabled={!historyTitle.trim()}
+                className="text-xs h-7.5 font-semibold bg-primary text-primary-foreground hover:bg-primary/90 cursor-pointer gap-1.5"
+              >
+                <Check className="h-3.5 w-3.5" />
+                Salvar no Histórico
               </Button>
             </div>
           </div>

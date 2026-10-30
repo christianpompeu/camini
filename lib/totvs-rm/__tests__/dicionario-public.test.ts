@@ -126,3 +126,60 @@ test("Dicionário RM - Deduplicação de Colunas e Relevância de Busca por Tabe
   assert.match(sidebarCode, /matchedColumn/);
 });
 
+test("SQL Studio - Modal de Salvar Consulta no Histórico e Paginação de Tabelas", async () => {
+  const [clientCode, editorCode, sidebarCode, routeCode] = await Promise.all([
+    read("components/sql-studio/sql-studio-client.tsx"),
+    read("components/sql-studio/smart-sql-editor.tsx"),
+    read("components/sql-studio/sql-studio-sidebar.tsx"),
+    read("app/api/totvs-rm/tables/route.ts"),
+  ]);
+
+  // 1. O alert/prompt nativo do navegador NÃO deve mais existir no fluxo de salvar histórico
+  assert.doesNotMatch(
+    clientCode,
+    /window\.prompt/,
+    "window.prompt nativo deve ser removido de sql-studio-client.tsx"
+  );
+
+  // 2. O editor inteligente possui o modal de salvar histórico com autoFocus, atalho Ctrl+S e feedback
+  assert.match(
+    editorCode,
+    /showSaveHistoryModal/,
+    "smart-sql-editor deve conter o estado e renderização de showSaveHistoryModal"
+  );
+  assert.match(
+    editorCode,
+    /Salvar Consulta no Histórico/,
+    "smart-sql-editor deve conter o título do modal de salvar histórico"
+  );
+  assert.match(
+    editorCode,
+    /handleOpenSaveHistoryModal/,
+    "smart-sql-editor deve disparar abertura do modal ao clicar ou pressionar Ctrl+S"
+  );
+
+  // 3. A sidebar possui suporte a carregar mais tabelas quando atingir o fim da listagem
+  assert.match(
+    sidebarCode,
+    /hasMore && onLoadMore/,
+    "sql-studio-sidebar deve verificar hasMore && onLoadMore"
+  );
+  assert.match(
+    sidebarCode,
+    /Carregar mais tabelas/,
+    "sql-studio-sidebar deve exibir a opção de Carregar mais tabelas"
+  );
+  assert.match(
+    sidebarCode,
+    /Fim da lista/,
+    "sql-studio-sidebar deve indicar o fim da lista quando todas forem carregadas"
+  );
+
+  // 4. A rota da API deve permitir carregamento até pelo menos 3000 tabelas
+  assert.match(
+    routeCode,
+    /3000/,
+    "A rota de tabelas deve suportar limites maiores para paginação completa"
+  );
+});
+
