@@ -14,6 +14,7 @@ import {
   Cpu,
   Database,
   Bot,
+  Code2,
 } from "lucide-react";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { MobileSidebar } from "@/components/layout/mobile-sidebar";
@@ -39,11 +40,12 @@ export function Navbar() {
   const isPlayground = pathname.startsWith("/playground");
   const isObservatorio = pathname.startsWith("/panorama") || pathname.startsWith("/tech");
   const isMercado = pathname.startsWith("/mercado");
+  const isSqlStudio = pathname.startsWith("/sql-studio");
 
   // Estados ativos por suíte de negócio
   const isGestaoActive = isDashboard || isMercado || isForca;
   const isFiscalActive = isRadar || isObservatorio;
-  const isTotvsRmActive = isTotvsRm || isDicionario;
+  const isTotvsRmActive = isTotvsRm || isDicionario || isSqlStudio;
 
   // Itens da suíte Gestão & BI
   const gestaoItems = [
@@ -77,9 +79,16 @@ export function Navbar() {
       label: "Dicionário RM",
       subtitle: "Catálogo de dados, esquemas e grafos FK",
       icon: Database,
-      badge: "Novo",
-      badgeClass: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20",
       isActive: isDicionario,
+    },
+    {
+      href: "/sql-studio",
+      label: "SQL Studio RM",
+      subtitle: "Editor & criador inteligente com autocompletar de JOINs",
+      icon: Code2,
+      badge: "Novo",
+      badgeClass: "bg-primary/10 text-primary border border-primary/20",
+      isActive: isSqlStudio,
     },
     {
       href: "/totvs-rm",

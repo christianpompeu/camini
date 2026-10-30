@@ -18,6 +18,7 @@ import {
   Cpu,
   Layers,
   ShoppingCart,
+  Code2,
 } from "lucide-react";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 
@@ -58,6 +59,7 @@ export function MobileSidebar({ isOpen, onClose }: MobileSidebarProps) {
   const isPanorama = pathname.startsWith("/panorama");
   const isTech = pathname.startsWith("/tech");
   const isMercado = pathname.startsWith("/mercado");
+  const isSqlStudio = pathname.startsWith("/sql-studio");
 
   const publications = [
     {
@@ -112,6 +114,14 @@ export function MobileSidebar({ isOpen, onClose }: MobileSidebarProps) {
       badge: "Público",
       icon: Layers,
       isActive: isDicionario,
+    },
+    {
+      href: "/sql-studio",
+      title: "SQL Studio RM",
+      subtitle: "Editor & criador inteligente com autocompletar de JOINs",
+      badge: "Novo",
+      icon: Code2,
+      isActive: isSqlStudio,
     },
     {
       href: "/mercado",
