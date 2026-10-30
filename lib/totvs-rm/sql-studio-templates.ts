@@ -1,7 +1,7 @@
 export interface SqlStudioTemplate {
   id: string;
   title: string;
-  category: "financeiro" | "faturamento" | "rh" | "contabil";
+  category: "financeiro" | "faturamento" | "rh" | "contabil" | "personalizado";
   moduleLabel: string;
   description: string;
   mainTables: string[];

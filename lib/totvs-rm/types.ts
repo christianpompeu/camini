@@ -1,11 +1,13 @@
 export interface RMSemanticRelationship {
   tabela_destino: string;
   chaves_ligacao: string;
+  descricao?: string;
 }
 
 export interface RMSemanticIncomingRelationship {
   tabela_origem: string;
   chaves_ligacao: string;
+  descricao?: string;
 }
 
 export interface RMSemanticColumn {
