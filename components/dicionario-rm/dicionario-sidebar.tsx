@@ -35,6 +35,47 @@ const MIN_SIDEBAR_WIDTH = 260;
 const MAX_SIDEBAR_WIDTH = 500;
 const DEFAULT_SIDEBAR_WIDTH = 320;
 
+export function getTableModuleBadge(tableName: string, sistema?: string) {
+  const prefix = tableName.charAt(0).toUpperCase();
+  switch (prefix) {
+    case "T":
+      return {
+        label: "Nucleus",
+        colorClass: "bg-amber-500/15 text-amber-500 dark:text-amber-400 border border-amber-500/30",
+      };
+    case "F":
+      return {
+        label: "Fluxus",
+        colorClass: "bg-sky-500/15 text-sky-500 dark:text-sky-400 border border-sky-500/30",
+      };
+    case "P":
+      return {
+        label: "Labore",
+        colorClass: "bg-purple-500/15 text-purple-500 dark:text-purple-400 border border-purple-500/30",
+      };
+    case "C":
+      return {
+        label: "Saldus",
+        colorClass: "bg-emerald-500/15 text-emerald-500 dark:text-emerald-400 border border-emerald-500/30",
+      };
+    case "G":
+      return {
+        label: "Global",
+        colorClass: "bg-slate-500/15 text-slate-400 border border-slate-500/30",
+      };
+    case "S":
+      return {
+        label: "Classis",
+        colorClass: "bg-rose-500/15 text-rose-500 dark:text-rose-400 border border-rose-500/30",
+      };
+    default:
+      return {
+        label: sistema?.replace("RM ", "").trim() || "Geral",
+        colorClass: "bg-muted text-muted-foreground border border-border/40",
+      };
+  }
+}
+
 interface DicionarioSidebarProps {
   isOpen: boolean;
   onToggleOpen: () => void;
@@ -283,7 +324,7 @@ export function DicionarioSidebar({
             </div>
             <div className="min-w-0">
               <span className="font-bold text-xs truncate block leading-tight text-foreground">
-                Dicionário RM
+                Catálogo de Tabelas
               </span>
               <span className="text-[10px] text-muted-foreground block truncate">
                 9.400+ tabelas catalogadas
@@ -479,74 +520,77 @@ export function DicionarioSidebar({
                 </div>
               ) : (
                 <>
-                  <div className="divide-y divide-border/40">
+                  <div className="p-2 space-y-1.5">
                     {catalogTables.map((t) => {
                       const isPrimary = activePrimaryTable === t.tabela;
                       const isSecondary = activeSecondaryTable === t.tabela;
+                      const modBadge = getTableModuleBadge(t.tabela, t.sistema);
 
                       return (
                         <div
                           key={t.tabela}
                           onClick={() => onSelectTable(t.tabela)}
-                          className={`group w-full text-left px-2.5 py-2.5 transition-all text-xs cursor-pointer flex flex-col gap-1 ${
+                          className={`group w-full text-left p-2.5 rounded-xl border transition-all text-xs cursor-pointer flex flex-col gap-1.5 ${
                             isPrimary
-                              ? "bg-primary/10 text-primary font-medium"
+                              ? "bg-primary/10 border-primary/50 text-primary shadow-xs ring-1 ring-primary/20"
                               : isSecondary
-                              ? "bg-amber-500/10 text-foreground"
-                              : "hover:bg-muted/60 text-muted-foreground hover:text-foreground"
+                              ? "bg-amber-500/10 border-amber-500/50 text-foreground shadow-xs ring-1 ring-amber-500/20"
+                              : "bg-card/40 hover:bg-muted/40 border-border/50 hover:border-border text-foreground"
                           }`}
                         >
+                          {/* Linha Superior: Nome da Tabela + Badge do Módulo + Status + Ação */}
                           <div className="flex items-center justify-between gap-1.5 w-full">
-                            <div className="flex items-center gap-1.5 flex-wrap">
-                              <span className="font-mono font-bold text-foreground">
+                            <div className="flex items-center gap-2 min-w-0 flex-wrap">
+                              <span className="font-mono font-bold text-sm tracking-wide text-foreground">
                                 {t.tabela}
                               </span>
+                              <span
+                                className={`text-[10px] font-semibold px-2 py-0.5 rounded-md ${modBadge.colorClass}`}
+                              >
+                                {modBadge.label}
+                              </span>
                               {isPrimary && (
-                                <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-primary text-primary-foreground">
+                                <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-primary text-primary-foreground">
                                   Ativa
                                 </span>
                               )}
                               {isSecondary && (
-                                <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-600 dark:text-amber-400">
+                                <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/30">
                                   Ao lado
                                 </span>
                               )}
                               {t.matchedColumn && (
-                                <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-sky-500/10 text-sky-600 dark:text-sky-400 border border-sky-500/20 flex items-center gap-1">
+                                <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-sky-500/10 text-sky-600 dark:text-sky-400 border border-sky-500/20 flex items-center gap-1">
                                   <Key className="h-2.5 w-2.5" />
                                   <span>{t.matchedColumn}</span>
                                 </span>
                               )}
                             </div>
 
-                            <div className="flex items-center gap-1 shrink-0">
-                              <span className="text-[10px] px-1.5 py-0.2 rounded bg-muted border border-border text-muted-foreground font-mono">
-                                {t.sistema.replace("RM ", "")}
-                              </span>
-
-                              {onOpenSideBySide && !isPrimary && !isSecondary && (
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    onOpenSideBySide(t.tabela);
-                                  }}
-                                  className="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-opacity cursor-pointer"
-                                  title="Abrir ao lado para comparar"
-                                >
-                                  <Columns2 className="h-3 w-3" />
-                                </button>
-                              )}
-                            </div>
+                            {onOpenSideBySide && !isPrimary && !isSecondary && (
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  onOpenSideBySide(t.tabela);
+                                }}
+                                className="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-opacity cursor-pointer shrink-0"
+                                title="Abrir ao lado para comparar"
+                              >
+                                <Columns2 className="h-3.5 w-3.5" />
+                              </button>
+                            )}
                           </div>
 
-                          <span className="text-[11px] truncate w-full text-muted-foreground group-hover:text-foreground leading-normal">
+                          {/* Linha Inferior: Descrição da Tabela */}
+                          <p className="text-xs text-muted-foreground truncate leading-relaxed group-hover:text-foreground/90 transition-colors">
                             {t.descricao || "Sem descrição"}
-                          </span>
+                          </p>
 
+                          {/* Destaque de Coluna correspondente à busca (se houver) */}
                           {t.matchedColumn && t.matchedColumnDesc && (
-                            <span className="text-[10px] truncate w-full text-sky-600 dark:text-sky-400 font-mono">
+                            <p className="text-[10px] truncate w-full text-sky-600 dark:text-sky-400 font-mono">
                               ↳ Campo: <strong>{t.matchedColumn}</strong> — {t.matchedColumnDesc}
-                            </span>
+                            </p>
                           )}
                         </div>
                       );

@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback, useRef } from "react";
+import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   Database,
@@ -19,13 +20,30 @@ import {
   Plus,
   Maximize2,
   ArrowRight,
+  LayoutGrid,
+  ChevronDown,
+  Radio,
+  Compass,
+  TrendingUp,
+  Dumbbell,
+  Code2,
+  Menu,
 } from "lucide-react";
 import {
   RMSemanticTableWithKey,
   RMTableSummary,
 } from "@/lib/totvs-rm/types";
 import { Button } from "@/components/ui/button";
-import { Navbar } from "@/components/layout/navbar";
+import { CaminiLogo } from "@/components/ui/camini-logo";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
+import { MobileSidebar } from "@/components/layout/mobile-sidebar";
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
 import { DicionarioSidebar } from "./dicionario-sidebar";
 import { TableViewerPane } from "./table-viewer-pane";
 import { TableRelationGraph } from "./table-relation-graph";
@@ -44,6 +62,7 @@ export function DicionarioClient() {
 
   // Estados de layout e sidebar
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
 
   // Catálogo de tabelas
   const [searchTerm, setSearchTerm] = useState("");
@@ -571,19 +590,20 @@ export function DicionarioClient() {
 
   return (
     <div className="h-[100dvh] flex flex-col bg-background text-foreground overflow-hidden font-sans">
-      {/* 1. Header Global do Camini */}
-      <div className="shrink-0">
-        <Navbar />
-      </div>
+      {/* Header Unificado do Dicionário RM (Combina Navegação Global Camini + Controles de Modo e Tabela) */}
+      <header className="h-14 border-b border-border bg-background/95 backdrop-blur px-3 sm:px-4 flex items-center justify-between gap-3 shrink-0 z-40 select-none">
+        {/* Lado Esquerdo: Logo Camini + Separador + Toggle Catálogo + Tabela Ativa */}
+        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+          <CaminiLogo variant="symbol-text" size="sm" href="/" priority />
 
-      {/* 2. Sub-Header de Controle do Dicionário */}
-      <div className="h-13 border-b border-border bg-muted/20 px-4 flex items-center justify-between gap-3 shrink-0">
-        <div className="flex items-center gap-2 min-w-0">
+          <div className="h-4 w-px bg-border mx-0.5 sm:mx-1 hidden sm:block shrink-0" />
+
+          {/* Botão de Toggle da Sidebar */}
           <Button
             variant="ghost"
             size="icon"
             onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-            className="h-8 w-8 text-muted-foreground hover:text-foreground hidden md:flex"
+            className="h-8 w-8 text-muted-foreground hover:text-foreground hidden md:flex shrink-0 cursor-pointer"
             title={isSidebarOpen ? "Recolher catálogo" : "Expandir catálogo"}
           >
             {isSidebarOpen ? (
@@ -593,11 +613,11 @@ export function DicionarioClient() {
             )}
           </Button>
 
-          <div className="h-4 w-px bg-border mx-1 hidden md:block" />
+          <div className="h-4 w-px bg-border mx-0.5 hidden md:block shrink-0" />
 
-          {/* Status / Tabela(s) ativa(s) */}
-          <div className="flex items-center gap-2 min-w-0">
-            <span className="font-semibold text-xs text-muted-foreground hidden sm:inline">
+          {/* Contexto da Tabela Ativa */}
+          <div className="flex items-center gap-1.5 min-w-0">
+            <span className="font-semibold text-xs text-muted-foreground hidden lg:inline whitespace-nowrap">
               Dicionário RM:
             </span>
 
@@ -624,8 +644,8 @@ export function DicionarioClient() {
           </div>
         </div>
 
-        {/* Controles de Visualização & Ações Globais */}
-        <div className="flex items-center gap-2">
+        {/* Lado Direito: Modos de Visualização + Ações + Menu de Navegação Camini + Theme Toggle */}
+        <div className="flex items-center gap-2 shrink-0">
           {/* Seletor de Modo: Painel Único vs Lado a Lado vs Grafo ao Lado */}
           <div className="flex items-center bg-muted/60 p-0.5 rounded-lg border border-border">
             <button
@@ -693,25 +713,25 @@ export function DicionarioClient() {
             variant="outline"
             size="sm"
             onClick={handleShareLink}
-            className="h-8 gap-1.5 text-xs border-border bg-background hover:bg-muted"
+            className="h-8 gap-1.5 text-xs border-border bg-background hover:bg-muted cursor-pointer"
             title="Copiar link com a tabela e comparação atuais"
           >
             {linkCopied ? (
               <>
                 <Check className="h-3.5 w-3.5 text-emerald-500" />
-                <span className="text-emerald-500 font-semibold hidden md:inline">
-                  Link Copiado!
+                <span className="text-emerald-500 font-semibold hidden lg:inline">
+                  Copiado!
                 </span>
               </>
             ) : (
               <>
                 <Share2 className="h-3.5 w-3.5" />
-                <span className="hidden md:inline">Compartilhar</span>
+                <span className="hidden lg:inline">Compartilhar</span>
               </>
             )}
           </Button>
 
-          {/* Link para o Assistente RM SQL AI */}
+          {/* Botão de Atalho para o RM SQL AI */}
           <Button
             variant="ghost"
             size="sm"
@@ -725,14 +745,193 @@ export function DicionarioClient() {
                   : `/totvs-rm`
               );
             }}
-            className="h-8 gap-1.5 text-xs text-muted-foreground hover:text-foreground"
+            className="h-8 gap-1.5 text-xs text-muted-foreground hover:text-foreground cursor-pointer"
             title="Abrir no RM SQL AI"
           >
             <Bot className="h-3.5 w-3.5 text-primary" />
-            <span className="hidden lg:inline">RM SQL AI</span>
+            <span className="hidden xl:inline">RM SQL AI</span>
+          </Button>
+
+          <div className="h-4 w-px bg-border mx-1 shrink-0" />
+
+          {/* Menu Dropdown de Navegação do Camini (Preserva 100% dos recursos da barra superior) */}
+          <DropdownMenu>
+            <DropdownMenuTrigger className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium border border-border bg-background hover:bg-muted/70 transition-colors cursor-pointer text-foreground shadow-xs">
+              <LayoutGrid className="h-3.5 w-3.5 text-primary" />
+              <span className="hidden sm:inline font-semibold">Módulos</span>
+              <ChevronDown className="h-3 w-3 opacity-60" />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent
+              align="end"
+              className="w-80 p-2 shadow-2xl border border-border/80 bg-popover text-popover-foreground rounded-xl"
+            >
+              {/* Seção TOTVS RM */}
+              <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground px-2 py-1 select-none flex items-center justify-between">
+                <span>Suíte TOTVS RM</span>
+                <span className="text-[9px] font-mono text-primary font-bold">Ativa</span>
+              </div>
+              <DropdownMenuItem
+                render={<Link href="/dicionario-rm" />}
+                className="flex items-start gap-2.5 p-2 rounded-lg cursor-pointer bg-primary/10 text-primary font-semibold"
+              >
+                <div className="p-1.5 rounded-md bg-primary/20 text-primary shrink-0 mt-0.5">
+                  <Database className="h-4 w-4" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between gap-1">
+                    <span className="text-sm font-bold">Dicionário RM</span>
+                    <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-primary text-primary-foreground">
+                      Aqui
+                    </span>
+                  </div>
+                  <p className="text-xs text-muted-foreground">Catálogo de 9.400+ tabelas e grafos</p>
+                </div>
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                render={<Link href="/sql-studio" />}
+                className="flex items-start gap-2.5 p-2 rounded-lg cursor-pointer hover:bg-muted/70 transition-colors"
+              >
+                <div className="p-1.5 rounded-md bg-muted text-muted-foreground shrink-0 mt-0.5">
+                  <Code2 className="h-4 w-4" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between gap-1">
+                    <span className="text-sm font-semibold text-foreground">SQL Studio RM</span>
+                    <span className="text-[9px] px-1.5 py-0.2 rounded bg-primary/10 text-primary font-medium">
+                      Novo
+                    </span>
+                  </div>
+                  <p className="text-xs text-muted-foreground">Editor inteligente com autocompletar</p>
+                </div>
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                render={<Link href="/totvs-rm" />}
+                className="flex items-start gap-2.5 p-2 rounded-lg cursor-pointer hover:bg-muted/70 transition-colors"
+              >
+                <div className="p-1.5 rounded-md bg-muted text-muted-foreground shrink-0 mt-0.5">
+                  <Bot className="h-4 w-4" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <span className="text-sm font-semibold text-foreground">RM SQL AI</span>
+                  <p className="text-xs text-muted-foreground">Assistente inteligente e gerador T-SQL</p>
+                </div>
+              </DropdownMenuItem>
+
+              <DropdownMenuSeparator className="my-1.5" />
+
+              {/* Seção Gestão & BI */}
+              <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground px-2 py-1 select-none">
+                Suíte Gestão & BI
+              </div>
+              <DropdownMenuItem
+                render={<Link href="/dashboard" />}
+                className="flex items-start gap-2.5 p-2 rounded-lg cursor-pointer hover:bg-muted/70 transition-colors"
+              >
+                <div className="p-1.5 rounded-md bg-muted text-muted-foreground shrink-0 mt-0.5">
+                  <LayoutGrid className="h-4 w-4" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <span className="text-sm font-semibold text-foreground">Dashboard</span>
+                  <p className="text-xs text-muted-foreground">Visão executiva e métricas</p>
+                </div>
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                render={<Link href="/mercado" />}
+                className="flex items-start gap-2.5 p-2 rounded-lg cursor-pointer hover:bg-muted/70 transition-colors"
+              >
+                <div className="p-1.5 rounded-md bg-muted text-muted-foreground shrink-0 mt-0.5">
+                  <TrendingUp className="h-4 w-4" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <span className="text-sm font-semibold text-foreground">Mercado</span>
+                  <p className="text-xs text-muted-foreground">Painel macroeconômico e indicadores</p>
+                </div>
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                render={<Link href="/forca" />}
+                className="flex items-start gap-2.5 p-2 rounded-lg cursor-pointer hover:bg-muted/70 transition-colors"
+              >
+                <div className="p-1.5 rounded-md bg-muted text-muted-foreground shrink-0 mt-0.5">
+                  <Dumbbell className="h-4 w-4" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <span className="text-sm font-semibold text-foreground">App FORÇA</span>
+                  <p className="text-xs text-muted-foreground">Força de vendas e CRM</p>
+                </div>
+              </DropdownMenuItem>
+
+              <DropdownMenuSeparator className="my-1.5" />
+
+              {/* Seção Fiscal & Tributário */}
+              <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground px-2 py-1 select-none">
+                Fiscal & Tributário
+              </div>
+              <DropdownMenuItem
+                render={<Link href="/radar" />}
+                className="flex items-start gap-2.5 p-2 rounded-lg cursor-pointer hover:bg-muted/70 transition-colors"
+              >
+                <div className="p-1.5 rounded-md bg-muted text-muted-foreground shrink-0 mt-0.5">
+                  <Radio className="h-4 w-4" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <span className="text-sm font-semibold text-foreground">Radar Tributário</span>
+                  <p className="text-xs text-muted-foreground">Reforma tributária IBS/CBS</p>
+                </div>
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                render={<Link href="/nfe-pag" />}
+                className="flex items-start gap-2.5 p-2 rounded-lg cursor-pointer hover:bg-muted/70 transition-colors"
+              >
+                <div className="p-1.5 rounded-md bg-muted text-muted-foreground shrink-0 mt-0.5">
+                  <Compass className="h-4 w-4" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <span className="text-sm font-semibold text-foreground">NFe-Pag</span>
+                  <p className="text-xs text-muted-foreground">Pagamentos e notas fiscais</p>
+                </div>
+              </DropdownMenuItem>
+
+              <DropdownMenuSeparator className="my-1.5" />
+
+              {/* Atalhos Rápidos */}
+              <div className="flex items-center justify-between px-2 pt-1 text-xs">
+                <Link
+                  href="/"
+                  className="text-muted-foreground hover:text-foreground font-medium transition-colors"
+                >
+                  ← Início
+                </Link>
+                <Link
+                  href="/playground"
+                  className="text-muted-foreground hover:text-foreground font-medium transition-colors"
+                >
+                  Design System →
+                </Link>
+              </div>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          {/* Theme Toggle */}
+          <ThemeToggle />
+
+          {/* Menu Mobile Hamburger */}
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setIsMobileNavOpen(true)}
+            className="h-8 w-8 text-muted-foreground hover:text-foreground md:hidden cursor-pointer"
+            title="Abrir menu mobile"
+          >
+            <Menu className="h-4 w-4" />
           </Button>
         </div>
-      </div>
+      </header>
+
+      {/* Sidebar Mobile do Camini */}
+      <MobileSidebar
+        isOpen={isMobileNavOpen}
+        onClose={() => setIsMobileNavOpen(false)}
+      />
 
       {/* 3. Corpo Principal com Sidebar e Área de Conteúdo */}
       <div className="flex-1 flex min-h-0 overflow-hidden relative">
